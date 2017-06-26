@@ -6,11 +6,37 @@
  */ 
 #include "FileSys.h"
 #include "ErrorList.h"
+static uint8_t FS_CheckAddress(uint8_t ID);
+static uint32_t FS_CreateFileStart(void);
+static uint32_t FS_GetFileLength(uint8_t ID);
+static uint32_t FS_GetFileStart(uint8_t ID);
+static uint8_t FS_CheckAddress(uint8_t ID);
+static void FS_WriteFileInfo(uint8_t ID);
+static uint8_t FS_LoadFileInfo(uint8_t ID);
+static void FS_Reorganize(uint8_t ID);
+static void FS_UpdateFileSys(void);
+static void FS_SetAddress(uint8_t ID, uint8_t state);
 
 FS_Status_t FS_CurrentStatus;
 FS_StationRecord_t FS_TempRecord;
+FS_File_t FS_TempFile;
+//////////////////////////////////////////////////////////////////////////
+//						EEPROM-MAP
+//FS_EEPROM_StartAddress
+//+0 -> NextAddress for Records
+//+4 -> Record Count
+//+8 -> FullCircle - Indicates Record overflow status
+//+9 -> NextErrorAddress
+//+13 -> ErrorLogFull - Indicates Error overflow status
+//+14 - 15 -> ----FREE------
+//+16 - 17 -> Filetable  
+//+32 - (32 + FS_MaxFileCount*8) -> FileInfos
+//////////////////////////////////////////////////////////////////////////
+
+//NOCHMAL GUCKEN MIT DEN GANZEN EEPROM ADRESSEN.... KÖNNTE SEIN DAS DIE NOCH NICHT RICHTIG GEMAPPT WURDEN!!!
+
 #define FS_EEPROM_StartAddress 16
-#define FS_EEPROM_Range 24
+#define FS_EEPROM_Range 160
 
 #define FS_StartAddress_Errors 4096
 #define FS_StopAddress_Errors 8176
@@ -18,6 +44,7 @@ FS_StationRecord_t FS_TempRecord;
 
 #define FS_StartAddress_Files 8192
 #define FS_StopAddress_Files 131000UL
+#define FS_MaxFileCount 16
 
 #define FS_StartAddress_Records 131072UL
 
@@ -25,6 +52,58 @@ FS_StationRecord_t FS_TempRecord;
 #define FS_StopAddress 16777148UL
 //(StopAddress - StartAddress) / 16
 #define FS_MaxRecordCount ((FS_StopAddress - FS_StartAddress_Records) / 16)
+
+void FS_Init(void)
+{
+	FS_CurrentStatus.CurrentUnix = FS_GetUnix();
+	//FS_CurrentStatus.LastFileIndex = FS_GetLastFileIndex(); // Funktion???
+	uint32_t addr = EEPROM_ReadDWord(FS_EEPROM_StartAddress);
+	FS_CurrentStatus.NextAddress = Flash_CreateAddress((addr>>24)&0xff,(addr>>16)&0xff,(addr>>8)&0xff,(addr)&0xff);
+	FS_CurrentStatus.RecordCount = EEPROM_ReadDWord(FS_EEPROM_StartAddress+4);
+	FS_CurrentStatus.FullCircle = EEPROM_ReadByte(FS_EEPROM_StartAddress+8);
+	FS_CurrentStatus.NextErrorAddress = (uint16_t)EEPROM_ReadDWord(FS_EEPROM_StartAddress+9);
+	FS_CurrentStatus.ErrorLogFull = EEPROM_ReadByte(FS_EEPROM_StartAddress+13);
+	FS_CurrentStatus.LastSearchResult=-1;
+}
+
+void FS_FirstRun(void)
+{
+	//Clear our buffer
+	for (uint8_t i=0; i<FS_EEPROM_Range; i++)
+	{
+		EEPROM_WriteByte(i+FS_EEPROM_StartAddress,0);
+	}
+	EEPROM_WriteDWord(FS_EEPROM_StartAddress,FS_StartAddress_Records);//NextAddress
+	EEPROM_WriteDWord(FS_EEPROM_StartAddress+4,0);//Record Count
+	EEPROM_WriteByte(FS_EEPROM_StartAddress+8,0);//FullCircle
+	EEPROM_WriteDWord(FS_EEPROM_StartAddress+9,0);//ErrorNextaddress
+	EEPROM_WriteByte(FS_EEPROM_StartAddress+13,0);//ErrorLogFull
+	FS_CurrentStatus.NextAddress = Flash_CreateAddress(((uint32_t)FS_StartAddress_Records>>24)&0xff,((uint32_t)FS_StartAddress_Records>>16)&0xff,((uint32_t)FS_StartAddress_Records>>8)&0xff,(uint32_t)FS_StartAddress_Records &0xff);
+	FS_CurrentStatus.RecordCount = 0;
+	FS_CurrentStatus.FullCircle = 0;
+	FS_CurrentStatus.ErrorLogFull = 0;
+	FS_CurrentStatus.NextErrorAddress = FS_EEPROM_StartAddress;
+	uint32_t add=FS_StartAddress_Records;
+	//Sind das nu 4kb sectoren oder 64kb sectoren????
+	for (; add<FS_StopAddress; add+=4096)
+	{
+		FlashAddress addr = Flash_CreateAddress(add>>24,add>>16,add>>8,add);
+		Flash_sector_Erase(addr);
+		while(Flash_isBusy()){_delay_us(10);}
+	}
+}
+
+void FS_Update(void)
+{
+	//Triggers every 10ms
+	if(FS_CurrentStatus.UnixCounter++ > 99)
+	{
+		FS_CurrentStatus.UnixCounter=0;
+		FS_CurrentStatus.CurrentUnix++;
+	}
+}
+
+#pragma region ERROR SUPPORT
 
 //Fügt dem Fehlerspeicher einen Fehler hinzu.
 void FS_AddError(uint32_t unix,ERRORID_t id,uint8_t flag)
@@ -69,48 +148,215 @@ uint16_t FS_GetLastErrorID(void)
 	return ((FS_CurrentStatus.NextErrorAddress - FS_StartAddress_Errors) /6);
 }
 
+#pragma endregion ERROR SUPPORT
+
+#pragma region FILE SUPPORT
 
 
-
-void FS_Init(void)
+static uint32_t FS_CreateFileStart(void)
 {
-	FS_CurrentStatus.CurrentUnix = FS_GetUnix();
-	//FS_CurrentStatus.LastFileIndex = FS_GetLastFileIndex(); // Funktion???
-	uint32_t addr = EEPROM_ReadDWord(FS_EEPROM_StartAddress);
-	FS_CurrentStatus.NextAddress = Flash_CreateAddress((addr>>24)&0xff,(addr>>16)&0xff,(addr>>8)&0xff,(addr)&0xff);
-	FS_CurrentStatus.RecordCount = EEPROM_ReadDWord(FS_EEPROM_StartAddress+4);
-	FS_CurrentStatus.FullCircle = EEPROM_ReadByte(FS_EEPROM_StartAddress+8);
-	FS_CurrentStatus.NextErrorAddress = (uint16_t)EEPROM_ReadDWord(FS_EEPROM_StartAddress+9);
-	FS_CurrentStatus.ErrorLogFull = EEPROM_ReadByte(FS_EEPROM_StartAddress+13);
-	FS_CurrentStatus.LastSearchResult=-1;
+	if(FS_CurrentStatus.FileCount == 0) return FS_StartAddress_Files;
+	uint32_t maxStart=0;
+	uint8_t lastID=255;
+	for (uint8_t i = 1; i < FS_MaxFileCount; i++)
+	{
+		if(FS_CheckAddress(i))
+		{
+			uint32_t start = FS_GetFileStart(i);
+			if(start > maxStart)
+			{
+				maxStart = start;
+				lastID = i;
+			}
+		}
+	}
+	if(lastID == 255)return 0; //no space!!!!
+	maxStart = maxStart + FS_GetFileLength(lastID)+ (4096 -(maxStart + FS_GetFileLength(lastID))%4096);
+	return maxStart;
 }
 
-void FS_FirstRun(void)
+static uint32_t FS_GetFileLength(uint8_t ID)
 {
-	//Clear our buffer
-	for (uint8_t i=0; i<FS_EEPROM_Range; i++)
+	if(FS_CheckAddress(ID)) return EEPROM_ReadDWord(((uint16_t)(ID*8 + FS_EEPROM_StartAddress + 32 + 4)));
+	else return 0;
+}
+
+static uint32_t FS_GetFileStart(uint8_t ID)
+{
+	if(FS_CheckAddress(ID)) return EEPROM_ReadDWord((uint16_t)(ID*8 + FS_EEPROM_StartAddress + 32));
+	else return 0;
+}
+
+static uint8_t FS_CheckAddress(uint8_t ID)
+{
+	if(ID >FS_MaxFileCount)return(0);
+	uint8_t bit = ID%8; //Bit to check
+	uint8_t push=(1<<bit);
+	uint8_t b = ID/8; //Block
+	uint8_t Addblock = 0;
+	Addblock = EEPROM_ReadByte((uint16_t)(b+FS_EEPROM_StartAddress+16));
+	if(push & Addblock){ return(1); }
+	else{ return(0); }
+}
+
+static void FS_WriteFileInfo(uint8_t ID)
+{
+	uint16_t address = ID*8 + FS_EEPROM_StartAddress+32;
+	EEPROM_WriteDWord((uint16_t)address,FS_TempFile.Start);
+	EEPROM_WriteDWord((uint16_t)(address+4),FS_TempFile.Length);
+	EEPROM_WriteByte((uint16_t)(address+8),FS_TempFile.ID);
+	EEPROM_WriteByte((uint16_t)(address+9),FS_TempFile.Flag);
+}
+
+static uint8_t FS_LoadFileInfo(uint8_t ID)
+{
+	if(!FS_CheckAddress(ID))return(0);
+	uint16_t address = ID*8 + FS_EEPROM_StartAddress+32;
+	FS_TempFile.Start = EEPROM_ReadDWord((uint16_t)address);
+	FS_TempFile.Length = EEPROM_ReadDWord((uint16_t)(address+4));
+	FS_TempFile.ID = EEPROM_ReadByte((uint16_t)(address+8));
+	FS_TempFile.Flag = EEPROM_ReadByte((uint16_t)(address+9));
+	return(FS_TempFile.ID == ID);
+}
+
+static void FS_UpdateFileSys(void)
+{
+	FS_CurrentStatus.FileSpaceAvailable = (FS_StopAddress_Files - FS_StartAddress_Files);
+	FS_CurrentStatus.FileCount=0;
+	for (uint8_t i = 1; i < FS_MaxFileCount; i++)
 	{
-		EEPROM_WriteByte(i+FS_EEPROM_StartAddress,0);
-	}
-	EEPROM_WriteDWord(FS_EEPROM_StartAddress,FS_StartAddress_Records);//NextAddress
-	EEPROM_WriteDWord(FS_EEPROM_StartAddress+4,0);//Record Count
-	EEPROM_WriteByte(FS_EEPROM_StartAddress+8,0);//FullCircle
-	EEPROM_WriteDWord(FS_EEPROM_StartAddress+9,0);//ErrorNextaddress
-	EEPROM_WriteByte(FS_EEPROM_StartAddress+13,0);//ErrorLogFull
-	FS_CurrentStatus.NextAddress = Flash_CreateAddress(((uint32_t)FS_StartAddress_Records>>24)&0xff,((uint32_t)FS_StartAddress_Records>>16)&0xff,((uint32_t)FS_StartAddress_Records>>8)&0xff,(uint32_t)FS_StartAddress_Records &0xff);
-	FS_CurrentStatus.RecordCount = 0;
-	FS_CurrentStatus.FullCircle = 0;
-	FS_CurrentStatus.ErrorLogFull = 0;
-	FS_CurrentStatus.NextErrorAddress = FS_EEPROM_StartAddress;
-	uint32_t add=FS_StartAddress_Records;
-	//Sind das nu 4kb sectoren oder 64kb sectoren????
-	for (; add<FS_StopAddress; add+=4096)
-	{
-		FlashAddress addr = Flash_CreateAddress(add>>24,add>>16,add>>8,add);
-		Flash_sector_Erase(addr);
-		while(Flash_isBusy()){_delay_us(10);}
+		if(FS_CheckAddress(i))
+		{
+			FS_CurrentStatus.FileSpaceAvailable-= FS_GetFileLength(i);
+			FS_CurrentStatus.FileCount++;
+		}
 	}
 }
+
+static void FS_Reorganize(uint8_t ID)
+{
+	uint8_t lastID = ID;
+	uint32_t lastStart;
+	uint8_t Buffer[64];
+	uint8_t length = 64;
+	
+	for (uint8_t currentID = ID+1; currentID < FS_CurrentStatus.FileCount; currentID++)
+	{
+		FS_LoadFileInfo(currentID);
+		lastStart = FS_GetFileStart(lastID);
+		do
+		{
+			if(length > FS_TempFile.Length - FS_TempFile.ReadPos) length = FS_TempFile.Length - FS_TempFile.ReadPos;
+			
+			uint32_t rpos = (FS_TempFile.Start+FS_TempFile.ReadPos);
+			FlashAddress add = Flash_CreateAddress((rpos>>24) & 0xFF,(rpos>>16) & 0xFF,(rpos>>8) & 0xFF,rpos & 0xFF);
+			Flash_read_Bytes(add, Buffer, length);
+			
+			rpos = (lastStart+FS_TempFile.ReadPos);
+			add = Flash_CreateAddress((rpos>>24) & 0xFF,(rpos>>16) & 0xFF,(rpos>>8) & 0xFF,rpos & 0xFF);
+			Flash_write_Bytes(add, Buffer, 0, length);
+			
+			FS_TempFile.ReadPos += 64;
+			if(FS_TempFile.ReadPos % 4096 == 0)
+			{
+				rpos = (FS_TempFile.Start + 4096 * (FS_TempFile.ReadPos/4096-1));
+				add = Flash_CreateAddress((rpos>>24) & 0xFF,(rpos>>16) & 0xFF,(rpos>>8) & 0xFF,rpos & 0xFF);
+				Flash_sector_Erase(add);
+			}
+			
+		} while (FS_TempFile.ReadPos != FS_TempFile.Start+FS_TempFile.Length);
+		
+		uint32_t spos = (FS_TempFile.Start + 4096 * (FS_TempFile.ReadPos/4096));
+		FlashAddress sadd = Flash_CreateAddress((spos>>24) & 0xFF,(spos>>16) & 0xFF,(spos>>8) & 0xFF,spos & 0xFF);
+		
+		Flash_sector_Erase(sadd);
+		FS_WriteFileInfo(lastID);
+		lastID++;
+	}
+	FS_SetAddress(FS_CurrentStatus.FileCount,0);
+}
+
+static void FS_SetAddress(uint8_t ID, uint8_t state)
+{
+	uint8_t bit = ID%8; //Bit to check
+	uint8_t b = ID/8; //Block
+	uint8_t Addblock = 0;
+	Addblock = EEPROM_ReadByte((uint16_t)(b+FS_EEPROM_StartAddress + 16));
+	if(state){ Addblock |= (1<<bit); }
+	else{ Addblock &= ~(1<<bit); }
+	EEPROM_WriteByte((uint16_t)(b+FS_EEPROM_StartAddress + 16),Addblock);
+}
+
+uint8_t FS_CreateNewEntry(uint32_t length)
+{
+	if(length>FS_CurrentStatus.FileSpaceAvailable) return(255);//If 0 create empty file!
+	for(int c=1; c < FS_MaxFileCount; c++)
+	{
+		if(!FS_CheckAddress(c))
+		{
+			uint32_t start = FS_CreateFileStart();
+			if(start == 0)return(255);//Error Creating start address!
+			FS_TempFile.Start = start;
+			FS_TempFile.Length=0;
+			FS_TempFile.ID = c;
+			FS_WriteFileInfo(c);
+			FS_SetAddress(c,1);
+			FS_CurrentStatus.FileCount++;
+			return(c);
+		}
+	}
+	return(255); //No Filespace
+}
+
+void FS_RemoveEntry(uint8_t ID)
+{
+	if(!FS_CheckAddress(ID))return;
+	FS_LoadFileInfo(ID);
+	uint16_t remMax = (FS_TempFile.Length > 4096 ? (FS_TempFile.Length%4096 == 0 ? FS_TempFile.Length/4096 : FS_TempFile.Length/4096 + 1) : 1);
+	
+	for (uint16_t i = 0; i < remMax; i++)
+	{
+		FlashAddress add = Flash_CreateAddress((FS_TempFile.Start>>24) & 0xff,(FS_TempFile.Start>>16) & 0xff, (FS_TempFile.Start>>8) & 0xff, FS_TempFile.Start & 0xff);
+		Flash_sector_Erase(add);
+		FS_TempFile.Start += 4096;
+	}
+	FS_Reorganize(ID);
+	FS_UpdateFileSys();
+}
+
+void FS_WriteFile(uint8_t ID, uint8_t *buffer,uint8_t offset,uint8_t length)
+{
+	if(FS_TempFile.ID!=ID) FS_LoadFileInfo(ID);//Reload FileInfo into buffer
+	uint32_t add = FS_TempFile.Start + FS_TempFile.Length;
+	FlashAddress addr = Flash_CreateAddress((add>>24)&0xFF,(add>>16)&0xFF,(add>>8) & 0xFF,add & 0xFF);
+	Flash_write_Bytes(addr,buffer,offset,length);
+	FS_TempFile.Length += length;
+	FS_CurrentStatus.FileSpaceAvailable -=length;
+}
+
+void FS_SetReadPos(uint32_t position)
+{
+	if(position>FS_TempFile.Length)return;
+	FS_TempFile.ReadPos=position;
+}
+
+uint8_t FS_ReadFile(uint8_t ID,uint8_t *buffer,uint8_t length)
+{
+	if(FS_TempFile.ID !=ID)FS_LoadFileInfo(ID);
+	if(length>FS_TempFile.Length - FS_TempFile.ReadPos) length = FS_TempFile.Length - FS_TempFile.ReadPos;
+	if(length > 0)
+	{
+		uint32_t rpos = (FS_TempFile.ReadPos+FS_TempFile.Start);
+		FlashAddress add = Flash_CreateAddress((rpos>>24) & 0xFF,(rpos>>16) & 0xFF,(rpos>>8) & 0xFF,rpos & 0xFF);
+		Flash_read_Bytes(add,buffer,length);
+		FS_TempFile.ReadPos += length;
+	}
+	return length;
+}
+
+#pragma endregion FILE SUPPORT
+
+#pragma region RECORD SUPPORT
 
 //bei fullcircle muss der Sector vor der beschreibung gelöscht werden!!!
 //macht das probleme??? wenn daten nicht genau aufgehen ja!
@@ -157,19 +403,6 @@ void FS_ReadRecordHW(uint32_t record,FS_StationRecord_t* fs)
 	fs->Flags = buffer[15];
 	fs->Position = record;
 }
-
-
-void FS_Update(void)
-{
-	//Triggers every 10ms
-	if(FS_CurrentStatus.UnixCounter++ > 99)
-	{
-		FS_CurrentStatus.UnixCounter=0;
-		FS_CurrentStatus.CurrentUnix++;	
-	}
-}
-
-
 
 uint8_t FS_FindRecord(uint32_t unix,uint32_t* recordOut)
 {
@@ -263,3 +496,5 @@ uint32_t FS_GetUnix(void)
 	//MACHN DENNIS
 	return 0;
 }
+
+#pragma endregion RECORD SUPPORT

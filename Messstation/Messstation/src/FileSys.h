@@ -25,13 +25,17 @@ typedef struct FS_Status
 	uint8_t FullCircle;//Is 1 if the Flash is completely full and is refilling itself from the start
 	uint16_t NextErrorAddress;
 	uint8_t ErrorLogFull;//Is 1 if the Errorlog is completely full, the user needs to read the errors and clean them
+	uint32_t FileSpaceAvailable;
+	uint8_t FileCount;
 }FS_Status_t;
 
 typedef struct FS_File
 {
-	uint32_t StartAddress;
+	uint32_t Start;
 	uint16_t Length;
-	uint8_t Name;
+	uint8_t ID;
+	uint8_t Flag;//Unused
+	uint32_t ReadPos;
 }FS_File_t;
 
 typedef struct FS_StationRecord
@@ -74,4 +78,12 @@ void FS_ClearErrors(void);
 void FS_AddError(uint32_t unix,uint8_t id,uint8_t flag);
 void FS_GetError(uint16_t eid,FS_ErrorRecord_t* record);
 uint16_t FS_GetLastErrorID(void);
+
+
+uint8_t FS_CreateNewEntry(uint32_t length);
+void FS_RemoveEntry(uint8_t ID);
+void FS_WriteFile(uint8_t ID, uint8_t *buffer,uint8_t offset,uint8_t length);
+void FS_SetReadPos(uint32_t position);
+uint8_t FS_ReadFile(uint8_t ID,uint8_t *buffer,uint8_t length);
+
 #endif /* FILESYS_H_ */
