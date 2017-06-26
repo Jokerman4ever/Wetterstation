@@ -1,2 +1,2 @@
 # Wetterstation
-Project on the FH Lübeck
+Project at the FH Lübeck
