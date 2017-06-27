@@ -11,6 +11,7 @@
 
 #include <avr/io.h>
 #include "Flash.h"
+#include "Xdelay.h"
 #include "eeprom_driver.h"
 
 
@@ -22,7 +23,7 @@ typedef struct FS_Status
 	FlashAddress NextAddress;
 	uint32_t RecordCount;
 	int32_t LastSearchResult;
-	uint8_t FullCircle;//Is 1 if the Flash is completely full and is refilling itself from the start
+	uint8_t RecordLogFull;//Is 1 if the Flash is completely full and is refilling itself from the start
 	uint16_t NextErrorAddress;
 	uint8_t ErrorLogFull;//Is 1 if the Errorlog is completely full, the user needs to read the errors and clean them
 	uint32_t FileSpaceAvailable;
