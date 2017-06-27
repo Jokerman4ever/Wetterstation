@@ -4,9 +4,19 @@
 
 src\Display-Menu.c
 
+src\eeprom_driver.c
+
+src\FileSys.c
+
+src\Flash.c
+
 src\lcd-routines.c
 
+src\RF.c
+
 src\time.c
+
+src\Xdelay.c
 
 src\ASF\common\services\clock\xmega\sysclk.c
 

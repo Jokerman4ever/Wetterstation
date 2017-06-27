@@ -1,7 +1,7 @@
 #include <asf.h>
 #include "time.h"
 #include "lcd-routines.h"
-#include <util/delay.h>
+#include "Xdelay.h"
 
 int main (void)
 {
@@ -19,6 +19,6 @@ int main (void)
 	
 	while(1)
 	{
-		_delay_ms(1);
+		_xdelay_ms(1);
 	}
 }
