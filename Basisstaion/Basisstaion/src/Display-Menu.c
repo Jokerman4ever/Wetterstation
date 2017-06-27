@@ -16,6 +16,8 @@ void PGM_ReadStr(const uint8_t* str,char* dest,uint8_t start)
 		i++;
 	} while (dest[start + i -1]);
 }
+
+/*
 #define DStr_Play PSTR("Play")
 #define DStr_Record PSTR("Record")
 #define DStr_Remove PSTR("Remove")
@@ -28,44 +30,79 @@ void PGM_ReadStr(const uint8_t* str,char* dest,uint8_t start)
 #define DStr_RecRun PSTR("Record Running")
 #define DStr_RecFin PSTR("Record Finished")
 #define DStr_RemoveSure PSTR("!Remove!")
-#define DStr_DName PSTR("Voice Keeper")
-#define DStr_DVersion PSTR("ver. 1.0.0")
+*/
 
+#define DStr_WSName PSTR ("MY WEATHER STATION")
+#define DStr_WSVersion PSTR("ver. 1.0.0")
+#define DStr_WSStatusbar PSTR("")
+#define DStr_WSDate PSTR("")
+#define DStr_WSMenu PSTR("**MENU**")
+#define DStr_WHome PSTR("HOME")
+#define DSTR_W
+
+/*
 uint8_t DSP_MenuSelection;
 uint8_t DSP_CurrentPage;
 uint8_t DSP_PlayID;
 uint8_t* DSP_PlayName;
 uint8_t DSP_PlayMenuSelection;
 uint8_t DSP_PlaySpeed = 7;
+*/
+
 void DSP_ChangePage(uint8_t ID)
 {
 	DSP_CurrentPage=ID;
 	lcd_clear();//Löschen
 	switch(ID)
 	{
-		case PageHome:
-		{
-			lcd_set_cursor(0,1);
-			
-			lcd_set_cursor(0,2);
-			
-			lcd_set_cursor(0,3);
-			CenterString("MY WEATHER STATION", LineTemp, 0);
-			lcd_Xstring(LineTemp, 0);
-			lcd_set_cursor(0,4);
-			break;
-		}
-		
 		case PageWelcome:
 		{
 			lcd_set_cursor(0,1);
-			CenterStringPGM(DStr_DName,LineTemp,0);
-			lcd_Xstring(LineTemp,0);
+			//
 			lcd_set_cursor(0,2);
-			CenterStringPGM(DStr_DVersion,LineTemp,0);
+			CenterStringPGM(DStr_WSName,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,3);
+			CenterStringPGM(DStr_WSVersion,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,4);
+			//
+			break;
+		}
+
+		case PageMenuHome:
+		{
+			lcd_set_cursor(0,1);
+			//
+			lcd_set_cursor(0,2);
+			//
+			lcd_set_cursor(0,3);
+			CenterStringPGM(DStr_WSName,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,4);
+			//
+			break;
+		}
+
+		case PageHome:
+		{
+			lcd_set_cursor(0,1);
+			CenterStringPGM(DStr_WSStatusbar,LineTemp,0);
+			lcd_Xstring()
+			lcd_set_cursor(0,2);
+			//
+			lcd_set_cursor(0,3);
+			CenterStringPGM(DStr_WSName,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,4);
+			CenterStringPGM(DStr_WSDate,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
 			break;
 		}
+		
+
+		
+		
 		default: break;
 	}
 }

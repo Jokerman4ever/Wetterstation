@@ -13,8 +13,15 @@
 #include <avr/pgmspace.h>
 #include "string.h"
 enum PageID {
-				PageHome=1,
-				PageWelcome=100
+				PageWelcome = 1,
+				PageMenuHome = 10,
+				PageHome = 11,
+				PageMenuFehlerliste = 20,
+				PageFehlerliste = 21,
+				PageMenuEinstellungen = 30,
+				PageEinstellungen = 31,
+				PageMenuWettermonitor = 40,
+				PageWettermonitor = 41,
 			};
 	
 void PGM_ReadStr(const uint8_t* str,char* dest,uint8_t start);
