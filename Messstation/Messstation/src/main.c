@@ -8,8 +8,11 @@
 #include "LED.h"
 #include "ADC.h"
 #include <avr/interrupt.h>
+#include "com.h"
 
 uint8_t RF_Stuck;
+
+#define TEST
 
 #define  RF_RECEIVE_ID 1
 #define SLEEPTIME 10	//Wake up every x seconds
@@ -62,6 +65,7 @@ static void alarm(uint32_t time)
 	RF_Packet_t packet;
 	MeassurmentData_t meas_data;
 	
+	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
 		
 	PORTA.OUTTGL = 0x01;
 	
@@ -107,6 +111,7 @@ static void alarm(uint32_t time)
 	while(RF_CurrentStatus.Acknowledgment != RF_Acknowledgments_State_Idle){_delay_ms(1);}
 	
 	RF_Sleep();
+	PMIC.CTRL = PMIC_LOLVLEN_bm; //Only RTC IRQ
 }
 
 int main (void)
@@ -138,10 +143,10 @@ int main (void)
 	#ifdef TEST
 		val = RF_Get_Command(0x01);
 	#endif	
-	RF_Set_State(RF_State_Receive);
+	//RF_Set_State(RF_State_Receive);
 	RF_Sleep();
 	
-	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm; //Enable Interrupt
+	PMIC.CTRL = PMIC_LOLVLEN_bm; //Enable Interrupt for RTC
 	
 //Initialisiere RTC & Sleepmanager
 	sleepmgr_init();
