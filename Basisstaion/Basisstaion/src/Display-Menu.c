@@ -26,14 +26,10 @@ void PGM_ReadStr(const uint8_t* str,char* dest,uint8_t start)
 #define DSTR_WSFehlerliste PSTR ("Fehlerliste")
 #define DSTR_WSEinstellungen PSTR("Einstellungen")
 #define DSTR_WSWettermonitor PSTR("Wettermonitor")
-/*
+
 uint8_t DSP_MenuSelection;
 uint8_t DSP_CurrentPage;
-uint8_t DSP_PlayID;
-uint8_t* DSP_PlayName;
-uint8_t DSP_PlayMenuSelection;
-uint8_t DSP_PlaySpeed = 7;
-*/
+
 
 void DSP_ChangePage(uint8_t ID)
 {
@@ -74,7 +70,7 @@ void DSP_ChangePage(uint8_t ID)
 		{
 			lcd_set_cursor(0,1);
 			CenterStringPGM(DStr_WSStatusbar,LineTemp,0);
-			lcd_Xstring()
+			//lcd_Xstring()// TODO
 			lcd_set_cursor(0,2);
 			//
 			lcd_set_cursor(0,3);
@@ -97,57 +93,6 @@ void DSP_ScrollMenu(uint8_t dir)
 {
 	switch(DSP_CurrentPage)
 	{
-		case PagePlay_Titles: case PageRemove_Titles:
-		{
-			if(dir && DSP_MenuSelection < FS_FileCount)DSP_MenuSelection++;
-			else if(!dir && DSP_MenuSelection > 0)DSP_MenuSelection--;
-			DSP_ChangePage(DSP_CurrentPage);//Update Display
-			break;
-		}
-		case PagePlay:
-		{
-			if(dir)DSP_ChangePage(PageRecord);
-			else DSP_ChangePage(PageRemove);
-			break;
-		}
-		case PageRemove:
-		{
-			if(dir)DSP_ChangePage(PagePlay);
-			break;
-		}
-		case PageRecord:
-		{
-			if(!dir)DSP_ChangePage(PagePlay);
-			break;
-		}
-		case PagePlay_Active:
-		{
-			if(dir && DSP_MenuSelection < 4)DSP_MenuSelection++;
-			else if(!dir && DSP_MenuSelection > 0)DSP_MenuSelection--;
-			DSP_ChangePage(DSP_CurrentPage);//Update Display
-			break;
-		}
-		case PagePlay_Active_Speed:
-		{
-			if(dir && DSP_PlaySpeed < 14){DSP_PlaySpeed++;TCD1.PER -=150; }
-			else if(!dir && DSP_PlaySpeed > 0){DSP_PlaySpeed--;TCD1.PER +=150;}
-			DSP_ChangePage(DSP_CurrentPage);//Update Display
-			break;
-		}
-		case PagePlay_Active_Volume:
-		{
-			if(!dir && DP_Value < 0x3F){DP_MoveUp(4); }
-			else if(dir && DP_Value > 0x00){DP_MoveDown(4);}
-			DSP_ChangePage(DSP_CurrentPage);//Update Display
-			break;
-		}
-		case PageRemove_Titles_Sure:
-		{
-			if(dir && DSP_MenuSelection < 1)DSP_MenuSelection++;
-			else if(!dir && DSP_MenuSelection > 0)DSP_MenuSelection--;
-			DSP_ChangePage(DSP_CurrentPage);//Update Display
-			break;
-		}
 		default: break;
 	}
 }
@@ -156,70 +101,6 @@ void DSP_SelectMenu(void)
 {
 	switch(DSP_CurrentPage)
 	{
-		case PagePlay: DSP_MenuSelection=(FS_FileCount>0 ? 1 : 0); DSP_ChangePage(PagePlay_Titles); break;
-		case PageRecord: DSP_ChangePage(PageRecord_Active); StartRecord(); break;
-		case PagePlay_Titles:
-		{
-			if(DSP_MenuSelection == 0)DSP_ChangePage(PagePlay);
-			else
-			{
-				DSP_MenuSelection = 1;
-				//DSP_PlaySpeed = 7;
-				DSP_ChangePage(PagePlay_Active);
-				StartPlayback(DSP_PlayID);
-			}
-			break;
-		}
-		case PagePlay_Active:
-		{
-			switch(DSP_MenuSelection)
-			{
-				case 0: DSP_ChangePage(PagePlay_Active_Volume); break;//Volume Menu
-				case 1: DSP_MenuSelection = DSP_PlayMenuSelection; StopPlayback(); DSP_ChangePage(PagePlay_Titles); break;//Stop Selected
-				case 2: DSP_ChangePage(PagePlay_Active_Speed); break;//Speed Menu
-				case 3: AudioTempFile.Reverse = (AudioTempFile.Reverse ? 0 : 1); DSP_ChangePage(DSP_CurrentPage); break; //Reverse
-				case 4: AudioTempFile.FilePlaying = (AudioTempFile.FilePlaying == 1 ? 2 : 1); FS_SetReadPos(0); DSP_ChangePage(DSP_CurrentPage); break; //Loop
-				default:break;
-			}
-			
-			break;
-		}
-		case PageRemove_Titles:
-		{
-			if(DSP_MenuSelection == 0) DSP_ChangePage(PageRemove);
-			else
-			{
-				DSP_MenuSelection = 0;
-				DSP_ChangePage(PageRemove_Titles_Sure);
-			}
-			break;
-		}
-		case PagePlay_Active_Volume:DSP_ChangePage(PagePlay_Active);break;
-		case PagePlay_Active_Speed: DSP_ChangePage(PagePlay_Active);break;
-		case PageRemove: DSP_MenuSelection=(FS_FileCount>0 ? 1 : 0); DSP_ChangePage(PageRemove_Titles);break;
-		case PageRemove_Titles_Sure:
-		{
-			if(!DSP_MenuSelection)DSP_ChangePage(PageRemove);
-			else
-			{
-				FS_RemoveEntry(DSP_PlayID);//Remove File!
-				lcd_clear();
-				lcd_set_cursor(0,1);
-				SelectString("File Removed",LineTemp);
-				lcd_Xstring(LineTemp,0);
-				_delay_ms(1500);
-				DSP_ChangePage(PageRemove);
-			}
-			break;
-		}
-		case PageRecord_Active:
-		{
-			StopRecord();
-			DSP_ChangePage(PageRecord_Finished);
-			_delay_ms(1500);
-			DSP_ChangePage(PagePlay);
-			break;
-		}
 		default: break;
 	}
 }

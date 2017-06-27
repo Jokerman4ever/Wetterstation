@@ -33,7 +33,7 @@ c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/g
 c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avrxmega6\libgcc.a(_tablejump2.o)
                               src/lcd-routines.o (__tablejump2__)
 c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avrxmega6\libgcc.a(_copy_data.o)
-                              src/Display-Menu.o (__do_copy_data)
+                              src/lcd-routines.o (__do_copy_data)
 c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avrxmega6\libgcc.a(_clear_bss.o)
                               src/Display-Menu.o (__do_clear_bss)
 c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avrxmega6\libgcc.a(_umulhisi3.o)
@@ -61,9 +61,6 @@ Allocating common symbols
 Common symbol       size              file
 
 FS_CurrentStatus    0x1a              src/FileSys.o
-DSP_PlayMenuSelection
-                    0x1               src/Display-Menu.o
-DSP_PlayID          0x1               src/Display-Menu.o
 FlashTempAdd        0x4               src/Flash.o
 __brkval            0x2               c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avrxmega6\libc.a(malloc.o)
 DSP_CurrentPage     0x1               src/Display-Menu.o
@@ -79,7 +76,6 @@ g_ulTimeStamp       0x4               src/time.o
 __flp               0x2               c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avrxmega6\libc.a(malloc.o)
 XDELAY_ISFAST       0x1               src/Xdelay.o
 FS_TempRecord       0x14              src/FileSys.o
-DSP_PlayName        0x2               src/Display-Menu.o
 
 Discarded input sections
 
@@ -138,27 +134,31 @@ Discarded input sections
                 0x00000000       0xc4 src/Display-Menu.o
  .text.CenterStringPGM
                 0x00000000      0x10a src/Display-Menu.o
- .rodata.str1.1
-                0x00000000       0x13 src/Display-Menu.o
  .text.DSP_ChangePage
-                0x00000000       0x94 src/Display-Menu.o
+                0x00000000      0x10a src/Display-Menu.o
  .text.SelectString
                 0x00000000       0xe6 src/Display-Menu.o
  .text.SelectStringPGM
                 0x00000000      0x12c src/Display-Menu.o
- .progmem.data.__c.4945
-                0x00000000        0xb src/Display-Menu.o
- .progmem.data.__c.4943
-                0x00000000        0xd src/Display-Menu.o
- .data.DSP_PlaySpeed
+ .progmem.data.__c.4957
                 0x00000000        0x1 src/Display-Menu.o
- .debug_info    0x00000000      0x73c src/Display-Menu.o
+ .progmem.data.__c.4955
+                0x00000000       0x13 src/Display-Menu.o
+ .progmem.data.__c.4953
+                0x00000000        0x1 src/Display-Menu.o
+ .progmem.data.__c.4950
+                0x00000000       0x13 src/Display-Menu.o
+ .progmem.data.__c.4946
+                0x00000000        0xb src/Display-Menu.o
+ .progmem.data.__c.4944
+                0x00000000       0x13 src/Display-Menu.o
+ .debug_info    0x00000000      0x87d src/Display-Menu.o
  .debug_abbrev  0x00000000      0x1b4 src/Display-Menu.o
  .debug_loc     0x00000000      0xb3a src/Display-Menu.o
  .debug_aranges
                 0x00000000       0x58 src/Display-Menu.o
  .debug_ranges  0x00000000      0x178 src/Display-Menu.o
- .debug_macro   0x00000000      0x28b src/Display-Menu.o
+ .debug_macro   0x00000000      0x26d src/Display-Menu.o
  .debug_macro   0x00000000      0xa90 src/Display-Menu.o
  .debug_macro   0x00000000       0x10 src/Display-Menu.o
  .debug_macro   0x00000000      0x1c9 src/Display-Menu.o
@@ -199,11 +199,11 @@ Discarded input sections
  .debug_macro   0x00000000      0x154 src/Display-Menu.o
  .debug_macro   0x00000000       0x16 src/Display-Menu.o
  .debug_macro   0x00000000       0x76 src/Display-Menu.o
- .debug_line    0x00000000      0x8f3 src/Display-Menu.o
- .debug_str     0x00000000    0x29eab src/Display-Menu.o
+ .debug_line    0x00000000      0x93b src/Display-Menu.o
+ .debug_str     0x00000000    0x29e91 src/Display-Menu.o
  .comment       0x00000000       0x31 src/Display-Menu.o
  .debug_frame   0x00000000      0x110 src/Display-Menu.o
- COMMON         0x00000000       0x1a src/Display-Menu.o
+ COMMON         0x00000000       0x16 src/Display-Menu.o
  .group         0x00000000        0x8 src/eeprom_driver.o
  .group         0x00000000        0x8 src/eeprom_driver.o
  .group         0x00000000        0x8 src/eeprom_driver.o
