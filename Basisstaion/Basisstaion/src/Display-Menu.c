@@ -17,29 +17,15 @@ void PGM_ReadStr(const uint8_t* str,char* dest,uint8_t start)
 	} while (dest[start + i -1]);
 }
 
-/*
-#define DStr_Play PSTR("Play")
-#define DStr_Record PSTR("Record")
-#define DStr_Remove PSTR("Remove")
-#define DStr_Stop PSTR("Stop")
-#define DStr_Back PSTR("Back")
-#define DStr_Volume PSTR("Volume")
-#define DStr_Reverse PSTR("Reverse")
-#define DStr_Speed PSTR("Speed")
-#define DStr_Loop PSTR("Loop")
-#define DStr_RecRun PSTR("Record Running")
-#define DStr_RecFin PSTR("Record Finished")
-#define DStr_RemoveSure PSTR("!Remove!")
-*/
-
 #define DStr_WSName PSTR ("MY WEATHER STATION")
 #define DStr_WSVersion PSTR("ver. 1.0.0")
 #define DStr_WSStatusbar PSTR("")
 #define DStr_WSDate PSTR("")
 #define DStr_WSMenu PSTR("**MENU**")
-#define DStr_WHome PSTR("HOME")
-#define DSTR_W
-
+#define DStr_WSHome PSTR("Home")
+#define DSTR_WSFehlerliste PSTR ("Fehlerliste")
+#define DSTR_WSEinstellungen PSTR("Einstellungen")
+#define DSTR_WSWettermonitor PSTR("Wettermonitor")
 /*
 uint8_t DSP_MenuSelection;
 uint8_t DSP_CurrentPage;
