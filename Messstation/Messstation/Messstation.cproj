@@ -271,6 +271,12 @@
     <Compile Include="src\ASF\xmega\drivers\sleep\sleep.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\com.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\com.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\config\conf_rtc.h">
       <SubType>compile</SubType>
     </Compile>

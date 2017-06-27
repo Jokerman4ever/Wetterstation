@@ -121,65 +121,41 @@ int main (void)
 	
 	PORTA.DIRSET = 0xff;
 	_delay_ms(1000);
-	
+
+//Initialisiere Interfaces	
 	ADC_Init();
-	
 	i2c_init();
+	com_init();
+
+//Initialisiere Sensoren	
 	i2c_enable();
 	BMP_init();
 	i2c_disable();
-	
 	DHT_init();
 	
-	uint8_t buf[3] = {32,64,128};
-
+//Initialisiere RF-Modul
 	RF_Init(0x05);
-	val = RF_Get_Command(0x01);
+	#ifdef TEST
+		val = RF_Get_Command(0x01);
+	#endif	
 	RF_Set_State(RF_State_Receive);
-	RF_Packet_t packet = RF_CreatePacket(buf,3,0x01,0x00);
 	RF_Sleep();
 	
 	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm; //Enable Interrupt
 	
+//Initialisiere RTC & Sleepmanager
 	sleepmgr_init();
-
 	rtc_init();
-	
 	rtc_set_callback(alarm);
-
 	cpu_irq_enable();
 
 	/* We just initialized the counter so an alarm should trigger on next
 	 * time unit roll over.
 	 */
 	rtc_set_alarm_relative(0);
+	
 	while (1)
 	{
-		sleepmgr_enter_sleep();
-				
-		//packet = RF_CreatePacket(data, 12, RF_RECEICE_ID, 0);	
-		//RF_Send_Packet(packet);	
-				
-		//RF_Send_Packet(packet);
-		
-		//if(RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Idle && RF_CurrentStatus.State != RF_State_Receive)RF_Set_State(RF_State_Receive);
-	
-		//uint8_t rssi = RF_Get_Command(RF_REG_FTPRI);
-		//rssi|=(1<<2);
-		//RF_Set_Command(RF_REG_FTPRI,rssi);
-		//RF_Send_Packet(packet);
-		//RF_Get_Data(buffer, 128);
-		
-	/*	if(RF_CurrentStatus.NewPacket == 1)
-		{
-			packet = RF_Get_Packet();
-			uint16_t light = (uint16_t)((packet.Data[0] <<8) + packet.Data[1]);
-			power = (3.3/4096) * (uint16_t)((packet.Data[0] <<8) + packet.Data[1]);
-			LED_Set_Num_Lin(light/16);
-		}
-		
-*/
-		
-		//delay_ms(100);
+		sleepmgr_enter_sleep();	//Go to sleep
 	}
 }
