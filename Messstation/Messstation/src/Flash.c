@@ -10,6 +10,7 @@
 //This requires to use the read4, write4 and sectorErease4 commands
 //The old functions were uncommented and but can be restored
 
+//usaiufsdsgsod kai macht kacke
 void Flash_SPI_Init(void)
 {
 	sysclk_enable_module(SYSCLK_PORT_D, SYSCLK_SPI);
