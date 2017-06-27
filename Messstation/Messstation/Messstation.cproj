@@ -277,21 +277,6 @@
     <Compile Include="src\config\conf_sleepmgr.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\ErrorList.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FileSys.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FileSys.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\Flash.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\Flash.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="src\LED.c">
       <SubType>compile</SubType>
     </Compile>

@@ -236,6 +236,27 @@
     <Compile Include="src\Display-Menu.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="src\eeprom_driver.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\eeprom_driver.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\ErrorList.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\FileSys.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\FileSys.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\Flash.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\Flash.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\lcd-routines.c">
       <SubType>compile</SubType>
     </Compile>
