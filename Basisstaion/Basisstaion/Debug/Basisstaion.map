@@ -33,7 +33,7 @@ c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/g
 c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avrxmega6\libgcc.a(_tablejump2.o)
                               src/lcd-routines.o (__tablejump2__)
 c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avrxmega6\libgcc.a(_copy_data.o)
-                              src/lcd-routines.o (__do_copy_data)
+                              src/Display-Menu.o (__do_copy_data)
 c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avrxmega6\libgcc.a(_clear_bss.o)
                               src/Display-Menu.o (__do_clear_bss)
 c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avrxmega6\libgcc.a(_umulhisi3.o)
@@ -45,7 +45,7 @@ c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/g
 c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avrxmega6\libc.a(memcpy.o)
                               src/ASF/xmega/drivers/nvm/nvm.o (memcpy)
 c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avrxmega6\libc.a(sprintf.o)
-                              src/time.o (sprintf)
+                              src/Display-Menu.o (sprintf)
 c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avrxmega6\libc.a(vfprintf_std.o)
                               c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avrxmega6\libc.a(sprintf.o) (vfprintf)
 c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avrxmega6\libc.a(strnlen_P.o)
@@ -76,6 +76,7 @@ g_ulTimeStamp       0x4               src/time.o
 __flp               0x2               c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avrxmega6\libc.a(malloc.o)
 XDELAY_ISFAST       0x1               src/Xdelay.o
 FS_TempRecord       0x14              src/FileSys.o
+DSP_Time_Ms         0xe               src/Display-Menu.o
 
 Discarded input sections
 
@@ -121,44 +122,88 @@ Discarded input sections
  .group         0x00000000        0x8 src/Display-Menu.o
  .group         0x00000000        0x8 src/Display-Menu.o
  .group         0x00000000        0x8 src/Display-Menu.o
+ .group         0x00000000        0x8 src/Display-Menu.o
+ .group         0x00000000        0x8 src/Display-Menu.o
+ .group         0x00000000        0x8 src/Display-Menu.o
+ .group         0x00000000        0x8 src/Display-Menu.o
  .text          0x00000000        0x0 src/Display-Menu.o
  .data          0x00000000        0x0 src/Display-Menu.o
  .bss           0x00000000        0x0 src/Display-Menu.o
  .text.PGM_ReadStr
                 0x00000000       0x26 src/Display-Menu.o
+ .rodata.str1.1
+                0x00000000       0x4c src/Display-Menu.o
+ .text.DSP_Refresh
+                0x00000000      0x134 src/Display-Menu.o
  .text.DSP_ScrollMenu
                 0x00000000        0x2 src/Display-Menu.o
  .text.DSP_SelectMenu
                 0x00000000        0x2 src/Display-Menu.o
  .text.CenterString
-                0x00000000       0xc4 src/Display-Menu.o
+                0x00000000       0xc0 src/Display-Menu.o
  .text.CenterStringPGM
-                0x00000000      0x10a src/Display-Menu.o
+                0x00000000      0x106 src/Display-Menu.o
  .text.DSP_ChangePage
-                0x00000000      0x10a src/Display-Menu.o
+                0x00000000      0x386 src/Display-Menu.o
  .text.SelectString
                 0x00000000       0xe6 src/Display-Menu.o
  .text.SelectStringPGM
                 0x00000000      0x12c src/Display-Menu.o
- .progmem.data.__c.4957
-                0x00000000        0x1 src/Display-Menu.o
- .progmem.data.__c.4955
-                0x00000000       0x13 src/Display-Menu.o
- .progmem.data.__c.4953
-                0x00000000        0x1 src/Display-Menu.o
- .progmem.data.__c.4950
-                0x00000000       0x13 src/Display-Menu.o
- .progmem.data.__c.4946
+ .progmem.data.__c.5252
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5250
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5248
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5246
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5243
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5241
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5239
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5237
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5234
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5232
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5230
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5228
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5225
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5222
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5220
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5218
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5216
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5212
                 0x00000000        0xb src/Display-Menu.o
- .progmem.data.__c.4944
-                0x00000000       0x13 src/Display-Menu.o
- .debug_info    0x00000000      0x87d src/Display-Menu.o
- .debug_abbrev  0x00000000      0x1b4 src/Display-Menu.o
- .debug_loc     0x00000000      0xb3a src/Display-Menu.o
+ .progmem.data.__c.5210
+                0x00000000       0x15 src/Display-Menu.o
+ .data.Hour     0x00000000        0x3 src/Display-Menu.o
+ .data.Minute   0x00000000        0x3 src/Display-Menu.o
+ .data.Year     0x00000000        0x3 src/Display-Menu.o
+ .data.Month    0x00000000        0x3 src/Display-Menu.o
+ .data.Day      0x00000000        0x3 src/Display-Menu.o
+ .bss.NumNode   0x00000000        0x1 src/Display-Menu.o
+ .data.GSMState
+                0x00000000        0x4 src/Display-Menu.o
+ .data.BatState
+                0x00000000        0x4 src/Display-Menu.o
+ .debug_info    0x00000000      0x7bd src/Display-Menu.o
+ .debug_abbrev  0x00000000      0x265 src/Display-Menu.o
+ .debug_loc     0x00000000      0xee8 src/Display-Menu.o
  .debug_aranges
-                0x00000000       0x58 src/Display-Menu.o
- .debug_ranges  0x00000000      0x178 src/Display-Menu.o
- .debug_macro   0x00000000      0x26d src/Display-Menu.o
+                0x00000000       0x60 src/Display-Menu.o
+ .debug_ranges  0x00000000      0x180 src/Display-Menu.o
+ .debug_macro   0x00000000      0x290 src/Display-Menu.o
  .debug_macro   0x00000000      0xa90 src/Display-Menu.o
  .debug_macro   0x00000000       0x10 src/Display-Menu.o
  .debug_macro   0x00000000      0x1c9 src/Display-Menu.o
@@ -197,13 +242,17 @@ Discarded input sections
  .debug_macro   0x00000000       0x68 src/Display-Menu.o
  .debug_macro   0x00000000       0x2f src/Display-Menu.o
  .debug_macro   0x00000000      0x154 src/Display-Menu.o
+ .debug_macro   0x00000000       0x58 src/Display-Menu.o
+ .debug_macro   0x00000000       0x10 src/Display-Menu.o
+ .debug_macro   0x00000000       0xf2 src/Display-Menu.o
+ .debug_macro   0x00000000       0x22 src/Display-Menu.o
  .debug_macro   0x00000000       0x16 src/Display-Menu.o
  .debug_macro   0x00000000       0x76 src/Display-Menu.o
- .debug_line    0x00000000      0x93b src/Display-Menu.o
- .debug_str     0x00000000    0x29e91 src/Display-Menu.o
+ .debug_line    0x00000000      0xb41 src/Display-Menu.o
+ .debug_str     0x00000000    0x2a4fb src/Display-Menu.o
  .comment       0x00000000       0x31 src/Display-Menu.o
- .debug_frame   0x00000000      0x110 src/Display-Menu.o
- COMMON         0x00000000       0x16 src/Display-Menu.o
+ .debug_frame   0x00000000      0x1f0 src/Display-Menu.o
+ COMMON         0x00000000       0x24 src/Display-Menu.o
  .group         0x00000000        0x8 src/eeprom_driver.o
  .group         0x00000000        0x8 src/eeprom_driver.o
  .group         0x00000000        0x8 src/eeprom_driver.o
@@ -317,7 +366,7 @@ Discarded input sections
  .debug_macro   0x00000000      0x154 src/eeprom_driver.o
  .debug_macro   0x00000000       0x2e src/eeprom_driver.o
  .debug_line    0x00000000      0x7d7 src/eeprom_driver.o
- .debug_str     0x00000000    0x2a0d6 src/eeprom_driver.o
+ .debug_str     0x00000000    0x2a0e1 src/eeprom_driver.o
  .comment       0x00000000       0x31 src/eeprom_driver.o
  .debug_frame   0x00000000      0x15c src/eeprom_driver.o
  .group         0x00000000        0x8 src/FileSys.o
@@ -462,7 +511,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x10 src/FileSys.o
  .debug_macro   0x00000000       0x34 src/FileSys.o
  .debug_line    0x00000000      0xd48 src/FileSys.o
- .debug_str     0x00000000    0x2a80b src/FileSys.o
+ .debug_str     0x00000000    0x2a816 src/FileSys.o
  .comment       0x00000000       0x31 src/FileSys.o
  .debug_frame   0x00000000      0x46c src/FileSys.o
  COMMON         0x00000000       0x3a src/FileSys.o
@@ -581,7 +630,7 @@ Discarded input sections
  .debug_macro   0x00000000      0x160 src/Flash.o
  .debug_macro   0x00000000       0x58 src/Flash.o
  .debug_line    0x00000000      0x8f9 src/Flash.o
- .debug_str     0x00000000    0x2a223 src/Flash.o
+ .debug_str     0x00000000    0x2a22e src/Flash.o
  .comment       0x00000000       0x31 src/Flash.o
  .debug_frame   0x00000000      0x1c8 src/Flash.o
  COMMON         0x00000000        0x4 src/Flash.o
@@ -798,7 +847,7 @@ Discarded input sections
  .debug_macro   0x00000000      0x154 src/RF.o
  .debug_macro   0x00000000       0x34 src/RF.o
  .debug_line    0x00000000     0x103b src/RF.o
- .debug_str     0x00000000    0x2b6c3 src/RF.o
+ .debug_str     0x00000000    0x2b6ce src/RF.o
  .comment       0x00000000       0x31 src/RF.o
  .debug_frame   0x00000000      0x418 src/RF.o
  COMMON         0x00000000       0x55 src/RF.o
@@ -852,6 +901,9 @@ Discarded input sections
  .debug_macro   0x00000000       0x5e src/time.o
  .debug_macro   0x00000000       0x1c src/time.o
  .debug_macro   0x00000000       0x66 src/time.o
+ .debug_macro   0x00000000       0x58 src/time.o
+ .debug_macro   0x00000000       0x10 src/time.o
+ .debug_macro   0x00000000       0xf2 src/time.o
  .group         0x00000000        0x8 src/Xdelay.o
  .group         0x00000000        0x8 src/Xdelay.o
  .group         0x00000000        0x8 src/Xdelay.o
@@ -1267,6 +1319,7 @@ Discarded input sections
  .debug_macro   0x00000000       0x68 src/main.o
  .debug_macro   0x00000000       0x2f src/main.o
  .debug_macro   0x00000000      0x154 src/main.o
+ .debug_macro   0x00000000       0x22 src/main.o
  .debug_macro   0x00000000       0x76 src/main.o
  .debug_macro   0x00000000      0x160 src/main.o
  .text          0x00000000        0x0 c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avrxmega6\libm.a(cmpsf2.o)
@@ -2025,18 +2078,18 @@ END GROUP
  .debug_frame   0x00000230       0x94 src/ASF/common/services/clock/xmega/sysclk.o
  .debug_frame   0x000002c4       0x34 src/main.o
 
-.debug_str      0x00000000    0x2c570
+.debug_str      0x00000000    0x2c5b6
  *(.debug_str)
  .debug_str     0x00000000     0x223b C:/Program Files/Atmel/Studio/7.0/Packs/atmel/XMEGAA_DFP/1.1.68/gcc/dev/atxmega256a3u/avrxmega6/crtatxmega256a3u.o
  .debug_str     0x0000223b    0x1c5d2 src/lcd-routines.o
                               0x1cae6 (size before relaxing)
  .debug_str     0x0001e80d      0x8ee src/time.o
                               0x1a687 (size before relaxing)
- .debug_str     0x0001f0fb       0x75 src/Xdelay.o
-                               0x3dba (size before relaxing)
- .debug_str     0x0001f170     0xd296 src/ASF/common/services/clock/xmega/sysclk.o
+ .debug_str     0x0001f0fb       0xbb src/Xdelay.o
+                               0x3dc5 (size before relaxing)
+ .debug_str     0x0001f1b6     0xd296 src/ASF/common/services/clock/xmega/sysclk.o
                               0x29c2c (size before relaxing)
- .debug_str     0x0002c406      0x16a src/main.o
+ .debug_str     0x0002c44c      0x16a src/main.o
                               0x29ed7 (size before relaxing)
 
 .debug_loc      0x00000000      0xe90
@@ -2073,7 +2126,7 @@ END GROUP
  .debug_ranges  0x00000128       0x30 src/ASF/common/services/clock/xmega/sysclk.o
  .debug_ranges  0x00000158       0x10 src/main.o
 
-.debug_macro    0x00000000      0xc8a
+.debug_macro    0x00000000      0xb0e
  *(.debug_macro)
  .debug_macro   0x00000000       0xdd src/lcd-routines.o
  .debug_macro   0x000000dd       0x10 src/lcd-routines.o
@@ -2083,13 +2136,9 @@ END GROUP
  .debug_macro   0x00000457       0xdd src/time.o
  .debug_macro   0x00000534       0x1c src/time.o
  .debug_macro   0x00000550      0x10e src/time.o
- .debug_macro   0x0000065e       0x58 src/time.o
- .debug_macro   0x000006b6       0x10 src/time.o
- .debug_macro   0x000006c6       0x20 src/time.o
- .debug_macro   0x000006e6       0xf2 src/time.o
- .debug_macro   0x000007d8       0x5f src/Xdelay.o
- .debug_macro   0x00000837      0x1e6 src/ASF/common/services/clock/xmega/sysclk.o
- .debug_macro   0x00000a1d      0x24b src/main.o
- .debug_macro   0x00000c68       0x22 src/main.o
+ .debug_macro   0x0000065e       0x20 src/time.o
+ .debug_macro   0x0000067e       0x5f src/Xdelay.o
+ .debug_macro   0x000006dd      0x1e6 src/ASF/common/services/clock/xmega/sysclk.o
+ .debug_macro   0x000008c3      0x24b src/main.o
 OUTPUT(Basisstaion.elf elf32-avr)
 LOAD linker stubs

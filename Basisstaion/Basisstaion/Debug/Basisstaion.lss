@@ -23,13 +23,13 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING
   9 .debug_frame  000002f8  00000000  00000000  0000a898  2**2
                   CONTENTS, READONLY, DEBUGGING
- 10 .debug_str    0002c570  00000000  00000000  0000ab90  2**0
+ 10 .debug_str    0002c5b6  00000000  00000000  0000ab90  2**0
                   CONTENTS, READONLY, DEBUGGING
- 11 .debug_loc    00000e90  00000000  00000000  00037100  2**0
+ 11 .debug_loc    00000e90  00000000  00000000  00037146  2**0
                   CONTENTS, READONLY, DEBUGGING
- 12 .debug_ranges 00000168  00000000  00000000  00037f90  2**0
+ 12 .debug_ranges 00000168  00000000  00000000  00037fd6  2**0
                   CONTENTS, READONLY, DEBUGGING
- 13 .debug_macro  00000c8a  00000000  00000000  000380f8  2**0
+ 13 .debug_macro  00000b0e  00000000  00000000  0003813e  2**0
                   CONTENTS, READONLY, DEBUGGING
 
 Disassembly of section .text:
@@ -208,12 +208,6 @@ Disassembly of section .text:
  23e:	0c 94 00 00 	jmp	0	; 0x0 <__vectors>
 
 00000242 <lcd_WNibble>:
-	case 2: tmp=0x00+0x20+x; break;    // 2. Zeile
-    case 3: tmp=0x00+0x40+x; break;    // 3. Zeile
-    case 4: tmp=0x00+0x60+x; break;    // 4. Zeile
-    default: return;                   // für den Fall einer falschen Zeile
-  }
-  lcd_Write(tmp,0);
  242:	a0 e6       	ldi	r26, 0x60	; 96
  244:	b6 e0       	ldi	r27, 0x06	; 6
  246:	14 96       	adiw	r26, 0x04	; 4
@@ -323,47 +317,23 @@ Disassembly of section .text:
  31a:	08 95       	ret
 
 0000031c <lcd_string>:
-}
- 
-// Schreibt einen String auf das LCD
- 
-void lcd_string(char *data)
-{
  31c:	cf 93       	push	r28
  31e:	df 93       	push	r29
  320:	ec 01       	movw	r28, r24
-    while(*data) {
  322:	88 81       	ld	r24, Y
  324:	88 23       	and	r24, r24
  326:	39 f0       	breq	.+14     	; 0x336 <lcd_string+0x1a>
  328:	21 96       	adiw	r28, 0x01	; 1
-        lcd_Write(*data,1);
  32a:	61 e0       	ldi	r22, 0x01	; 1
  32c:	0e 94 6c 01 	call	0x2d8	; 0x2d8 <lcd_Write>
- 
-// Schreibt einen String auf das LCD
- 
-void lcd_string(char *data)
-{
-    while(*data) {
  330:	89 91       	ld	r24, Y+
  332:	81 11       	cpse	r24, r1
  334:	fa cf       	rjmp	.-12     	; 0x32a <lcd_string+0xe>
-        lcd_Write(*data,1);
-        data++;
-    }
-}
  336:	df 91       	pop	r29
  338:	cf 91       	pop	r28
  33a:	08 95       	ret
 
 0000033c <Set_Unix_Time>:
-	g_ulTimeStamp++; //1 sec tick
-}
-
-void Set_Unix_Time(uint32_t timestamp)
-{
-	g_ulTimeStamp = timestamp;	
  33c:	60 93 18 20 	sts	0x2018, r22	; 0x802018 <__data_end>
  340:	70 93 19 20 	sts	0x2019, r23	; 0x802019 <__data_end+0x1>
  344:	80 93 1a 20 	sts	0x201A, r24	; 0x80201a <__data_end+0x2>
@@ -371,9 +341,6 @@ void Set_Unix_Time(uint32_t timestamp)
  34c:	08 95       	ret
 
 0000034e <time_GetLocalTime>:
-}
-
-void time_GetLocalTime(tm_t *localTime) {
  34e:	3f 92       	push	r3
  350:	4f 92       	push	r4
  352:	5f 92       	push	r5
@@ -392,16 +359,10 @@ void time_GetLocalTime(tm_t *localTime) {
  36c:	cf 93       	push	r28
  36e:	df 93       	push	r29
  370:	ec 01       	movw	r28, r24
-	uint32_t days, rem;
-	uint16_t year;
-	char *ip;
-	
-	days = g_ulTimeStamp / SECS_PER_DAY;
  372:	60 91 18 20 	lds	r22, 0x2018	; 0x802018 <__data_end>
  376:	70 91 19 20 	lds	r23, 0x2019	; 0x802019 <__data_end+0x1>
  37a:	80 91 1a 20 	lds	r24, 0x201A	; 0x80201a <__data_end+0x2>
  37e:	90 91 1b 20 	lds	r25, 0x201B	; 0x80201b <__data_end+0x3>
-	rem = g_ulTimeStamp % SECS_PER_DAY;
  382:	20 e8       	ldi	r18, 0x80	; 128
  384:	31 e5       	ldi	r19, 0x51	; 81
  386:	41 e0       	ldi	r20, 0x01	; 1
@@ -409,11 +370,6 @@ void time_GetLocalTime(tm_t *localTime) {
  38a:	0e 94 64 03 	call	0x6c8	; 0x6c8 <__udivmodsi4>
  38e:	69 01       	movw	r12, r18
  390:	7a 01       	movw	r14, r20
-	while (rem < 0) {
-		rem += SECS_PER_DAY;
-		--days;
-	}
-	while (rem >= SECS_PER_DAY) {
  392:	60 38       	cpi	r22, 0x80	; 128
  394:	21 e5       	ldi	r18, 0x51	; 81
  396:	72 07       	cpc	r23, r18
@@ -421,23 +377,15 @@ void time_GetLocalTime(tm_t *localTime) {
  39a:	82 07       	cpc	r24, r18
  39c:	91 05       	cpc	r25, r1
  39e:	80 f0       	brcs	.+32     	; 0x3c0 <time_GetLocalTime+0x72>
-		rem -= SECS_PER_DAY;
  3a0:	60 58       	subi	r22, 0x80	; 128
  3a2:	71 45       	sbci	r23, 0x51	; 81
  3a4:	81 40       	sbci	r24, 0x01	; 1
  3a6:	91 09       	sbc	r25, r1
-		++days;
  3a8:	3f ef       	ldi	r19, 0xFF	; 255
  3aa:	c3 1a       	sub	r12, r19
  3ac:	d3 0a       	sbc	r13, r19
  3ae:	e3 0a       	sbc	r14, r19
  3b0:	f3 0a       	sbc	r15, r19
-	rem = g_ulTimeStamp % SECS_PER_DAY;
-	while (rem < 0) {
-		rem += SECS_PER_DAY;
-		--days;
-	}
-	while (rem >= SECS_PER_DAY) {
  3b2:	60 38       	cpi	r22, 0x80	; 128
  3b4:	21 e5       	ldi	r18, 0x51	; 81
  3b6:	72 07       	cpc	r23, r18
@@ -445,10 +393,6 @@ void time_GetLocalTime(tm_t *localTime) {
  3ba:	82 07       	cpc	r24, r18
  3bc:	91 05       	cpc	r25, r1
  3be:	80 f7       	brcc	.-32     	; 0x3a0 <time_GetLocalTime+0x52>
-		rem -= SECS_PER_DAY;
-		++days;
-	}
-	localTime->tm_hour = rem / SECS_PER_HOUR;	// Set hours
  3c0:	20 e1       	ldi	r18, 0x10	; 16
  3c2:	3e e0       	ldi	r19, 0x0E	; 14
  3c4:	40 e0       	ldi	r20, 0x00	; 0
@@ -456,8 +400,6 @@ void time_GetLocalTime(tm_t *localTime) {
  3c8:	0e 94 64 03 	call	0x6c8	; 0x6c8 <__udivmodsi4>
  3cc:	2c 83       	std	Y+4, r18	; 0x04
  3ce:	3d 83       	std	Y+5, r19	; 0x05
-	rem %= SECS_PER_HOUR;
-	localTime->tm_min = rem / 60; //Set minutes
  3d0:	2c e3       	ldi	r18, 0x3C	; 60
  3d2:	30 e0       	ldi	r19, 0x00	; 0
  3d4:	40 e0       	ldi	r20, 0x00	; 0
@@ -465,12 +407,8 @@ void time_GetLocalTime(tm_t *localTime) {
  3d8:	0e 94 64 03 	call	0x6c8	; 0x6c8 <__udivmodsi4>
  3dc:	2a 83       	std	Y+2, r18	; 0x02
  3de:	3b 83       	std	Y+3, r19	; 0x03
-	localTime->tm_sec = rem % 60; //Set seconds
  3e0:	68 83       	st	Y, r22
  3e2:	79 83       	std	Y+1, r23	; 0x01
-	
-	/* January 1, 1970 was a Thursday.  */
-	localTime->tm_wday = (4 + days) % 7;
  3e4:	c7 01       	movw	r24, r14
  3e6:	b6 01       	movw	r22, r12
  3e8:	6c 5f       	subi	r22, 0xFC	; 252
@@ -482,30 +420,17 @@ void time_GetLocalTime(tm_t *localTime) {
  3f4:	40 e0       	ldi	r20, 0x00	; 0
  3f6:	50 e0       	ldi	r21, 0x00	; 0
  3f8:	0e 94 64 03 	call	0x6c8	; 0x6c8 <__udivmodsi4>
-	if (localTime->tm_wday < 0)
  3fc:	77 23       	and	r23, r23
  3fe:	1c f0       	brlt	.+6      	; 0x406 <__LOCK_REGION_LENGTH__+0x6>
-	rem %= SECS_PER_HOUR;
-	localTime->tm_min = rem / 60; //Set minutes
-	localTime->tm_sec = rem % 60; //Set seconds
-	
-	/* January 1, 1970 was a Thursday.  */
-	localTime->tm_wday = (4 + days) % 7;
  400:	6c 87       	std	Y+12, r22	; 0x0c
  402:	7d 87       	std	Y+13, r23	; 0x0d
  404:	04 c0       	rjmp	.+8      	; 0x40e <__LOCK_REGION_LENGTH__+0xe>
-	if (localTime->tm_wday < 0)
-	{
-		localTime->tm_wday += 7;	//Set Week-Day
  406:	69 5f       	subi	r22, 0xF9	; 249
  408:	7f 4f       	sbci	r23, 0xFF	; 255
  40a:	6c 87       	std	Y+12, r22	; 0x0c
  40c:	7d 87       	std	Y+13, r23	; 0x0d
-	}
-	year = 1970;
  40e:	42 eb       	ldi	r20, 0xB2	; 178
  410:	57 e0       	ldi	r21, 0x07	; 7
-	while (days >= (rem = __isleap(year) ? 366 : 365)) {
  412:	0f 2e       	mov	r0, r31
  414:	fd e6       	ldi	r31, 0x6D	; 109
  416:	9f 2e       	mov	r9, r31
@@ -529,20 +454,12 @@ void time_GetLocalTime(tm_t *localTime) {
  43a:	00 e9       	ldi	r16, 0x90	; 144
  43c:	11 e0       	ldi	r17, 0x01	; 1
  43e:	06 c0       	rjmp	.+12     	; 0x44c <__LOCK_REGION_LENGTH__+0x4c>
-		++year;
  440:	4f 5f       	subi	r20, 0xFF	; 255
  442:	5f 4f       	sbci	r21, 0xFF	; 255
-		days -= rem;
  444:	c8 1a       	sub	r12, r24
  446:	d9 0a       	sbc	r13, r25
  448:	ea 0a       	sbc	r14, r26
  44a:	fb 0a       	sbc	r15, r27
-	if (localTime->tm_wday < 0)
-	{
-		localTime->tm_wday += 7;	//Set Week-Day
-	}
-	year = 1970;
-	while (days >= (rem = __isleap(year) ? 366 : 365)) {
  44c:	fa 01       	movw	r30, r20
  44e:	e3 70       	andi	r30, 0x03	; 3
  450:	ff 27       	eor	r31, r31
@@ -612,15 +529,8 @@ void time_GetLocalTime(tm_t *localTime) {
  4d4:	fb 06       	cpc	r15, r27
  4d6:	08 f0       	brcs	.+2      	; 0x4da <__LOCK_REGION_LENGTH__+0xda>
  4d8:	b3 cf       	rjmp	.-154    	; 0x440 <__LOCK_REGION_LENGTH__+0x40>
-
-	while (days < 0) {
-		--year;
-		days += __isleap(year) ? 366 : 365;
-	}
-	localTime->tm_year = year; //Set Year
  4da:	4a 87       	std	Y+10, r20	; 0x0a
  4dc:	5b 87       	std	Y+11, r21	; 0x0b
-	ip = (char *)__mon_lengths[__isleap(year)];
  4de:	ef 2b       	or	r30, r31
  4e0:	91 f5       	brne	.+100    	; 0x546 <__LOCK_REGION_LENGTH__+0x146>
  4e2:	9a 01       	movw	r18, r20
@@ -687,7 +597,6 @@ void time_GetLocalTime(tm_t *localTime) {
  560:	ff 1f       	adc	r31, r31
  562:	e0 50       	subi	r30, 0x00	; 0
  564:	f0 4e       	sbci	r31, 0xE0	; 224
-	for (year = 0; days >= ip[year]; ++year)
  566:	80 81       	ld	r24, Z
  568:	08 2e       	mov	r0, r24
  56a:	00 0c       	add	r0, r0
@@ -702,18 +611,10 @@ void time_GetLocalTime(tm_t *localTime) {
  57c:	31 96       	adiw	r30, 0x01	; 1
  57e:	20 e0       	ldi	r18, 0x00	; 0
  580:	30 e0       	ldi	r19, 0x00	; 0
-	{
-		days -= ip[year];
  582:	c8 1a       	sub	r12, r24
  584:	d9 0a       	sbc	r13, r25
  586:	ea 0a       	sbc	r14, r26
  588:	fb 0a       	sbc	r15, r27
-		--year;
-		days += __isleap(year) ? 366 : 365;
-	}
-	localTime->tm_year = year; //Set Year
-	ip = (char *)__mon_lengths[__isleap(year)];
-	for (year = 0; days >= ip[year]; ++year)
  58a:	2f 5f       	subi	r18, 0xFF	; 255
  58c:	3f 4f       	sbci	r19, 0xFF	; 255
  58e:	81 91       	ld	r24, Z+
@@ -730,21 +631,15 @@ void time_GetLocalTime(tm_t *localTime) {
  5a4:	02 c0       	rjmp	.+4      	; 0x5aa <__LOCK_REGION_LENGTH__+0x1aa>
  5a6:	20 e0       	ldi	r18, 0x00	; 0
  5a8:	30 e0       	ldi	r19, 0x00	; 0
-	{
-		days -= ip[year];
-	}
-	localTime->tm_mon = year + 1; //Set Month
  5aa:	2f 5f       	subi	r18, 0xFF	; 255
  5ac:	3f 4f       	sbci	r19, 0xFF	; 255
  5ae:	28 87       	std	Y+8, r18	; 0x08
  5b0:	39 87       	std	Y+9, r19	; 0x09
-	localTime->tm_mday = days + 1; //Set Month-Day
  5b2:	7f ef       	ldi	r23, 0xFF	; 255
  5b4:	c7 1a       	sub	r12, r23
  5b6:	d7 0a       	sbc	r13, r23
  5b8:	ce 82       	std	Y+6, r12	; 0x06
  5ba:	df 82       	std	Y+7, r13	; 0x07
-}
  5bc:	df 91       	pop	r29
  5be:	cf 91       	pop	r28
  5c0:	1f 91       	pop	r17
@@ -900,12 +795,6 @@ void _xdelay_us(uint16_t delay)
  66e:	08 95       	ret
 
 00000670 <sysclk_init>:
-#endif
-	bool need_rc2mhz = false;
-
-	/* Turn off all peripheral clocks that can be turned off. */
-	for (i = 0; i <= SYSCLK_PORT_F; i++) {
-		*(reg++) = 0xff;
  670:	8f ef       	ldi	r24, 0xFF	; 255
  672:	80 93 70 00 	sts	0x0070, r24	; 0x800070 <__TEXT_REGION_LENGTH__+0x700070>
  676:	80 93 71 00 	sts	0x0071, r24	; 0x800071 <__TEXT_REGION_LENGTH__+0x700071>
@@ -917,12 +806,6 @@ void _xdelay_us(uint16_t delay)
  68e:	08 95       	ret
 
 00000690 <main>:
-#include "time.h"
-#include "lcd-routines.h"
-#include "Xdelay.h"
-
-int main (void)
-{
  690:	cf 93       	push	r28
  692:	df 93       	push	r29
  694:	cd b7       	in	r28, 0x3d	; 61
@@ -930,33 +813,18 @@ int main (void)
  698:	2e 97       	sbiw	r28, 0x0e	; 14
  69a:	cd bf       	out	0x3d, r28	; 61
  69c:	de bf       	out	0x3e, r29	; 62
-	sysclk_init();
  69e:	0e 94 38 03 	call	0x670	; 0x670 <sysclk_init>
-	
-	
-	Set_Unix_Time(500000000);
  6a2:	60 e0       	ldi	r22, 0x00	; 0
  6a4:	75 e6       	ldi	r23, 0x65	; 101
  6a6:	8d ec       	ldi	r24, 0xCD	; 205
  6a8:	9d e1       	ldi	r25, 0x1D	; 29
  6aa:	0e 94 9e 01 	call	0x33c	; 0x33c <Set_Unix_Time>
-	
-	tm_t bla;
-	
-	time_GetLocalTime(&bla);
  6ae:	ce 01       	movw	r24, r28
  6b0:	01 96       	adiw	r24, 0x01	; 1
  6b2:	0e 94 a7 01 	call	0x34e	; 0x34e <time_GetLocalTime>
-	
-	
-	lcd_string((char *) &bla);
  6b6:	ce 01       	movw	r24, r28
  6b8:	01 96       	adiw	r24, 0x01	; 1
  6ba:	0e 94 8e 01 	call	0x31c	; 0x31c <lcd_string>
-	
-	while(1)
-	{
-		_xdelay_ms(1);
  6be:	81 e0       	ldi	r24, 0x01	; 1
  6c0:	90 e0       	ldi	r25, 0x00	; 0
  6c2:	0e 94 f0 02 	call	0x5e0	; 0x5e0 <_xdelay_ms>
