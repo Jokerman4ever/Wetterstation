@@ -11,8 +11,8 @@
 
 #define COM_INTERFACE USARTC0
 #define COM_PORT PORTC
-#define	TX_PIN 7
-#define RX_PIN 6
+#define	TX_PIN 3
+#define RX_PIN 2
 
 #define BAUD 9600
 

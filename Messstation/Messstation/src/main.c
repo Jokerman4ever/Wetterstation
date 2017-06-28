@@ -71,7 +71,7 @@ static void alarm(uint32_t time)
 	
 	//Read Sensor Data
 	DHT_on(); //wait for 2s befor Read!!!
-	PORTA.OUTSET = (1<<7);
+	PORTA.OUTSET = 0xff;
 	i2c_enable();
 	BMP_read(&meas_data.pressure, &meas_data.temp);	//takes 4ms
 	BH1750_read(&meas_data.lux);	//takes 24ms
@@ -84,7 +84,7 @@ static void alarm(uint32_t time)
 	_delay_ms(2000);
 	DHT_read(&meas_data.humidity, &tf);
 	DHT_off();
-	PORTA.OUTCLR = (1<<7);
+	PORTA.OUTCLR = 0xff;
 	
 	//Simulation Wind oder so was in der Art... keine Ahnung
 	if(meas_data.wind_r == 0)
