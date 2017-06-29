@@ -23,7 +23,7 @@ static void SPI_putc(uint8_t data)
 
 static uint8_t SPI_getc(void)
 {
-	SPID.DATA = 0x00; //Dummy Byte
+	SPID.DATA = 0x01; //Dummy Byte
 	while(!(SPID.STATUS & SPI_IF_bm));//Wait
 	return SPID.DATA;//return data
 }
@@ -66,9 +66,9 @@ void RF_Init(uint8_t dev_add)
 	
 	RF_Reset_PORT.DIRSET = (1<<RF_Reset_Pin);
 	RF_Reset_PORT.OUTSET = (1<<RF_Reset_Pin);
-	_delay_ms(5);//Wait
+	_xdelay_ms(5);//Wait
 	RF_Reset_PORT.OUTCLR = (1<<RF_Reset_Pin);
-	_delay_ms(200);//Wait to respond
+	_xdelay_ms(200);//Wait to respond
 	
 	Update_Timer_Init();
 	SPI_Init();
@@ -144,9 +144,9 @@ void RF_Wakeup(void)
 	SPI_Init(); //Enable SPI
 	Update_Timer_Init();
 	RF_Set_State(RF_State_Receive);
-	_delay_ms(10);
+	_xdelay_ms(10);
 	RF_Set_State(RF_State_StandBy);
-	_delay_ms(10);
+	_xdelay_ms(10);
 	
 	sysclk_enable_module(SYSCLK_PORT_C, SYSCLK_TC1); //Enable Update-Timer
 	TCC1.CTRLA |= TC_CLKSEL_DIV1024_gc;
@@ -298,7 +298,7 @@ uint8_t RF_VerifyPLLLock(void)
         ftpriVal = RF_Get_Command(RF_REG_FTPRI);
         if ((ftpriVal & 0x02) != 0)
             break;
-		_delay_ms(1);
+		_xdelay_ms(1);
     }
     RF_Set_State(RF_State_StandBy);
     return ((ftpriVal & 0x02) != 0);
@@ -451,7 +451,7 @@ static void RF_Send_DataHW(uint8_t data)
 	RF_CS_DATA_LOW();
 	SPI_putc(data);
 	RF_CS_DATA_HIGH();
-	_delay_us(2); //needed??
+	_xdelay_us(2); //needed??
 }
 
 static uint8_t RF_Get_DataHW(void)
@@ -459,7 +459,7 @@ static uint8_t RF_Get_DataHW(void)
 	RF_CS_DATA_LOW();
 	uint8_t data = SPI_getc();
 	RF_CS_DATA_HIGH();
-	_delay_us(2); //needed??
+	_xdelay_us(2); //needed??
 	return data;
 }
 
@@ -573,7 +573,7 @@ void RF_Update(void)
 			RF_CurrentStatus.AckTimeout = 0;
 			RF_CurrentStatus.Acknowledgment = RF_Acknowledgments_State_Idle;
 			RF_Set_State(RF_State_StandBy);
-			_delay_ms(10);
+			_xdelay_ms(10);
 			RF_Set_State(RF_State_Receive);
 		}
 	}
@@ -598,4 +598,35 @@ void RF_Get_Data(uint8_t* buf, uint8_t len)
 uint8_t RF_Get_SignalStrength(void)
 {
 	return RF_Get_Command(RF_REG_RSTS);
+}
+
+
+uint8_t RF_RegisterDevice(uint8_t ID)
+{
+	for (uint8_t i = 0; i < RF_MaxDevices; i++)
+	{
+		if(RF_CheckDeviceSlot(i))
+		{
+			RF_CurrentStatus.TimeSlots[i] = ID;
+			return i;
+		}
+	}
+	return 0;
+}
+
+void RF_UnregisterDevice(uint8_t ID)
+{
+	RF_CurrentStatus.TimeSlots[ID]=0;
+}
+
+uint16_t RF_GetDeviceSleepTime(uint8_t ID)
+{
+	uint16_t s = ID* (300 / RF_MaxDevices);
+	return (300 - RF_CurrentStatus.CurrentSlotTime + s);
+}
+
+uint8_t RF_CheckDeviceSlot(uint8_t ID)
+{
+	if(RF_CurrentStatus.TimeSlots[ID] == 0)return 1;
+	else return 0;
 }

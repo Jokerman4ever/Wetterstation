@@ -10,9 +10,9 @@
 #define RF_H_
 
 #include <avr/io.h>
-#include <util/delay.h>
+#include "Xdelay.h"
 
-
+#define RF_MaxDevices 16
 
 #define RF_Max_PacketPayload 32
 
@@ -214,7 +214,12 @@ typedef struct RF_Status
 	uint8_t AckTimeout;
 	uint8_t AckRetransmit;
 	uint8_t IsStuck;
+	uint8_t TimeSlots[RF_MaxDevices];
+	uint16_t CurrentSlotTime;
 } RF_Status_t;
+
+
+
 
 void RF_Init(uint8_t dev_add);
 void RF_Set_State(RF_State_t state);
@@ -252,5 +257,11 @@ uint8_t RF_VerifyPLLLock(void);
 uint8_t RF_Set_Frequency(float centre);
 
 extern RF_Status_t RF_CurrentStatus;
+
+uint8_t RF_RegisterDevice(uint8_t ID);
+void RF_UnregisterDevice(uint8_t ID);
+uint8_t RF_CheckDeviceSlot(uint8_t ID);
+uint16_t RF_GetDeviceSleepTime(uint8_t ID);
+
 
 #endif /* RF_H_ */
