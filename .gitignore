@@ -222,6 +222,8 @@ Basisstaion/Basisstaion/Debug/
 
 *.atsuo
 *.map
+Basisstaion\.vs\
+Messstation\.vs\
 Basisstaion/.vs/
 Messstation/.vs/
 
