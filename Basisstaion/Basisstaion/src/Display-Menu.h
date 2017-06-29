@@ -23,13 +23,34 @@ enum PageID {
 				PageHome = 11,
 				// TabeFehler:
 				PageMenuFehlerliste = 20,
-				PageFehlerliste = 21,
+				PageFehlerliste_Oben_Oben = 21,
+				PageFehlerliste_Oben_Mitte = 22,
+				PageFehlerliste_Mitte = 23,
+				PageFehlerliste_Unten_Mitte = 24,
+				PageFehlerliste_Unten_Unten = 25,
+				PageFehler = 26,				
 				// TabEinstellungen:
 				PageMenuEinstellungen = 30,
-				PageEinstellungen = 31,
+				PageEinstellungen_Zurueck = 31,
+				PageEinstellungen_Namen = 32,
+				PageEinstellungen_Speicher = 33,
+				PageEinstellungen_RF = 34,
+				PageEinstellungen_GSM = 35,
+				PageEinstellungen_Energie = 36,
+				PageEinstellungen_Einheit = 37,
+				PageEinstellungen_Intervall = 38,
+				PageEinstellungen_Sync = 39,
+				PageSet_Namen = 40,
+				PageSet_Speicher = 41,
+				PageSet_RF = 42,
+				PageSet_GSM = 43,
+				PageSet_Energie = 44,
+				PageSet_Einheit = 45,
+				PageSet_Intervall = 46,
+				PageSet_Sync = 47,
 				// TabWettermonitor:
-				PageMenuWettermonitor = 40,
-				PageWettermonitor = 41,
+				PageMenuWettermonitor = 50,
+				PageWettermonitor = 51,
 			};
 			
 enum BatLvl {

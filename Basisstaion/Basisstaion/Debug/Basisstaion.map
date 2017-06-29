@@ -31,7 +31,7 @@ c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/g
 c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avrxmega6\libgcc.a(_exit.o)
                               C:/Program Files/Atmel/Studio/7.0/Packs/atmel/XMEGAA_DFP/1.1.68/gcc/dev/atxmega256a3u/avrxmega6/crtatxmega256a3u.o (exit)
 c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avrxmega6\libgcc.a(_tablejump2.o)
-                              src/lcd-routines.o (__tablejump2__)
+                              src/Display-Menu.o (__tablejump2__)
 c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avrxmega6\libgcc.a(_copy_data.o)
                               src/Display-Menu.o (__do_copy_data)
 c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/avrxmega6\libgcc.a(_clear_bss.o)
@@ -61,8 +61,10 @@ Allocating common symbols
 Common symbol       size              file
 
 FS_CurrentStatus    0x1a              src/FileSys.o
+Fehler_k            0x1               src/Display-Menu.o
 FlashTempAdd        0x4               src/Flash.o
 __brkval            0x2               c:/program files/atmel/studio/7.0/toolchain/avr8/avr8-gnu-toolchain/bin/../lib/gcc/avr/5.4.0/../../../../avr/lib/avrxmega6\libc.a(malloc.o)
+Fehler_i            0x1               src/Display-Menu.o
 DSP_CurrentPage     0x1               src/Display-Menu.o
 FS_TempFile         0xc               src/FileSys.o
 DSP_MenuSelection   0x1               src/Display-Menu.o
@@ -77,6 +79,7 @@ __flp               0x2               c:/program files/atmel/studio/7.0/toolchai
 XDELAY_ISFAST       0x1               src/Xdelay.o
 FS_TempRecord       0x14              src/FileSys.o
 DSP_Time_Ms         0xe               src/Display-Menu.o
+Fehler_j            0x1               src/Display-Menu.o
 
 Discarded input sections
 
@@ -132,61 +135,158 @@ Discarded input sections
  .text.PGM_ReadStr
                 0x00000000       0x26 src/Display-Menu.o
  .rodata.str1.1
-                0x00000000       0x4c src/Display-Menu.o
+                0x00000000       0x53 src/Display-Menu.o
  .text.DSP_Refresh
                 0x00000000      0x134 src/Display-Menu.o
- .text.DSP_ScrollMenu
-                0x00000000        0x2 src/Display-Menu.o
- .text.DSP_SelectMenu
-                0x00000000        0x2 src/Display-Menu.o
  .text.CenterString
                 0x00000000       0xc0 src/Display-Menu.o
  .text.CenterStringPGM
                 0x00000000      0x106 src/Display-Menu.o
  .text.DSP_ChangePage
-                0x00000000      0x386 src/Display-Menu.o
+                0x00000000      0xef2 src/Display-Menu.o
+ .progmem.gcc_sw_table.DSP_ChangePage
+                0x00000000       0x66 src/Display-Menu.o
+ .text.DSP_ScrollMenu
+                0x00000000       0x96 src/Display-Menu.o
+ .progmem.gcc_sw_table.DSP_ScrollMenu
+                0x00000000       0x20 src/Display-Menu.o
+ .text.DSP_SelectMenu
+                0x00000000      0x108 src/Display-Menu.o
+ .progmem.gcc_sw_table.DSP_SelectMenu
+                0x00000000       0x54 src/Display-Menu.o
  .text.SelectString
                 0x00000000       0xe6 src/Display-Menu.o
  .text.SelectStringPGM
                 0x00000000      0x12c src/Display-Menu.o
- .progmem.data.__c.5252
+ .progmem.data.__c.5389
                 0x00000000       0x15 src/Display-Menu.o
- .progmem.data.__c.5250
+ .progmem.data.__c.5387
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5385
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5383
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5372
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5370
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5368
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5366
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5363
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5361
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5359
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5357
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5354
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5352
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5350
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5348
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5345
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5343
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5341
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5339
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5336
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5334
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5332
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5330
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5327
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5325
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5323
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5321
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5318
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5316
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5314
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5312
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5309
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5307
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5305
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5303
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5300
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5298
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5296
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5294
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5291
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5289
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5287
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5285
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5282
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5279
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5276
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5273
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5270
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5268
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5265
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5263
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5260
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5258
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5256
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5254
+                0x00000000       0x15 src/Display-Menu.o
+ .progmem.data.__c.5251
                 0x00000000       0x15 src/Display-Menu.o
  .progmem.data.__c.5248
                 0x00000000       0x15 src/Display-Menu.o
  .progmem.data.__c.5246
                 0x00000000       0x15 src/Display-Menu.o
- .progmem.data.__c.5243
+ .progmem.data.__c.5244
                 0x00000000       0x15 src/Display-Menu.o
- .progmem.data.__c.5241
+ .progmem.data.__c.5242
                 0x00000000       0x15 src/Display-Menu.o
- .progmem.data.__c.5239
+ .progmem.data.__c.5238
                 0x00000000       0x15 src/Display-Menu.o
- .progmem.data.__c.5237
+ .progmem.data.__c.5236
                 0x00000000       0x15 src/Display-Menu.o
- .progmem.data.__c.5234
-                0x00000000       0x15 src/Display-Menu.o
- .progmem.data.__c.5232
-                0x00000000       0x15 src/Display-Menu.o
- .progmem.data.__c.5230
-                0x00000000       0x15 src/Display-Menu.o
- .progmem.data.__c.5228
-                0x00000000       0x15 src/Display-Menu.o
- .progmem.data.__c.5225
-                0x00000000       0x15 src/Display-Menu.o
- .progmem.data.__c.5222
-                0x00000000       0x15 src/Display-Menu.o
- .progmem.data.__c.5220
-                0x00000000       0x15 src/Display-Menu.o
- .progmem.data.__c.5218
-                0x00000000       0x15 src/Display-Menu.o
- .progmem.data.__c.5216
-                0x00000000       0x15 src/Display-Menu.o
- .progmem.data.__c.5212
-                0x00000000        0xb src/Display-Menu.o
- .progmem.data.__c.5210
-                0x00000000       0x15 src/Display-Menu.o
+ .bss.Anzahl_Fehler
+                0x00000000        0x1 src/Display-Menu.o
+ .bss.Fehler    0x00000000      0x3e8 src/Display-Menu.o
  .data.Hour     0x00000000        0x3 src/Display-Menu.o
  .data.Minute   0x00000000        0x3 src/Display-Menu.o
  .data.Year     0x00000000        0x3 src/Display-Menu.o
@@ -197,13 +297,13 @@ Discarded input sections
                 0x00000000        0x4 src/Display-Menu.o
  .data.BatState
                 0x00000000        0x4 src/Display-Menu.o
- .debug_info    0x00000000      0x7bd src/Display-Menu.o
- .debug_abbrev  0x00000000      0x265 src/Display-Menu.o
- .debug_loc     0x00000000      0xee8 src/Display-Menu.o
+ .debug_info    0x00000000      0xbbe src/Display-Menu.o
+ .debug_abbrev  0x00000000      0x276 src/Display-Menu.o
+ .debug_loc     0x00000000     0x1508 src/Display-Menu.o
  .debug_aranges
                 0x00000000       0x60 src/Display-Menu.o
  .debug_ranges  0x00000000      0x180 src/Display-Menu.o
- .debug_macro   0x00000000      0x290 src/Display-Menu.o
+ .debug_macro   0x00000000      0x2d8 src/Display-Menu.o
  .debug_macro   0x00000000      0xa90 src/Display-Menu.o
  .debug_macro   0x00000000       0x10 src/Display-Menu.o
  .debug_macro   0x00000000      0x1c9 src/Display-Menu.o
@@ -248,11 +348,11 @@ Discarded input sections
  .debug_macro   0x00000000       0x22 src/Display-Menu.o
  .debug_macro   0x00000000       0x16 src/Display-Menu.o
  .debug_macro   0x00000000       0x76 src/Display-Menu.o
- .debug_line    0x00000000      0xb41 src/Display-Menu.o
- .debug_str     0x00000000    0x2a4fb src/Display-Menu.o
+ .debug_line    0x00000000     0x1394 src/Display-Menu.o
+ .debug_str     0x00000000    0x2a953 src/Display-Menu.o
  .comment       0x00000000       0x31 src/Display-Menu.o
- .debug_frame   0x00000000      0x1f0 src/Display-Menu.o
- COMMON         0x00000000       0x24 src/Display-Menu.o
+ .debug_frame   0x00000000      0x320 src/Display-Menu.o
+ COMMON         0x00000000       0x27 src/Display-Menu.o
  .group         0x00000000        0x8 src/eeprom_driver.o
  .group         0x00000000        0x8 src/eeprom_driver.o
  .group         0x00000000        0x8 src/eeprom_driver.o

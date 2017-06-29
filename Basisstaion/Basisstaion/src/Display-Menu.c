@@ -20,13 +20,25 @@ void PGM_ReadStr(const uint8_t* str,char* dest,uint8_t start)
 }
 
 
-#define DStr_BSName PSTR (" MY WEATHER STATION ")
-#define DStr_BSVersion PSTR("ver. 1.0.0")
-#define DStr_BSMenu PSTR("      **MENU**      ")
-#define DStr_BSHome PSTR("    Home            ")
-#define DStr_BSFehlerliste PSTR ("    Fehlerliste     ")
-#define DStr_BSEinstellungen PSTR("    Einstellungen   ")
-#define DStr_BSWettermonitor PSTR("    Wettermonitor   ")
+#define DStr_BSName PSTR				(" MY WEATHER STATION ")
+#define DStr_BSVersion PSTR				("   Version 1.0.0    ")
+#define DStr_BSMenu PSTR				("      **MENU**      ")
+#define DStr_BSHome PSTR				("    Home            ")
+#define DStr_BSFehlerliste PSTR			("    Fehlerliste     ")
+#define DStr_BSEinstellungen PSTR		("    Einstellungen   ")
+#define DStr_BSWettermonitor PSTR		("    Wettermonitor   ")
+#define DStr_BSMenuFehlerliste PSTR		("  **FEHLERLISTE**   ")
+#define DStr_BSMenuEinstellungen PSTR	(" **Einstellungen**  ")
+#define DStr_BSZurueck PSTR				("    Zurück          ")
+#define DStr_BSNamenVergeben PSTR		("    Namen vergeben  ")
+#define DStr_BSSpeicherverwaltung PSTR	("    Flashverwaltung ")
+#define DStr_BSRFverwaltung PSTR		("    Funkverwaltung  ")
+#define DStr_BSGSMverwaltung PSTR		("    GSM-Verwaltung  ")
+#define DStr_BSEnergiemanagement PSTR	("    Energiemanage   ")
+#define DStr_BSEinheiten PSTR			("    Einheit waehlen ")
+#define DStr_BSIntervalle PSTR			("    Messintervalle  ")
+#define DStr_BSSyncWort PSTR			("    Syncwort        ")
+#define DStr_BSFehler PSTR				("    **Fehler   **   ")
 
 uint8_t BatState[4] = "...";
 uint8_t GSMState[4] = "...";
@@ -36,6 +48,12 @@ uint8_t Month[3] = "00";
 uint8_t Year[3] = "00";
 uint8_t Minute[3] = "00";
 uint8_t Hour[3] = "00";
+// Fehlerliste:
+uint8_t Fehler[20][50] = {};
+uint8_t Anzahl_Fehler = 0;
+uint8_t Fehler_i;
+uint8_t Fehler_j;
+uint8_t Fehler_k;
 
 tm_t DSP_Time_Ms;	
 
@@ -116,6 +134,7 @@ void DSP_ChangePage(uint8_t ID)
 	lcd_clear(); //Löschen
 	switch(ID)
 	{
+		// Welcome:
 		case PageWelcome:
 		{
 			lcd_set_cursor(0,1);
@@ -130,7 +149,8 @@ void DSP_ChangePage(uint8_t ID)
 			//
 			break;
 		}
-
+		
+		// TabHome:
 		case PageMenuHome:
 		{
 			lcd_set_cursor(0,1);
@@ -166,7 +186,8 @@ void DSP_ChangePage(uint8_t ID)
 			lcd_Xstring(LineTemp,0);
 			break;
 		}
-		
+
+		// TabeFehler:		
 		case PageMenuFehlerliste:
 		{
 			lcd_set_cursor(0,1);
@@ -186,7 +207,151 @@ void DSP_ChangePage(uint8_t ID)
 			lcd_string("v");
 			break;
 		}
+		
+		case PageFehlerliste_Oben_Oben:
+		{
+			lcd_set_cursor(0,1);
+			CenterStringPGM(DStr_BSMenuFehlerliste,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,2);
+			CenterStringPGM(DStr_BSZurueck,LineTemp,2);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,3);
+			sprintf(LineTemp,"    %s",Fehler[1]);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,4);
+			sprintf(LineTemp,"    %s",Fehler[2]);
+			lcd_Xstring(LineTemp,0);
+			if(Fehler[3] != 0){
+				//Pfeil nach unten:
+				lcd_set_cursor(0,4);
+				lcd_string("v");
+			}
+			break;
+		}
 
+		case PageFehlerliste_Oben_Mitte:
+		{
+			lcd_set_cursor(0,1);
+			CenterStringPGM(DStr_BSMenuFehlerliste,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,2);
+			CenterStringPGM(DStr_BSZurueck,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,3);
+			sprintf(LineTemp,"    %s",Fehler[1]);
+			CenterString(LineTemp,LineTemp,2);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,4);
+			sprintf(LineTemp,"    %s",Fehler[2]);
+			lcd_Xstring(LineTemp,0);
+			if(Fehler[3] != 0){
+				//Pfeil nach unten:
+				lcd_set_cursor(0,4);
+				lcd_string("v");
+			}
+			break;
+		}
+
+		case PageFehlerliste_Mitte:
+		{
+			lcd_set_cursor(0,1);
+			CenterStringPGM(DStr_BSMenuFehlerliste,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,2);
+			sprintf(LineTemp,"    %s",Fehler[Fehler_i]);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,3);
+			sprintf(LineTemp,"    %s",Fehler[Fehler_j]);
+			CenterString(LineTemp,LineTemp,2);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,4);
+			sprintf(LineTemp,"    %s",Fehler[Fehler_k]);
+			lcd_Xstring(LineTemp,0);
+			if (Fehler_i != 0)
+			{
+				if(Fehler[Fehler_i-1] != 0){
+					//Pfeil nach oben:
+					lcd_set_cursor(0,1);
+					lcd_string("^");
+				}
+			}
+			if(Fehler_k != Anzahl_Fehler - 1){
+				if(Fehler[Fehler_k+1] != 0){
+					//Pfeil nach unten:
+					lcd_set_cursor(0,4);
+					lcd_string("v");
+				}
+			}
+			break;
+		}
+
+		case PageFehlerliste_Unten_Mitte:
+		{
+			lcd_set_cursor(0,1);
+			CenterStringPGM(DStr_BSMenuFehlerliste,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,2);
+			sprintf(LineTemp,"    %s",Fehler[Fehler_i]);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,3);
+			sprintf(LineTemp,"    %s",Fehler[Fehler_j]);
+			CenterString(LineTemp,LineTemp,2);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,4);
+			sprintf(LineTemp,"    %s",Fehler[Fehler_k]);
+			lcd_Xstring(LineTemp,0);
+			if (Fehler_i != 0)
+			{
+				if(Fehler[Fehler_i-1] != 0){
+					//Pfeil nach oben:
+					lcd_set_cursor(0,1);
+					lcd_string("^");
+				}
+			}
+			break;
+		}
+		
+		case PageFehlerliste_Unten_Unten:
+		{
+			lcd_set_cursor(0,1);
+			CenterStringPGM(DStr_BSMenuFehlerliste,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,2);
+			sprintf(LineTemp,"    %s",Fehler[Fehler_i]);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,3);
+			sprintf(LineTemp,"    %s",Fehler[Fehler_j]);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,4);
+			sprintf(LineTemp,"    %s",Fehler[Fehler_k]);
+			CenterString(LineTemp,LineTemp,2);
+			lcd_Xstring(LineTemp,0);
+			if (Fehler_i != 0)
+			{
+				if(Fehler[Fehler_i-1] != 0){
+					//Pfeil nach oben:
+					lcd_set_cursor(0,1);
+					lcd_string("^");
+				}
+			}
+			break;
+		}
+		
+		case PageFehler:
+		{
+			lcd_set_cursor(0,1);
+			CenterStringPGM(DStr_BSFehler,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,2);
+			//
+			lcd_set_cursor(0,3);
+			//
+			lcd_set_cursor(0,4);
+			//
+		}
+
+		// TabEinstellungen:
 		case PageMenuEinstellungen:
 		{
 			lcd_set_cursor(0,1);
@@ -206,7 +371,307 @@ void DSP_ChangePage(uint8_t ID)
 			lcd_string("^");
 			break;
 		}
+
+		case PageEinstellungen_Zurueck:
+		{
+			lcd_set_cursor(0,1);
+			CenterStringPGM(DStr_BSEinstellungen,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,2);
+			CenterStringPGM(DStr_BSZurueck,LineTemp,2);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,3);
+			CenterStringPGM(DStr_BSNamenVergeben,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,4);
+			CenterStringPGM(DStr_BSSpeicherverwaltung,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			//Pfeil nach unten:
+			lcd_set_cursor(0,2);
+			lcd_string("v");
+			break;
+		}
 		
+		case PageEinstellungen_Namen:
+		{
+			lcd_set_cursor(0,1);
+			CenterStringPGM(DStr_BSEinstellungen,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,2);
+			CenterStringPGM(DStr_BSZurueck,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,3);
+			CenterStringPGM(DStr_BSNamenVergeben,LineTemp,2);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,4);
+			CenterStringPGM(DStr_BSSpeicherverwaltung,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			//Pfeil nach unten:
+			lcd_set_cursor(0,2);
+			lcd_string("v");
+			break;
+		}
+
+		case PageEinstellungen_Speicher:
+		{
+			lcd_set_cursor(0,1);
+			CenterStringPGM(DStr_BSEinstellungen,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,2);
+			CenterStringPGM(DStr_BSNamenVergeben,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,3);
+			CenterStringPGM(DStr_BSSpeicherverwaltung,LineTemp,2);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,4);
+			CenterStringPGM(DStr_BSRFverwaltung,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			//Pfeil nach oben:
+			lcd_set_cursor(0,1);
+			lcd_string("^");
+			//Pfeil nach unten:
+			lcd_set_cursor(0,2);
+			lcd_string("v");
+			break;
+		}
+		
+		case PageEinstellungen_RF:
+		{
+			lcd_set_cursor(0,1);
+			CenterStringPGM(DStr_BSEinstellungen,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,2);
+			CenterStringPGM(DStr_BSSpeicherverwaltung,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,3);
+			CenterStringPGM(DStr_BSRFverwaltung,LineTemp,2);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,4);
+			CenterStringPGM(DStr_BSGSMverwaltung,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			//Pfeil nach oben:
+			lcd_set_cursor(0,1);
+			lcd_string("^");
+			//Pfeil nach unten:
+			lcd_set_cursor(0,2);
+			lcd_string("v");
+			break;
+		}
+
+		case PageEinstellungen_GSM:
+		{
+			lcd_set_cursor(0,1);
+			CenterStringPGM(DStr_BSEinstellungen,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,2);
+			CenterStringPGM(DStr_BSRFverwaltung,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,3);
+			CenterStringPGM(DStr_BSGSMverwaltung,LineTemp,2);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,4);
+			CenterStringPGM(DStr_BSEnergiemanagement,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			//Pfeil nach oben:
+			lcd_set_cursor(0,1);
+			lcd_string("^");
+			//Pfeil nach unten:
+			lcd_set_cursor(0,2);
+			lcd_string("v");
+			break;
+		}										
+
+		case PageEinstellungen_Energie:
+		{
+			lcd_set_cursor(0,1);
+			CenterStringPGM(DStr_BSEinstellungen,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,2);
+			CenterStringPGM(DStr_BSGSMverwaltung,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,3);
+			CenterStringPGM(DStr_BSEnergiemanagement,LineTemp,2);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,4);
+			CenterStringPGM(DStr_BSEinheiten,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			//Pfeil nach oben:
+			lcd_set_cursor(0,1);
+			lcd_string("^");
+			//Pfeil nach unten:
+			lcd_set_cursor(0,2);
+			lcd_string("v");
+			break;
+		}
+
+		case PageEinstellungen_Einheit:
+		{
+			lcd_set_cursor(0,1);
+			CenterStringPGM(DStr_BSEinstellungen,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,2);
+			CenterStringPGM(DStr_BSEnergiemanagement,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,3);
+			CenterStringPGM(DStr_BSEinheiten,LineTemp,2);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,4);
+			CenterStringPGM(DStr_BSIntervalle,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			//Pfeil nach oben:
+			lcd_set_cursor(0,1);
+			lcd_string("^");
+			//Pfeil nach unten:
+			lcd_set_cursor(0,2);
+			lcd_string("v");
+			break;
+		}
+		
+		case PageEinstellungen_Intervall:
+		{
+			lcd_set_cursor(0,1);
+			CenterStringPGM(DStr_BSEinstellungen,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,2);
+			CenterStringPGM(DStr_BSEinheiten,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,3);
+			CenterStringPGM(DStr_BSIntervalle,LineTemp,2);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,4);
+			CenterStringPGM(DStr_BSSyncWort,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			//Pfeil nach oben:
+			lcd_set_cursor(0,1);
+			lcd_string("^");
+			break;
+		}				
+
+		case PageEinstellungen_Sync:
+		{
+			lcd_set_cursor(0,1);
+			CenterStringPGM(DStr_BSEinstellungen,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,2);
+			CenterStringPGM(DStr_BSEinheiten,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,3);
+			CenterStringPGM(DStr_BSIntervalle,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,4);
+			CenterStringPGM(DStr_BSSyncWort,LineTemp,2);
+			lcd_Xstring(LineTemp,0);
+			//Pfeil nach oben:
+			lcd_set_cursor(0,1);
+			lcd_string("^");
+			break;
+		}
+		
+		case PageSet_Namen:
+		{
+			lcd_set_cursor(0,1);
+			//
+			lcd_set_cursor(0,2);
+			//
+			lcd_set_cursor(0,3);
+			//
+			lcd_set_cursor(0,4);
+			//
+			break;
+		}
+		
+		case PageSet_Speicher:
+		{
+			lcd_set_cursor(0,1);
+			//
+			lcd_set_cursor(0,2);
+			//
+			lcd_set_cursor(0,3);
+			//
+			lcd_set_cursor(0,4);
+			//
+			break;
+		}
+		
+		case PageSet_RF:
+		{
+			lcd_set_cursor(0,1);
+			//
+			lcd_set_cursor(0,2);
+			//
+			lcd_set_cursor(0,3);
+			//
+			lcd_set_cursor(0,4);
+			//
+			break;
+		}
+		
+		case PageSet_GSM:
+		{
+			lcd_set_cursor(0,1);
+			//
+			lcd_set_cursor(0,2);
+			//
+			lcd_set_cursor(0,3);
+			//
+			lcd_set_cursor(0,4);
+			//
+			break;
+		}
+		
+		case PageSet_Energie:
+		{
+			lcd_set_cursor(0,1);
+			//
+			lcd_set_cursor(0,2);
+			//
+			lcd_set_cursor(0,3);
+			//
+			lcd_set_cursor(0,4);
+			//
+			break;
+		}
+		
+		case PageSet_Einheit:
+		{
+			lcd_set_cursor(0,1);
+			//
+			lcd_set_cursor(0,2);
+			//
+			lcd_set_cursor(0,3);
+			//
+			lcd_set_cursor(0,4);
+			//
+			break;
+		}
+		
+		case PageSet_Intervall:
+		{
+			lcd_set_cursor(0,1);
+			//
+			lcd_set_cursor(0,2);
+			//
+			lcd_set_cursor(0,3);
+			//
+			lcd_set_cursor(0,4);
+			//
+			break;
+		}
+		
+		case PageSet_Sync:
+		{
+			lcd_set_cursor(0,1);
+			//
+			lcd_set_cursor(0,2);
+			//
+			lcd_set_cursor(0,3);
+			//
+			lcd_set_cursor(0,4);
+			//
+			break;
+		}		
+	
+		// TabWettermonitor:		
 		case PageMenuWettermonitor:
 		{
 			lcd_set_cursor(0,1);
@@ -225,7 +690,25 @@ void DSP_ChangePage(uint8_t ID)
 			lcd_set_cursor(0,2);
 			lcd_string("^");
 			break;
-		}				
+		}
+		
+		case PageWettermonitor:	
+		{
+			lcd_set_cursor(0,1);
+			sprintf(LineTemp,"[%s]-  GSM %s   %d ",BatState,GSMState,NumNode);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,2);
+			//sprintf(LineTemp,"**%s**",Name_Messstation);
+			//CenterString(LineTemp,LineTemp,0);
+			//lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,3);
+			//sprintf(LineTemp," %d°C  %dhPa  %d% ",Temp_MS[i],Druck_MS[i],Feuchte_MS[i]);
+			//lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,4);
+			//sprintf(LineTemp," %s %dkm/h    ",Licht_MS[i],Wind_MS[i]); //Licht muss immer 7 Zeichen beinhalten ("Sonnig ","Regen  ","Bewölkt")
+			//lcd_Xstring(LineTemp,0);
+			break;
+		}			
 		
 		default: break;
 	}
@@ -235,6 +718,122 @@ void DSP_ScrollMenu(uint8_t dir)
 {
 	switch(DSP_CurrentPage)
 	{
+		case PageMenuHome:
+		{
+			if(dir == 1)
+			{
+				DSP_ChangePage(PageMenuFehlerliste);
+			}
+			else
+			{
+				//-
+			}
+			break;
+		}
+		
+		case PageMenuFehlerliste:
+		{
+			if(dir == 1)
+			{
+				DSP_ChangePage(PageMenuEinstellungen);
+			}
+			else
+			{
+				DSP_ChangePage(PageMenuHome);
+			}
+			break;
+		}
+		
+		case PageFehlerliste_Oben_Oben:
+		{
+			if(dir == 1)
+			{
+				DSP_ChangePage(PageFehlerliste_Oben_Mitte);
+			}
+			else
+			{
+				//-
+			}
+			break;
+		}
+		
+		case PageFehlerliste_Oben_Mitte:
+		{
+			if(dir == 1)
+			{
+				DSP_ChangePage(PageFehlerliste_Mitte);
+			}
+			else
+			{
+				DSP_ChangePage(PageFehlerliste_Oben_Oben);
+			}
+			break;
+		}
+		
+		case PageFehlerliste_Mitte:
+		{
+			if(dir == 1)
+			{
+				DSP_ChangePage(PageFehlerliste_Unten_Mitte);
+			}
+			else
+			{
+				DSP_ChangePage(PageFehlerliste_Oben_Mitte);
+			}
+			break;
+		}
+		
+		case PageFehlerliste_Unten_Mitte:
+		{
+			if(dir == 1)
+			{
+				DSP_ChangePage(PageFehlerliste_Unten_Unten);
+			}
+			else
+			{
+				DSP_ChangePage(PageFehlerliste_Mitte);
+			}
+			break;
+		}
+		
+		case PageFehlerliste_Unten_Unten:
+		{
+			if (dir == 1)
+			{
+				//-
+			}
+			else
+			{
+				DSP_ChangePage(PageFehlerliste_Unten_Mitte);
+			}
+			break;
+		}
+		
+		/*
+		// TabEinstellungen:
+		PageMenuEinstellungen = 30,
+		PageEinstellungen_Zurueck = 31,
+		PageEinstellungen_Namen = 32,
+		PageEinstellungen_Speicher = 33,
+		PageEinstellungen_RF = 34,
+		PageEinstellungen_GSM = 35,
+		PageEinstellungen_Energie = 36,
+		PageEinstellungen_Einheit = 37,
+		PageEinstellungen_Intervall = 38,
+		PageEinstellungen_Sync = 39,
+		PageSet_Namen = 40,
+		PageSet_Speicher = 41,
+		PageSet_RF = 42,
+		PageSet_GSM = 43,
+		PageSet_Energie = 44,
+		PageSet_Einheit = 45,
+		PageSet_Intervall = 46,
+		PageSet_Sync = 47,
+		// TabWettermonitor:
+		PageMenuWettermonitor = 50,
+		PageWettermonitor = 51,
+		*/
+		
 		default: break;
 	}
 }
@@ -243,6 +842,187 @@ void DSP_SelectMenu(void)
 {
 	switch(DSP_CurrentPage)
 	{
+		// TabHome:
+		case PageMenuHome:
+		{
+			DSP_ChangePage(PageHome);
+			break;
+		}
+		
+		case PageHome:
+		{			
+			DSP_ChangePage(PageMenuHome);
+			break;
+		}
+		
+		// TabeFehler:
+		case PageMenuFehlerliste:
+		{
+			DSP_ChangePage(PageFehlerliste_Oben_Oben);
+			break;
+		}
+		
+		case PageFehlerliste_Oben_Oben:
+		{
+			DSP_ChangePage(PageMenuFehlerliste);
+			break;
+		}
+		
+		case PageFehlerliste_Oben_Mitte:
+		{
+			DSP_ChangePage(PageFehler);
+			break;
+		}
+		
+		case PageFehlerliste_Mitte:
+		{
+			DSP_ChangePage(PageFehler);
+			break;
+		}
+		
+		case PageFehlerliste_Unten_Mitte:
+		{
+			DSP_ChangePage(PageFehler);
+			break;
+		}
+		
+		case PageFehlerliste_Unten_Unten:
+		{
+			DSP_ChangePage(PageFehler);
+			break;
+		}
+		
+		case PageFehler:
+		{
+			// Zurückkehren zum Ausgangspunkt wäre schöner
+			DSP_ChangePage(PageFehlerliste_Oben_Oben);
+			break;
+		}
+		
+		// TabEinstellungen:
+		case PageMenuEinstellungen:
+		{
+			DSP_ChangePage(PageEinstellungen_Zurueck);
+			break;
+		}
+		
+		case PageEinstellungen_Zurueck:
+		{
+			DSP_ChangePage(PageMenuEinstellungen);
+			break;
+		}
+		
+		case PageEinstellungen_Namen:
+		{
+			DSP_ChangePage(PageSet_Namen);
+			break;
+		}
+		
+		case PageEinstellungen_Speicher:
+		{
+			DSP_ChangePage(PageSet_Speicher);
+			break;
+		}
+		
+		case PageEinstellungen_RF:
+		{
+			DSP_ChangePage(PageSet_RF);
+			break;	
+		}
+		
+		case PageEinstellungen_GSM:
+		{
+			DSP_ChangePage(PageSet_GSM);
+			break;
+		}
+		
+		case PageEinstellungen_Energie:
+		{
+			DSP_ChangePage(PageSet_Energie);
+			break;
+		}
+		
+		case PageEinstellungen_Einheit:
+		{
+			DSP_ChangePage(PageSet_Einheit);
+			break;
+		}
+		
+		case PageEinstellungen_Intervall:
+		{
+			DSP_ChangePage(PageSet_Intervall);
+			break;
+		}
+		
+		case PageEinstellungen_Sync:
+		{
+			DSP_ChangePage(PageSet_Sync);
+			break;
+		}
+		
+// Start Provisorium
+		case PageSet_Namen:
+		{
+			DSP_ChangePage(PageEinstellungen_Namen);
+			break;
+		}
+		
+		case PageSet_Speicher:
+		{
+			DSP_ChangePage(PageEinstellungen_Speicher);
+			break;
+		}
+		
+		case PageSet_RF:
+		{
+			DSP_ChangePage(PageEinstellungen_RF);
+			break;
+		}
+		
+		case PageSet_GSM:
+		{
+			DSP_ChangePage(PageEinstellungen_GSM);
+			break;
+		}
+		
+		case PageSet_Energie:
+		{
+			DSP_ChangePage(PageEinstellungen_Energie);
+			break;
+		}
+		
+		case PageSet_Einheit:
+		{
+			DSP_ChangePage(PageEinstellungen_Einheit);
+			break;
+		}
+		
+		case PageSet_Intervall:
+		{
+			DSP_ChangePage(PageEinstellungen_Intervall);
+			break;
+		}
+		
+		case PageSet_Sync:
+		{
+			DSP_ChangePage(PageEinstellungen_Sync);
+			break;
+		}								
+// Stop Provisorium
+
+		// TabWettermonitor:
+		case PageMenuWettermonitor:
+		{
+			DSP_ChangePage(PageWettermonitor);
+			break;
+		}
+		
+		case PageWettermonitor:
+		{
+			DSP_ChangePage(PageMenuWettermonitor);
+			break;
+		}		
+
 		default: break;
 	}
 }
