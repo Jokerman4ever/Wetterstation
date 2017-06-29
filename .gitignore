@@ -215,19 +215,19 @@ pip-log.txt
 #Mr Developer
 .mr.developer.cfg
 
-Messstation/Messstation/Debug/*
-Basisstaion/Basisstaion/Debug/*
-Messstation\Messstation\Debug\*
-Basisstaion\Basisstaion\Debug\*
+/Messstation/Messstation/Debug/*
+/Basisstaion/Basisstaion/Debug/*
+\Messstation\Messstation\Debug\*
+\Basisstaion\Basisstaion\Debug\*
 *.atsln
 *.atsuo
 
 *.atsuo
 *.map
-Basisstaion/.vs/*
-Messstation/.vs/*
+/Basisstaion/.vs/*
+/Messstation/.vs/*
 
-Basisstaion\.vs\*
-Messstation\.vs\*
+\Basisstaion\.vs\*
+\Messstation\.vs\*
 
 
