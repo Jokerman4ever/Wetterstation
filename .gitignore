@@ -221,16 +221,13 @@ pip-log.txt
 \Basisstaion\Basisstaion\Debug\*
 *.atsln
 *.atsuo
-
-*.atsuo
-*.map
 /Basisstaion/.vs/*
 /Messstation/.vs/*
 
 \Basisstaion\.vs\*
 \Messstation\.vs\*
-Debug/**/*
-Debug\**\*
-Debug/*
-Debug\*
 
+*.elf
+*.lss
+*.map
+Basisstaion/Basisstaion/Debug/Makefile
