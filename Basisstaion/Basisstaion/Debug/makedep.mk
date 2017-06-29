@@ -2,21 +2,23 @@
 # Automatically-generated file. Do not edit or delete the file
 ################################################################################
 
+src\Clock\clock.c
+
+src\Clock\Xdelay.c
+
 src\Display-Menu.c
-
-src\eeprom_driver.c
-
-src\FileSys.c
-
-src\Flash.c
 
 src\lcd-routines.c
 
 src\RF.c
 
-src\time.c
+src\Storage\eeprom_driver.c
 
-src\Xdelay.c
+src\Storage\FileSys.c
+
+src\Storage\Flash.c
+
+src\time.c
 
 src\ASF\common\services\clock\xmega\sysclk.c
 

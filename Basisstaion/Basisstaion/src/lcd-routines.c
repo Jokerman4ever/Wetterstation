@@ -5,7 +5,7 @@
  
 #include <avr/io.h>
 #include "lcd-routines.h"
-#include "Xdelay.h"
+#include "Clock/Xdelay.h"
 #include <avr/pgmspace.h>
  
  uint8_t  GC_Char0[8] = {1,1,1,2,18,10,4,0};

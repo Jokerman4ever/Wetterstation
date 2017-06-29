@@ -52,19 +52,22 @@ SUBDIRS :=  \
 ../src/ASF/xmega/utils/assembler/ \
 ../src/ASF/xmega/utils/bit_handling/ \
 ../src/ASF/xmega/utils/preprocessor/ \
-../src/config/
+../src/config/ \
+../src/Clock \
+../src/Storage
 
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS +=  \
+../src/Clock/clock.c \
+../src/Clock/Xdelay.c \
 ../src/Display-Menu.c \
-../src/eeprom_driver.c \
-../src/FileSys.c \
-../src/Flash.c \
 ../src/lcd-routines.c \
 ../src/RF.c \
+../src/Storage/eeprom_driver.c \
+../src/Storage/FileSys.c \
+../src/Storage/Flash.c \
 ../src/time.c \
-../src/Xdelay.c \
 ../src/ASF/common/services/clock/xmega/sysclk.c \
 ../src/ASF/xmega/drivers/nvm/nvm.c \
 ../src/ASF/common/boards/user_board/init.c \
@@ -80,14 +83,15 @@ ASM_SRCS +=
 
 
 OBJS +=  \
+src/Clock/clock.o \
+src/Clock/Xdelay.o \
 src/Display-Menu.o \
-src/eeprom_driver.o \
-src/FileSys.o \
-src/Flash.o \
 src/lcd-routines.o \
 src/RF.o \
+src/Storage/eeprom_driver.o \
+src/Storage/FileSys.o \
+src/Storage/Flash.o \
 src/time.o \
-src/Xdelay.o \
 src/ASF/common/services/clock/xmega/sysclk.o \
 src/ASF/xmega/drivers/nvm/nvm.o \
 src/ASF/xmega/drivers/nvm/nvm_asm.o \
@@ -96,14 +100,15 @@ src/ASF/common/boards/user_board/init.o \
 src/main.o
 
 OBJS_AS_ARGS +=  \
+src/Clock/clock.o \
+src/Clock/Xdelay.o \
 src/Display-Menu.o \
-src/eeprom_driver.o \
-src/FileSys.o \
-src/Flash.o \
 src/lcd-routines.o \
 src/RF.o \
+src/Storage/eeprom_driver.o \
+src/Storage/FileSys.o \
+src/Storage/Flash.o \
 src/time.o \
-src/Xdelay.o \
 src/ASF/common/services/clock/xmega/sysclk.o \
 src/ASF/xmega/drivers/nvm/nvm.o \
 src/ASF/xmega/drivers/nvm/nvm_asm.o \
@@ -112,14 +117,15 @@ src/ASF/common/boards/user_board/init.o \
 src/main.o
 
 C_DEPS +=  \
+src/Clock/clock.d \
+src/Clock/Xdelay.d \
 src/Display-Menu.d \
-src/eeprom_driver.d \
-src/FileSys.d \
-src/Flash.d \
 src/lcd-routines.d \
 src/RF.d \
+src/Storage/eeprom_driver.d \
+src/Storage/FileSys.d \
+src/Storage/Flash.d \
 src/time.d \
-src/Xdelay.d \
 src/ASF/common/services/clock/xmega/sysclk.d \
 src/ASF/xmega/drivers/nvm/nvm.d \
 src/ASF/xmega/drivers/nvm/nvm_asm.d \
@@ -128,14 +134,15 @@ src/ASF/common/boards/user_board/init.d \
 src/main.d
 
 C_DEPS_AS_ARGS +=  \
+src/Clock/clock.d \
+src/Clock/Xdelay.d \
 src/Display-Menu.d \
-src/eeprom_driver.d \
-src/FileSys.d \
-src/Flash.d \
 src/lcd-routines.d \
 src/RF.d \
+src/Storage/eeprom_driver.d \
+src/Storage/FileSys.d \
+src/Storage/Flash.d \
 src/time.d \
-src/Xdelay.d \
 src/ASF/common/services/clock/xmega/sysclk.d \
 src/ASF/xmega/drivers/nvm/nvm.d \
 src/ASF/xmega/drivers/nvm/nvm_asm.d \
@@ -182,7 +189,23 @@ LINKER_SCRIPT_DEP+=
 
 
 
+
+
+src/Clock/%.o: ../src/Clock/%.c
+	@echo Building file: $<
+	@echo Invoking: AVR/GNU C Compiler : 5.4.0
+	$(QUOTE)C:\Program Files\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -DDEBUG -DBOARD=USER_BOARD -DF_CPU=2000000  -I"C:\Program Files\Atmel\Studio\7.0\Packs\atmel\XMEGAA_DFP\1.1.68\include" -I"../src/ASF/common/boards/user_board" -I"../src/ASF/common/boards" -I"../src/ASF/xmega/utils/preprocessor" -I"../src/ASF/xmega/utils" -I"../src/ASF/common/utils" -I"../src" -I"../src/config" -I"../src/ASF/xmega/drivers/cpu" -I"../src/ASF/xmega/drivers/nvm" -I"../src/ASF/common/services/clock"  -O1 -fdata-sections -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g3 -Wall -mmcu=atxmega256a3u -B "C:\Program Files\Atmel\Studio\7.0\Packs\atmel\XMEGAA_DFP\1.1.68\gcc\dev\atxmega256a3u" -c -std=gnu99 -fno-strict-aliasing -Wstrict-prototypes -Wmissing-prototypes -Werror-implicit-function-declaration -Wpointer-arith -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
 src/%.o: ../src/%.c
+	@echo Building file: $<
+	@echo Invoking: AVR/GNU C Compiler : 5.4.0
+	$(QUOTE)C:\Program Files\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -DDEBUG -DBOARD=USER_BOARD -DF_CPU=2000000  -I"C:\Program Files\Atmel\Studio\7.0\Packs\atmel\XMEGAA_DFP\1.1.68\include" -I"../src/ASF/common/boards/user_board" -I"../src/ASF/common/boards" -I"../src/ASF/xmega/utils/preprocessor" -I"../src/ASF/xmega/utils" -I"../src/ASF/common/utils" -I"../src" -I"../src/config" -I"../src/ASF/xmega/drivers/cpu" -I"../src/ASF/xmega/drivers/nvm" -I"../src/ASF/common/services/clock"  -O1 -fdata-sections -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g3 -Wall -mmcu=atxmega256a3u -B "C:\Program Files\Atmel\Studio\7.0\Packs\atmel\XMEGAA_DFP\1.1.68\gcc\dev\atxmega256a3u" -c -std=gnu99 -fno-strict-aliasing -Wstrict-prototypes -Wmissing-prototypes -Werror-implicit-function-declaration -Wpointer-arith -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
+	@echo Finished building: $<
+	
+
+src/Storage/%.o: ../src/Storage/%.c
 	@echo Building file: $<
 	@echo Invoking: AVR/GNU C Compiler : 5.4.0
 	$(QUOTE)C:\Program Files\Atmel\Studio\7.0\toolchain\avr8\avr8-gnu-toolchain\bin\avr-gcc.exe$(QUOTE)  -x c -DDEBUG -DBOARD=USER_BOARD -DF_CPU=2000000  -I"C:\Program Files\Atmel\Studio\7.0\Packs\atmel\XMEGAA_DFP\1.1.68\include" -I"../src/ASF/common/boards/user_board" -I"../src/ASF/common/boards" -I"../src/ASF/xmega/utils/preprocessor" -I"../src/ASF/xmega/utils" -I"../src/ASF/common/utils" -I"../src" -I"../src/config" -I"../src/ASF/xmega/drivers/cpu" -I"../src/ASF/xmega/drivers/nvm" -I"../src/ASF/common/services/clock"  -O1 -fdata-sections -ffunction-sections -fdata-sections -fpack-struct -fshort-enums -g3 -Wall -mmcu=atxmega256a3u -B "C:\Program Files\Atmel\Studio\7.0\Packs\atmel\XMEGAA_DFP\1.1.68\gcc\dev\atxmega256a3u" -c -std=gnu99 -fno-strict-aliasing -Wstrict-prototypes -Wmissing-prototypes -Werror-implicit-function-declaration -Wpointer-arith -MD -MP -MF "$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -MT"$(@:%.o=%.o)"   -o "$@" "$<" 
