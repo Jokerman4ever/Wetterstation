@@ -231,4 +231,6 @@ pip-log.txt
 \Messstation\.vs\*
 Debug/**/*
 Debug\**\*
+Debug/*
+Debug\*
 
