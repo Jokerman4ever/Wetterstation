@@ -229,5 +229,6 @@ pip-log.txt
 
 \Basisstaion\.vs\*
 \Messstation\.vs\*
-
+\Debug\
+/Debug/
 
