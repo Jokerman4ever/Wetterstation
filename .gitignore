@@ -217,6 +217,8 @@ pip-log.txt
 
 Messstation/Messstation/Debug/*
 Basisstaion/Basisstaion/Debug/*
+Messstation\Messstation\Debug\*
+Basisstaion\Basisstaion\Debug\*
 *.atsln
 *.atsuo
 
@@ -224,4 +226,8 @@ Basisstaion/Basisstaion/Debug/*
 *.map
 Basisstaion/.vs/*
 Messstation/.vs/*
+
+Basisstaion\.vs\*
+Messstation\.vs\*
+
 
