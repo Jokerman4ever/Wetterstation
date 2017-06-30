@@ -23,7 +23,7 @@ static void SPI_putc(uint8_t data)
 
 static uint8_t SPI_getc(void)
 {
-	SPID.DATA = 0x01; //Dummy Byte
+	SPID.DATA = 0x00; //Dummy Byte
 	while(!(SPID.STATUS & SPI_IF_bm));//Wait
 	return SPID.DATA;//return data
 }
