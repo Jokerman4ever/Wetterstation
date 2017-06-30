@@ -79,9 +79,5 @@ $RECYCLE.BIN/
 /Basisstaion/.vs/**/*
 /Messstation/.vs/**/*
  
-*.elf
-*.lss
-*.map
-*.o
-*.d
-
+/Basisstaion/Basisstaion/Debug/**/*
+/Messstation/Messstation/Debug/**/*
