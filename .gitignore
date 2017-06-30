@@ -73,20 +73,15 @@ Desktop.ini
 # Recycle Bin used on file shares
 $RECYCLE.BIN/
 
-\..\..\Debug\*.*
-
-\Messstation\Messstation\Debug\*
-\Basisstaion\Basisstaion\Debug\*
 *.atsln
-
 *.atsuo
 
-\Basisstaion\.vs\*
-\Messstation\.vs\*
-
+/Basisstaion/.vs/**/*
+/Messstation/.vs/**/*
+ 
 *.elf
 *.lss
 *.map
 *.o
 *.d
-/Basisstaion/Basisstaion/Debug/**/*
+
