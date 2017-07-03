@@ -12,7 +12,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 
-
+#define RF_MaxDevices 16
 
 #define RF_Max_PacketPayload 32
 
@@ -23,6 +23,10 @@
 #define RF_SPI_PORT PORTD
 
 //ÜBERPRÜFEN!!!!!!!!!
+//CHANGE THIS LINE IN RF.C TOO!!!
+//RF_IRQ1_PORT.PIN0CTRL = (PORT_ISC_RISING_gc);
+//................|............................
+//to the pin its connected to
 #define RF_IRQ0_PORT PORTD
 #define RF_IRQ1_PORT PORTE
 #define RF_IRQ0_PIN 2
@@ -92,7 +96,7 @@ typedef enum RF_TXIRQ1{RF_TXIRQ1_TXDONE=0x08, RF_TXIRQ1_FIFOFULL=0x00}RF_TXIRQ1_
 #define RF_FLAG_FIFOEMPTY 0x02
 #define RF_FLAG_FIFOOVERRUN 0x01
 
-typedef enum RF_Packet_Flags{RF_Packet_Flags_Ack=0x01}RF_Packet_Flags_t;
+typedef enum RF_Packet_Flags{RF_Packet_Flags_Ack=0x01,RF_Packet_Flags_Time=0x02,RF_Packet_Flags_Weather=0x04}RF_Packet_Flags_t;
 #define RF_Packet_Flags_MASK 0xff
 
 typedef enum RF_Acknowledgments_State{RF_Acknowledgments_State_Pending,RF_Acknowledgments_State_Transmitted,RF_Acknowledgments_State_Idle,RF_Acknowledgments_State_Error}RF_Acknowledgments_State_t;
@@ -202,6 +206,12 @@ typedef struct RF_Config
 	uint8_t UseAcknowledgments :1;
 } RF_Config_t;
 
+typedef struct RF_TimeSlot
+{
+	uint8_t ID;
+	uint8_t Timeout;
+}RF_TimeSlot_t;
+
 typedef struct RF_Status
 {
 	RF_State_t State;
@@ -214,7 +224,12 @@ typedef struct RF_Status
 	uint8_t AckTimeout;
 	uint8_t AckRetransmit;
 	uint8_t IsStuck;
+	RF_TimeSlot_t TimeSlots[RF_MaxDevices];
+	uint16_t CurrentSlotTime;
 } RF_Status_t;
+
+
+
 
 void RF_Init(uint8_t dev_add);
 void RF_Set_State(RF_State_t state);
@@ -252,5 +267,11 @@ uint8_t RF_VerifyPLLLock(void);
 uint8_t RF_Set_Frequency(float centre);
 
 extern RF_Status_t RF_CurrentStatus;
+
+uint8_t RF_RegisterDevice(uint8_t ID);
+void RF_UnregisterDevice(uint8_t ID);
+uint8_t RF_CheckDeviceSlot(uint8_t ID);
+uint16_t RF_GetDeviceSleepTime(uint8_t ID);
+uint8_t RF_FindDevice(uint8_t ID);
 
 #endif /* RF_H_ */

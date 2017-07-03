@@ -17,6 +17,11 @@ static void FS_Reorganize(uint8_t ID);
 static void FS_UpdateFileSys(void);
 static void FS_SetAddress(uint8_t ID, uint8_t state);
 
+static void FS_WriteRecordHW(FS_StationRecord_t* fs);
+static void FS_ReadRecordHW(uint32_t record,FS_StationRecord_t* fs);
+static FlashAddress FS_CreateNextAddress(void);
+
+
 FS_Status_t FS_CurrentStatus;
 FS_StationRecord_t FS_TempRecord;
 FS_File_t FS_TempFile;
@@ -360,7 +365,7 @@ uint8_t FS_ReadFile(uint8_t ID,uint8_t *buffer,uint8_t length)
 
 //bei fullcircle muss der Sector vor der beschreibung gelöscht werden!!!
 //macht das probleme??? wenn daten nicht genau aufgehen ja!
-void FS_WriteRecord(FS_StationRecord_t fs)
+void FS_WriteRecord(FS_StationRecord_t* fs)
 {
 	FS_WriteRecordHW(fs);
 	FS_CurrentStatus.NextAddress = FS_CreateNextAddress();
@@ -369,23 +374,23 @@ void FS_WriteRecord(FS_StationRecord_t fs)
 	EEPROM_WriteDWord(FS_EEPROM_StartAddress+4,FS_CurrentStatus.RecordCount);
 }
 
-void FS_WriteRecordHW(FS_StationRecord_t fs)
+static void FS_WriteRecordHW(FS_StationRecord_t* fs)
 {
 	uint8_t buffer[16];
-	buffer[0]=(fs.Unix>>24)& 0xff;buffer[1]=(fs.Unix>>16)& 0xff;buffer[2]= (fs.Unix>>8)& 0xff;buffer[3]=fs.Unix & 0xff;
-	buffer[4]=fs.ID & 0xff;
-	buffer[5]=fs.LightStrength;
-	buffer[6]=fs.RainState;
-	buffer[7]=fs.WindLevel;
-	buffer[8]=fs.WindDirection;
-	buffer[9]=(fs.Temperatur>>8) & 0xff; buffer[10]=fs.Temperatur & 0xff;
-	buffer[11]=(fs.Humidity>>8) & 0xff; buffer[12]=fs.Humidity & 0xff;
-	buffer[13]=(fs.Pressure>>8)& 0xff;buffer[14]=fs.Pressure & 0xff;
-	buffer[15]=fs.Flags;
+	buffer[0]=(fs->Unix>>24)& 0xff;buffer[1]=(fs->Unix>>16)& 0xff;buffer[2]= (fs->Unix>>8)& 0xff;buffer[3]=fs->Unix & 0xff;
+	buffer[4]=fs->ID & 0xff;
+	buffer[5]=fs->LightStrength;
+	buffer[6]=fs->RainState;
+	buffer[7]=fs->WindLevel;
+	buffer[8]=fs->WindDirection;
+	buffer[9]=(fs->Temperature>>8) & 0xff; buffer[10]=fs->Temperature & 0xff;
+	buffer[11]=(fs->Humidity>>8) & 0xff; buffer[12]=fs->Humidity & 0xff;
+	buffer[13]=(fs->Pressure>>8)& 0xff;buffer[14]=fs->Pressure & 0xff;
+	buffer[15]=fs->Flags;
 	Flash_write_Bytes(FS_CurrentStatus.NextAddress,buffer,0,16);
 }
 
-void FS_ReadRecordHW(uint32_t record,FS_StationRecord_t* fs)
+static void FS_ReadRecordHW(uint32_t record,FS_StationRecord_t* fs)
 {
 	uint32_t addr = FS_StartAddress_Records+record*16;
 	FlashAddress add = Flash_CreateAddress((addr>>24)&0xff,(addr>>16)&0xff,(addr>>8)&0xff,(addr)&0xff);
@@ -397,11 +402,22 @@ void FS_ReadRecordHW(uint32_t record,FS_StationRecord_t* fs)
 	fs->RainState = buffer[6];
 	fs->WindLevel = buffer[7];
 	fs->WindDirection = buffer[8];
-	fs->Temperatur = ((uint32_t)buffer[9]<<8) |((uint32_t)buffer[10]);
+	fs->Temperature = ((uint32_t)buffer[9]<<8) |((uint32_t)buffer[10]);
 	fs->Humidity = ((uint32_t)buffer[11]<<8) |((uint32_t)buffer[12]);
 	fs->Pressure = ((uint32_t)buffer[13]<<8) |((uint32_t)buffer[14]);
 	fs->Flags = buffer[15];
 	fs->Position = record;
+}
+
+static FlashAddress FS_CreateNextAddress(void)
+{
+	//FS_FileIndex_t lastindex = FS_LoadFileIndex(FS_CurrentStatus.LastFileIndex);
+	uint32_t add = ((uint32_t)FS_CurrentStatus.NextAddress.High<<24) | ((uint32_t)FS_CurrentStatus.NextAddress.Mid<<16) | ((uint32_t)FS_CurrentStatus.NextAddress.Low<<8) | (uint32_t)FS_CurrentStatus.NextAddress.XLow;
+	add+= 16;
+	if(!FS_CurrentStatus.RecordLogFull)FS_CurrentStatus.RecordCount++;
+	if(add > FS_StopAddress){add = FS_StartAddress_Records; FS_CurrentStatus.RecordLogFull=1; EEPROM_WriteByte(FS_EEPROM_StartAddress+8,1);}// REPORT ERROR -> FILE SYSTEM OVERFLOW!!! FullCircleMode activated!
+	FlashAddress f = Flash_CreateAddress((add>>24) & 0xff,(add>>16) & 0xff,(add>>8) & 0xff,add & 0xff);
+	return f;
 }
 
 uint8_t FS_FindRecord(uint32_t unix,uint32_t* recordOut)
@@ -435,17 +451,6 @@ uint8_t FS_FindRecord(uint32_t unix,uint32_t* recordOut)
 	}
 	if(found)*recordOut=midpoint;
 	return found;
-}
-
-FlashAddress FS_CreateNextAddress(void)
-{
-	//FS_FileIndex_t lastindex = FS_LoadFileIndex(FS_CurrentStatus.LastFileIndex);
-	uint32_t add = ((uint32_t)FS_CurrentStatus.NextAddress.High<<24) | ((uint32_t)FS_CurrentStatus.NextAddress.Mid<<16) | ((uint32_t)FS_CurrentStatus.NextAddress.Low<<8) | (uint32_t)FS_CurrentStatus.NextAddress.XLow;
-	add+= 16;
-	if(!FS_CurrentStatus.RecordLogFull)FS_CurrentStatus.RecordCount++;
-	if(add > FS_StopAddress){add = FS_StartAddress_Records; FS_CurrentStatus.RecordLogFull=1; EEPROM_WriteByte(FS_EEPROM_StartAddress+8,1);}// REPORT ERROR -> FILE SYSTEM OVERFLOW!!! FullCircleMode activated!
-	FlashAddress f = Flash_CreateAddress((add>>24) & 0xff,(add>>16) & 0xff,(add>>8) & 0xff,add & 0xff);
-	return f;
 }
 
 uint32_t FS_GetRecordUnix(uint32_t record)
@@ -495,6 +500,31 @@ uint32_t FS_GetUnix(void)
 {
 	//MACHN DENNIS
 	return 0;
+}
+
+FS_StationRecord_t* FS_CreateStationRecord(uint16_t temp,uint16_t pres,uint16_t humid, uint8_t light,uint8_t rain,uint8_t windlvl,uint8_t winddir)
+{
+	FS_TempRecord.Temperature = temp;
+	FS_TempRecord.Pressure = pres;
+	FS_TempRecord.Humidity = humid;
+	FS_TempRecord.LightStrength = light;
+	FS_TempRecord.RainState = rain;
+	FS_TempRecord.WindLevel = windlvl;
+	FS_TempRecord.WindDirection = winddir;
+	return &FS_TempRecord;
+}
+
+FS_StationRecord_t* FS_CreateStationRecordArray(uint8_t* buffer)
+{
+	FS_TempRecord.Temperature = (buffer[1]<<8) | buffer[0];
+	FS_TempRecord.Humidity = (buffer[3]<<8) | buffer[2];
+	FS_TempRecord.Pressure = (buffer[5]<<8) | buffer[4];
+
+	FS_TempRecord.LightStrength = buffer[6];
+	FS_TempRecord.RainState = buffer[7];
+	FS_TempRecord.WindLevel = buffer[8];
+	FS_TempRecord.WindDirection = buffer[9];
+	return &FS_TempRecord;
 }
 
 #pragma endregion RECORD SUPPORT

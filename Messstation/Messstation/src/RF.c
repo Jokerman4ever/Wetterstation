@@ -143,7 +143,7 @@ void RF_Wakeup(void)
 {
 	//sysclk_enable_module(SYSCLK_PORT_D, SYSCLK_SPI); //Enable SPI
 	SPI_Init(); //Enable SPI
-	
+
 	RF_Set_State(RF_State_Receive);
 	_delay_ms(10);
 	RF_Set_State(RF_State_StandBy);
@@ -497,7 +497,7 @@ void RF_HandleInterrupt(void)
 		}
 		//RF_Set_FIFOAccess(RF_FIFOAccess_Read);
 		//for (uint8_t i=0; RF_Get_Command(RF_REG_FTXRXI) & RF_FLAG_FIFOEMPTY; i++)RF_Get_DataHW();//Drain Buffer
-		RF_CurrentStatus.NewPacket=1;
+		
 		if(RF_CurrentConfig.UseAcknowledgments && receiver!=0x00 && !(RF_LastReceivedPacket.Flags & RF_Packet_Flags_Ack))
 		{
 			//Only send an ACK if its not a Broadcast 
@@ -505,12 +505,20 @@ void RF_HandleInterrupt(void)
 			//_delay_ms(1);//Wait that the sender is ready
 			RF_Send_Acknowledgment();
 			RF_CurrentStatus.Acknowledgment = RF_Acknowledgments_State_Transmitted;
+			RF_CurrentStatus.IsStuck=0;
 		}
+		else if(!RF_CurrentConfig.UseAcknowledgments)//wenn keine ack gefordert sind setze das NewPacketFlag
+		{
+			RF_CurrentStatus.NewPacket=1;
+			RF_CurrentStatus.IsStuck=0;
+		}
+		
 		if(RF_LastReceivedPacket.Flags & RF_Packet_Flags_Ack)
 		{
 			//Packet is ok ACK was received
 			RF_CurrentStatus.Acknowledgment = RF_Acknowledgments_State_Idle;
 			RF_Set_State(RF_State_StandBy);
+			RF_CurrentStatus.IsStuck=0;
 			//_delay_ms(2);
 		}
 	}
@@ -530,6 +538,7 @@ void RF_HandleInterrupt(void)
 		{
 			RF_CurrentStatus.Acknowledgment = RF_Acknowledgments_State_Idle;
 			RF_Set_State(RF_State_StandBy);
+			RF_CurrentStatus.NewPacket=1;//wenn ein normales Packet angekommen ist setze NewPacketFlag und ACK gesendet wurde!
 		}
 	}
 }
@@ -600,4 +609,47 @@ void RF_Get_Data(uint8_t* buf, uint8_t len)
 uint8_t RF_Get_SignalStrength(void)
 {
 	return RF_Get_Command(RF_REG_RSTS);
+}
+
+
+//Basisstation only
+uint8_t RF_RegisterDevice(uint8_t ID)
+{
+	for (uint8_t i = 0; i < RF_MaxDevices; i++)
+	{
+		if(RF_CheckDeviceSlot(i))
+		{
+			RF_CurrentStatus.TimeSlots[i].ID = ID;
+			RF_CurrentStatus.TimeSlots[i].Timeout = 0;
+			return i;
+		}
+	}
+	return 0;
+}
+
+void RF_UnregisterDevice(uint8_t ID)
+{
+	RF_CurrentStatus.TimeSlots[ID].ID=0;
+	RF_CurrentStatus.TimeSlots[ID].Timeout=0;
+}
+
+uint16_t RF_GetDeviceSleepTime(uint8_t ID)
+{
+	uint16_t s = ID* (300 / RF_MaxDevices);
+	return (300 - RF_CurrentStatus.CurrentSlotTime + s);
+}
+
+uint8_t RF_FindDevice(uint8_t ID)
+{
+	for (uint8_t i = 0; i < RF_MaxDevices; i++)
+	{
+		if(RF_CurrentStatus.TimeSlots[i].ID == ID)return 1;
+	}
+	return 0;
+}
+
+uint8_t RF_CheckDeviceSlot(uint8_t ID)
+{
+	if(RF_CurrentStatus.TimeSlots[ID].ID == 0)return 1;
+	else return 0;
 }

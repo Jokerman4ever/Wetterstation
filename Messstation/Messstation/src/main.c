@@ -8,9 +8,10 @@
 #include "LED.h"
 #include "ADC.h"
 #include <avr/interrupt.h>
-#include "com.h"
+#include "com.h"11
 
-uint8_t RF_Stuck;
+//Prototypen
+void ConnectToBasestation(void);
 
 #define TEST
 
@@ -33,14 +34,14 @@ ISR(TCC1_OVF_vect)
 
 typedef struct MeassurmentData_t
 {
-	int16_t temp;
+	int16_t temperature;
 	uint16_t humidity;
 	uint16_t pressure;
 	
 	uint8_t lux;
-	uint8_t regen;
-	uint8_t wind_v;
-	uint8_t wind_r;
+	uint8_t rainstate;
+	uint8_t windlevel;
+	uint8_t winddirection;
 } MeassurmentData_t;
 
 
@@ -73,7 +74,7 @@ static void alarm(uint32_t time)
 	DHT_on(); //wait for 2s befor Read!!!
 	PORTA.OUTSET = 0xff;
 	i2c_enable();
-	BMP_read(&meas_data.pressure, &meas_data.temp);	//takes 4ms
+	BMP_read(&meas_data.pressure, &meas_data.temperature);	//takes 4ms
 	BH1750_read(&meas_data.lux);	//takes 24ms
 	/* Wind-/Regensensor here */
 	
@@ -87,23 +88,23 @@ static void alarm(uint32_t time)
 	PORTA.OUTCLR = 0xff;
 	
 	//Simulation Wind oder so was in der Art... keine Ahnung
-	if(meas_data.wind_r == 0)
+	if(meas_data.winddirection == 0)
 	{
-		meas_data.wind_v = 0x01;
-		meas_data.wind_r = 0x01;
+		meas_data.windlevel = 0x01;
+		meas_data.winddirection = 0x01;
 	}
 	else
 	{
-		meas_data.wind_r <<= 1;
-		meas_data.wind_v <<= 1;
+		meas_data.winddirection <<= 1;
+		meas_data.windlevel <<= 1;
 	}	
 	
 	
 	//Send Data
 	RF_Wakeup();
 	
-	if(wind_con){ packet = RF_CreatePacket((uint8_t *)&meas_data, 10, RF_RECEIVE_ID, 0); }
-	else{ packet = RF_CreatePacket((uint8_t *)&meas_data, 6, RF_RECEIVE_ID, 0); }
+	if(wind_con){ packet = RF_CreatePacket((uint8_t *)&meas_data, 10, RF_RECEIVE_ID, RF_Packet_Flags_Weather); }
+	else{ packet = RF_CreatePacket((uint8_t *)&meas_data, 6, RF_RECEIVE_ID, RF_Packet_Flags_Weather); }
 	RF_Send_Packet(packet);
 	
 	
@@ -143,6 +144,12 @@ int main (void)
 	#ifdef TEST
 		val = RF_Get_Command(0x01);
 	#endif	
+	
+	//////////////////////////////////////////////////////////////////////////
+	//LOG INTO BASE
+	//////////////////////////////////////////////////////////////////////////
+	ConnectToBasestation();
+	
 	//RF_Set_State(RF_State_Receive);
 	RF_Sleep();
 	
@@ -163,4 +170,32 @@ int main (void)
 	{
 		sleepmgr_enter_sleep();	//Go to sleep
 	}
+}
+
+
+void ConnectToBasestation(void)
+{
+	uint8_t trys = 10;
+	uint8_t NPtrys = 10;
+	RF_Packet_t p = RF_CreatePacket(&trys,0,RF_RECEIVE_ID,RF_Packet_Flags_Time);
+	while(trys-- > 0)
+	{
+		RF_Send_Packet(p);
+		while(RF_CurrentStatus.State == RF_State_Transmit){_delay_ms(1);}
+		while(RF_CurrentStatus.Acknowledgment != RF_Acknowledgments_State_Idle){_delay_ms(1);}
+		RF_Set_State(RF_State_Receive);//Wait for Time Packet
+		while(!RF_CurrentStatus.NewPacket && NPtrys-- > 0){_delay_ms(50);}
+		if(NPtrys > 0 && RF_CurrentStatus.NewPacket)
+		{
+			//Time Packet Received
+			RF_Packet_t r = RF_Get_Packet();
+			if(r.Flags & RF_Packet_Flags_Time)
+			{
+				uint16_t sleep = (r.Data[0]<<8 | r.Data[1]);
+				//TIM HIER MUSSTE SLEEPEN!!!!!
+				break;
+			}
+		}
+	}
+	//SYNC FAILED.... Was Nu?
 }

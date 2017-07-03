@@ -66,8 +66,8 @@ enum GSMLvl {
 		};
 
 	
-void PGM_ReadStr(const uint8_t* str,char* dest,uint8_t start);
-void CenterStringPGM(const uint8_t* str, uint8_t* Temp,uint8_t arrows);
+void PGM_ReadStr(const char* str,char* dest,uint8_t start);
+void CenterStringPGM(const char* str, uint8_t* Temp,uint8_t arrows);
 void CenterString(char* str,char* Temp,uint8_t arrows);
 void SelectString(char* str,uint8_t* Temp);
 void SelectStringPGM(const uint8_t* str,uint8_t* Temp);

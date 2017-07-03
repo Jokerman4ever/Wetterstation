@@ -96,7 +96,7 @@ typedef enum RF_TXIRQ1{RF_TXIRQ1_TXDONE=0x08, RF_TXIRQ1_FIFOFULL=0x00}RF_TXIRQ1_
 #define RF_FLAG_FIFOEMPTY 0x02
 #define RF_FLAG_FIFOOVERRUN 0x01
 
-typedef enum RF_Packet_Flags{RF_Packet_Flags_Ack=0x01,RF_Packet_Flags_Time=0x02}RF_Packet_Flags_t;
+typedef enum RF_Packet_Flags{RF_Packet_Flags_Ack=0x01,RF_Packet_Flags_Time=0x02,RF_Packet_Flags_Weather=0x04}RF_Packet_Flags_t;
 #define RF_Packet_Flags_MASK 0xff
 
 typedef enum RF_Acknowledgments_State{RF_Acknowledgments_State_Pending,RF_Acknowledgments_State_Transmitted,RF_Acknowledgments_State_Idle,RF_Acknowledgments_State_Error}RF_Acknowledgments_State_t;
@@ -206,6 +206,12 @@ typedef struct RF_Config
 	uint8_t UseAcknowledgments :1;
 } RF_Config_t;
 
+typedef struct RF_TimeSlot
+{
+	uint8_t ID;
+	uint8_t Timeout;
+}RF_TimeSlot_t;
+
 typedef struct RF_Status
 {
 	RF_State_t State;
@@ -218,7 +224,7 @@ typedef struct RF_Status
 	uint8_t AckTimeout;
 	uint8_t AckRetransmit;
 	uint8_t IsStuck;
-	uint8_t TimeSlots[RF_MaxDevices];
+	RF_TimeSlot_t TimeSlots[RF_MaxDevices];
 	uint16_t CurrentSlotTime;
 } RF_Status_t;
 

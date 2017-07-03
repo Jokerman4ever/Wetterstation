@@ -9,7 +9,7 @@
 
 uint8_t LineTemp[20];
 
-void PGM_ReadStr(const uint8_t* str,char* dest,uint8_t start)
+void PGM_ReadStr(const char* str,char* dest,uint8_t start)
 {
 	uint8_t i=0;
 	do 
@@ -77,7 +77,7 @@ void DSP_Refresh(uint8_t BS_BatState,uint8_t BS_GSMState,uint8_t BS_NumNode)
 	{
 		case BatLow:
 		{
-			*BatState = "o..";
+			*BatState = "o.."; // ich glaube das geht so nicht ????
 			break;
 		}
 		case BatMid:
@@ -174,7 +174,7 @@ void DSP_ChangePage(uint8_t ID)
 		case PageHome:
 		{
 			lcd_set_cursor(0,1);
-			sprintf(LineTemp,"[%s]-  GSM %s   %d ",BatState,GSMState,NumNode);
+			sprintf(LineTemp,"[%s]-  GSM %s   %d ",BatState,GSMState,NumNode); 
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,2);
 			//
@@ -182,7 +182,7 @@ void DSP_ChangePage(uint8_t ID)
 			CenterStringPGM(DStr_BSName,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,4);
-			sprintf(LineTemp,"  %d.%d.%d   %d:%d  ",Day,Month,Year,Minute,Hour);
+			sprintf(LineTemp,"  %d.%d.%d   %d:%d  ",Day,Month,Year,Minute,Hour);//das wird so nicht gehen, %d steht für decimal also eine zahl.... du übergibst nen string!!!
 			lcd_Xstring(LineTemp,0);
 			break;
 		}
@@ -1038,7 +1038,7 @@ void CenterString(char* str,char* Temp,uint8_t arrows)
 	if(arrows & 0x02){*Temp++='>';*Temp++='>';}
 }
 
-void CenterStringPGM(const uint8_t* str,uint8_t* Temp,uint8_t arrows)
+void CenterStringPGM(const char* str,uint8_t* Temp,uint8_t arrows)
 {
 	char tt[20];
 	PGM_ReadStr(str,tt,0);

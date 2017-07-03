@@ -44,7 +44,7 @@ typedef struct FS_StationRecord
 	uint32_t Unix;
 	uint32_t Position;
 	uint8_t ID;
-	uint16_t Temperatur;
+	uint16_t Temperature;
 	uint16_t Pressure;
 	uint8_t LightStrength;
 	uint8_t RainState;
@@ -64,16 +64,19 @@ typedef struct FS_ErrorRecord
 
 void FS_Init(void);
 void FS_FirstRun(void);
-void FS_WriteRecord(FS_StationRecord_t fs);
-void FS_WriteRecordHW(FS_StationRecord_t fs);
-void FS_ReadRecordHW(uint32_t record,FS_StationRecord_t* fs);
+void FS_WriteRecord(FS_StationRecord_t* fs);
+//void FS_WriteRecordHW(FS_StationRecord_t fs);
+//void FS_ReadRecordHW(uint32_t record,FS_StationRecord_t* fs);
 void FS_Update(void);
 uint8_t FS_FindRecord(uint32_t unix,uint32_t* recordOut);
-FlashAddress FS_CreateNextAddress(void);
+//FlashAddress FS_CreateNextAddress(void);
 uint32_t FS_GetRecordUnix(uint32_t record);
 uint8_t FS_GetRecords(uint32_t unix,FS_StationRecord_t* fs);
 uint32_t FS_GetUnix(void);
 void FS_ResetRecordSearch(void);
+
+FS_StationRecord_t* FS_CreateStationRecord(uint16_t temp,uint16_t pres,uint16_t humid, uint8_t light,uint8_t rain,uint8_t windlvl,uint8_t winddir);
+FS_StationRecord_t* FS_CreateStationRecordArray(uint8_t* buffer);
 
 void FS_ClearErrors(void);
 void FS_AddError(uint32_t unix,uint8_t id,uint8_t flag);
