@@ -16,21 +16,25 @@
 
 #define RF_Max_PacketPayload 32
 
-#define RF_CS_DATA_PORT PORTE
+#define RF_CS_DATA_PORT PORTD
 #define RF_CS_COM_PORT PORTD
 #define RF_CS_DATA_PIN 0
 #define RF_CS_COM_PIN 3
 #define RF_SPI_PORT PORTD
 
 //ÜBERPRÜFEN!!!!!!!!!
+//CHANGE THIS LINE IN RF.C TOO!!!
+//RF_IRQ1_PORT.PIN0CTRL = (PORT_ISC_RISING_gc);
+//................|............................
+//to the pin its connected to
 #define RF_IRQ0_PORT PORTD
 #define RF_IRQ1_PORT PORTE
 #define RF_IRQ0_PIN 2
-#define RF_IRQ1_PIN 1
+#define RF_IRQ1_PIN 0
 
 //ÜBERPRÜFEN!!!!!!!!!
-#define RF_Reset_PORT PORTE
-#define RF_Reset_Pin 2
+#define RF_Reset_PORT PORTD
+#define RF_Reset_Pin 1
 
 #define RF_XTAL_FREQ 12.8
 
@@ -92,7 +96,7 @@ typedef enum RF_TXIRQ1{RF_TXIRQ1_TXDONE=0x08, RF_TXIRQ1_FIFOFULL=0x00}RF_TXIRQ1_
 #define RF_FLAG_FIFOEMPTY 0x02
 #define RF_FLAG_FIFOOVERRUN 0x01
 
-typedef enum RF_Packet_Flags{RF_Packet_Flags_Ack=0x01}RF_Packet_Flags_t;
+typedef enum RF_Packet_Flags{RF_Packet_Flags_Ack=0x01,RF_Packet_Flags_Time=0x02}RF_Packet_Flags_t;
 #define RF_Packet_Flags_MASK 0xff
 
 typedef enum RF_Acknowledgments_State{RF_Acknowledgments_State_Pending,RF_Acknowledgments_State_Transmitted,RF_Acknowledgments_State_Idle,RF_Acknowledgments_State_Error}RF_Acknowledgments_State_t;
@@ -262,6 +266,6 @@ uint8_t RF_RegisterDevice(uint8_t ID);
 void RF_UnregisterDevice(uint8_t ID);
 uint8_t RF_CheckDeviceSlot(uint8_t ID);
 uint16_t RF_GetDeviceSleepTime(uint8_t ID);
-
+uint8_t RF_FindDevice(uint8_t ID);
 
 #endif /* RF_H_ */

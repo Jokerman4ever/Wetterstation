@@ -96,7 +96,7 @@ void RF_Init(uint8_t dev_add)
 	//RF_IRQ0_PORT.PIN2CTRL = (PORT_ISC_RISING_gc);
 	//RF_IRQ0_PORT.INTCTRL |= (PORT_INT0LVL_HI_gc);
 	RF_IRQ1_PORT.INT0MASK = (1<<RF_IRQ1_PIN);
-	RF_IRQ1_PORT.PIN1CTRL = (PORT_ISC_RISING_gc);
+	RF_IRQ1_PORT.PIN0CTRL = (PORT_ISC_RISING_gc);
 	RF_IRQ1_PORT.INTCTRL |= (PORT_INT0LVL_HI_gc);
 #pragma endregion Interrupt Handling
 
@@ -142,12 +142,13 @@ void RF_Wakeup(void)
 {
 	//sysclk_enable_module(SYSCLK_PORT_D, SYSCLK_SPI); //Enable SPI
 	SPI_Init(); //Enable SPI
-	Update_Timer_Init();
+
 	RF_Set_State(RF_State_Receive);
 	_xdelay_ms(10);
 	RF_Set_State(RF_State_StandBy);
 	_xdelay_ms(10);
 	
+	Update_Timer_Init();
 	sysclk_enable_module(SYSCLK_PORT_C, SYSCLK_TC1); //Enable Update-Timer
 	TCC1.CTRLA |= TC_CLKSEL_DIV1024_gc;
 }
@@ -623,6 +624,15 @@ uint16_t RF_GetDeviceSleepTime(uint8_t ID)
 {
 	uint16_t s = ID* (300 / RF_MaxDevices);
 	return (300 - RF_CurrentStatus.CurrentSlotTime + s);
+}
+
+uint8_t RF_FindDevice(uint8_t ID)
+{
+	for (uint8_t i = 0; i < RF_MaxDevices; i++)
+	{
+		if(RF_CurrentStatus.TimeSlots[i] == ID)return 1;
+	}
+	return 0;
 }
 
 uint8_t RF_CheckDeviceSlot(uint8_t ID)
