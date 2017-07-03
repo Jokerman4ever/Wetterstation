@@ -59,6 +59,7 @@ static void Update_Timer_Init(void)
 	TCC1.PER = 2; //Zähler Top-Wert
 	TCC1.CNT = 0x00; //Reset Zähler-Wert
 	TCC1.INTCTRLA = TC_OVFINTLVL_MED_gc;
+	sysclk_disable_module(SYSCLK_PORT_C, SYSCLK_TC1); //TC1 SysClock Enable
 }
 
 void RF_Init(uint8_t dev_add)
@@ -142,12 +143,13 @@ void RF_Wakeup(void)
 {
 	//sysclk_enable_module(SYSCLK_PORT_D, SYSCLK_SPI); //Enable SPI
 	SPI_Init(); //Enable SPI
-	Update_Timer_Init();
+	
 	RF_Set_State(RF_State_Receive);
 	_delay_ms(10);
 	RF_Set_State(RF_State_StandBy);
 	_delay_ms(10);
 	
+	Update_Timer_Init();
 	sysclk_enable_module(SYSCLK_PORT_C, SYSCLK_TC1); //Enable Update-Timer
 	TCC1.CTRLA |= TC_CLKSEL_DIV1024_gc;
 }

@@ -11,11 +11,60 @@
 
 #include <asf.h>
 #include <avr/pgmspace.h>
+#include <stdio.h>
+#include "time.h"
 #include "string.h"
+
 enum PageID {
-				PageHome=1,
-				PageWelcome=100
+				// Welcome:
+				PageWelcome = 1,
+				// TabHome:
+				PageMenuHome = 10,
+				PageHome = 11,
+				// TabeFehler:
+				PageMenuFehlerliste = 20,
+				PageFehlerliste_Oben_Oben = 21,
+				PageFehlerliste_Oben_Mitte = 22,
+				PageFehlerliste_Mitte = 23,
+				PageFehlerliste_Unten_Mitte = 24,
+				PageFehlerliste_Unten_Unten = 25,
+				PageFehler = 26,				
+				// TabEinstellungen:
+				PageMenuEinstellungen = 30,
+				PageEinstellungen_Zurueck = 31,
+				PageEinstellungen_Namen = 32,
+				PageEinstellungen_Speicher = 33,
+				PageEinstellungen_RF = 34,
+				PageEinstellungen_GSM = 35,
+				PageEinstellungen_Energie = 36,
+				PageEinstellungen_Einheit = 37,
+				PageEinstellungen_Intervall = 38,
+				PageEinstellungen_Sync = 39,
+				PageSet_Namen = 40,
+				PageSet_Speicher = 41,
+				PageSet_RF = 42,
+				PageSet_GSM = 43,
+				PageSet_Energie = 44,
+				PageSet_Einheit = 45,
+				PageSet_Intervall = 46,
+				PageSet_Sync = 47,
+				// TabWettermonitor:
+				PageMenuWettermonitor = 50,
+				PageWettermonitor = 51,
 			};
+			
+enum BatLvl {
+				BatLow = 1,		// Batterie Basisstation leer
+				BatMid = 2,		// Batterie Basisstation mittel
+				BatHigh = 3,	// Batterie Basisstation voll
+	};
+
+enum GSMLvl {
+				GSMLow = 1,		// GSM Sendeleistung niedrig
+				GSMMid = 2,		// GSM Sendeleistung mittel
+				GSMHigh = 3,	// GSM Sendeleistung hoch
+		};
+
 	
 void PGM_ReadStr(const uint8_t* str,char* dest,uint8_t start);
 void CenterStringPGM(const uint8_t* str, uint8_t* Temp,uint8_t arrows);
@@ -25,5 +74,6 @@ void SelectStringPGM(const uint8_t* str,uint8_t* Temp);
 void DSP_ChangePage(uint8_t ID);
 void DSP_ScrollMenu(uint8_t dir);
 void DSP_SelectMenu(void);
+void DSP_Refresh(uint8_t BS_BatState, uint8_t BS_GSMState, uint8_t BS_NumNode);
 
 #endif /*DISPLAYMENU_H_*/

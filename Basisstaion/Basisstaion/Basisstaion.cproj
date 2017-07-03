@@ -181,6 +181,7 @@
           <ListValues>
             <Value>DEBUG</Value>
             <Value>BOARD=USER_BOARD</Value>
+            <Value>F_CPU=2000000</Value>
           </ListValues>
         </avrgcc.compiler.symbols.DefSymbols>
         <avrgcc.compiler.directories.IncludePaths>
@@ -198,6 +199,7 @@
             <Value>../src/ASF/common/services/clock</Value>
           </ListValues>
         </avrgcc.compiler.directories.IncludePaths>
+        <avrgcc.compiler.optimization.level>Optimize (-O1)</avrgcc.compiler.optimization.level>
         <avrgcc.compiler.optimization.OtherFlags>-fdata-sections</avrgcc.compiler.optimization.OtherFlags>
         <avrgcc.compiler.optimization.PackStructureMembers>True</avrgcc.compiler.optimization.PackStructureMembers>
         <avrgcc.compiler.optimization.AllocateBytesNeededForEnum>True</avrgcc.compiler.optimization.AllocateBytesNeededForEnum>
@@ -230,37 +232,55 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="src\Clock\clock.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\Clock\clock.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\Clock\Xdelay.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\Clock\Xdelay.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="src\Display-Menu.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\Display-Menu.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="src\eeprom_driver.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\eeprom_driver.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="src\ErrorList.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FileSys.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\FileSys.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\Flash.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="src\Flash.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\lcd-routines.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\lcd-routines.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\RF.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\RF.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\Storage\eeprom_driver.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\Storage\eeprom_driver.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\Storage\FileSys.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\Storage\FileSys.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\Storage\Flash.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="src\Storage\Flash.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="src\time.c">
@@ -396,6 +416,8 @@
     <Folder Include="src\ASF\xmega\utils\bit_handling\" />
     <Folder Include="src\ASF\xmega\utils\preprocessor\" />
     <Folder Include="src\config\" />
+    <Folder Include="src\Clock" />
+    <Folder Include="src\Storage" />
   </ItemGroup>
   <Import Project="$(AVRSTUDIO_EXE_PATH)\\Vs\\Compiler.targets" />
 </Project>

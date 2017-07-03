@@ -8,8 +8,11 @@
 #include "LED.h"
 #include "ADC.h"
 #include <avr/interrupt.h>
+#include "com.h"
 
 uint8_t RF_Stuck;
+
+#define TEST
 
 #define  RF_RECEIVE_ID 1
 #define SLEEPTIME 10	//Wake up every x seconds
@@ -62,12 +65,13 @@ static void alarm(uint32_t time)
 	RF_Packet_t packet;
 	MeassurmentData_t meas_data;
 	
+	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
 		
 	PORTA.OUTTGL = 0x01;
 	
 	//Read Sensor Data
 	DHT_on(); //wait for 2s befor Read!!!
-	PORTA.OUTSET = (1<<7);
+	PORTA.OUTSET = 0xff;
 	i2c_enable();
 	BMP_read(&meas_data.pressure, &meas_data.temp);	//takes 4ms
 	BH1750_read(&meas_data.lux);	//takes 24ms
@@ -80,7 +84,7 @@ static void alarm(uint32_t time)
 	_delay_ms(2000);
 	DHT_read(&meas_data.humidity, &tf);
 	DHT_off();
-	PORTA.OUTCLR = (1<<7);
+	PORTA.OUTCLR = 0xff;
 	
 	//Simulation Wind oder so was in der Art... keine Ahnung
 	if(meas_data.wind_r == 0)
@@ -107,6 +111,7 @@ static void alarm(uint32_t time)
 	while(RF_CurrentStatus.Acknowledgment != RF_Acknowledgments_State_Idle){_delay_ms(1);}
 	
 	RF_Sleep();
+	PMIC.CTRL = PMIC_LOLVLEN_bm; //Only RTC IRQ
 }
 
 int main (void)
@@ -121,65 +126,41 @@ int main (void)
 	
 	PORTA.DIRSET = 0xff;
 	_delay_ms(1000);
-	
+
+//Initialisiere Interfaces	
 	ADC_Init();
-	
 	i2c_init();
+	com_init();
+
+//Initialisiere Sensoren	
 	i2c_enable();
 	BMP_init();
 	i2c_disable();
-	
 	DHT_init();
 	
-	uint8_t buf[3] = {32,64,128};
-
+//Initialisiere RF-Modul
 	RF_Init(0x05);
-	val = RF_Get_Command(0x01);
-	RF_Set_State(RF_State_Receive);
-	RF_Packet_t packet = RF_CreatePacket(buf,3,0x01,0x00);
+	#ifdef TEST
+		val = RF_Get_Command(0x01);
+	#endif	
+	//RF_Set_State(RF_State_Receive);
 	RF_Sleep();
 	
-	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm; //Enable Interrupt
+	PMIC.CTRL = PMIC_LOLVLEN_bm; //Enable Interrupt for RTC
 	
+//Initialisiere RTC & Sleepmanager
 	sleepmgr_init();
-
 	rtc_init();
-	
 	rtc_set_callback(alarm);
-
 	cpu_irq_enable();
 
 	/* We just initialized the counter so an alarm should trigger on next
 	 * time unit roll over.
 	 */
 	rtc_set_alarm_relative(0);
+	
 	while (1)
 	{
-		sleepmgr_enter_sleep();
-				
-		//packet = RF_CreatePacket(data, 12, RF_RECEICE_ID, 0);	
-		//RF_Send_Packet(packet);	
-				
-		//RF_Send_Packet(packet);
-		
-		//if(RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Idle && RF_CurrentStatus.State != RF_State_Receive)RF_Set_State(RF_State_Receive);
-	
-		//uint8_t rssi = RF_Get_Command(RF_REG_FTPRI);
-		//rssi|=(1<<2);
-		//RF_Set_Command(RF_REG_FTPRI,rssi);
-		//RF_Send_Packet(packet);
-		//RF_Get_Data(buffer, 128);
-		
-	/*	if(RF_CurrentStatus.NewPacket == 1)
-		{
-			packet = RF_Get_Packet();
-			uint16_t light = (uint16_t)((packet.Data[0] <<8) + packet.Data[1]);
-			power = (3.3/4096) * (uint16_t)((packet.Data[0] <<8) + packet.Data[1]);
-			LED_Set_Num_Lin(light/16);
-		}
-		
-*/
-		
-		//delay_ms(100);
+		sleepmgr_enter_sleep();	//Go to sleep
 	}
 }

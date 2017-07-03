@@ -5,7 +5,7 @@
  
 #include <avr/io.h>
 #include "lcd-routines.h"
-#include <util/delay.h>
+#include "Clock/Xdelay.h"
 #include <avr/pgmspace.h>
  
  uint8_t  GC_Char0[8] = {1,1,1,2,18,10,4,0};
@@ -42,7 +42,7 @@
 	 data = data2 & 0x0F;
 	 lcd_WNibble(data);
 	 lcd_enable();
-	 _delay_us(50);
+	 _xdelay_us(50);
  }
  /*
 // sendet ein Datenbyte an das LCD
@@ -57,13 +57,13 @@ void lcd_data(unsigned char temp1)
    LCD_PORT &= 0xF0;
    LCD_PORT |= temp1;               // setzen
    lcd_enable();
-   //_delay_us(100);//42
+   //_xdelay_us(100);//42
    temp2 = temp2 & 0x0F;
    LCD_PORT &= 0xF0;
    LCD_PORT |= temp2;               // setzen
    lcd_enable();
    
-   _delay_us(50);
+   _xdelay_us(50);
 }
  
 // sendet einen Befehl an das LCD
@@ -79,13 +79,13 @@ void lcd_command(unsigned char temp1)
    LCD_PORT &= 0xF0;
    LCD_PORT |= temp1;               // setzen
    lcd_enable();
-   //_delay_us(100);//42
+   //_xdelay_us(100);//42
    temp2 = temp2 & 0x0F;            // unteres Nibble holen und maskieren
    LCD_PORT &= 0xF0;
    LCD_PORT |= temp2;               // setzen
    lcd_enable();
    
-   _delay_us(50);//42
+   _xdelay_us(50);//42
 }
  */
 // erzeugt den Enable-Puls
@@ -94,7 +94,7 @@ void lcd_enable(void)
    // Bei Problemen ggf. Pause gemäß Datenblatt des LCD Controllers einfügen
    // http://www.mikrocontroller.net/topic/81974#685882
    LCD_PORT |= (1<<LCD_EN);
-    _delay_us(25);                   // kurze Pause
+    _xdelay_us(25);                   // kurze Pause
    // Bei Problemen ggf. Pause gemäß Datenblatt des LCD Controllers verlängern
    // http://www.mikrocontroller.net/topic/80900
    
@@ -113,30 +113,30 @@ void lcd_init(void)
    lcd_WNibble(0x03);
    lcd_enable();
  
-   _delay_ms(5);
+   _xdelay_ms(5);
    lcd_enable();
  
-   _delay_ms(5);
+   _xdelay_ms(5);
    lcd_enable();
    
-   _delay_ms(5);
+   _xdelay_ms(5);
  
    // 4 Bit Modus aktivieren 
    lcd_WNibble(0x02);
    lcd_enable();
-   _delay_ms(5);
+   _xdelay_ms(5);
  
    // 4Bit / 2 Zeilen / 5x7
    lcd_Write(0x28,0); //0010 1100 0x28
-   _delay_ms(5);
+   _xdelay_ms(5);
    // Display ein / Cursor aus / kein Blinken
    lcd_Write(0x0C,0); //0x0C 
-   _delay_ms(5);
+   _xdelay_ms(5);
     //inkrement / kein Scrollen
    lcd_Write(0x06,0);
-   _delay_ms(5);
+   _xdelay_ms(5);
    lcd_clear();
-   _delay_ms(5);
+   _xdelay_ms(5);
    lcd_home();
 }
  
@@ -145,7 +145,7 @@ void lcd_init(void)
 void lcd_clear(void)
 {
    lcd_Write(CLEAR_DISPLAY,0);
-   _delay_ms(10);
+   _xdelay_ms(10);
 }
  
 // Sendet den Befehl: Cursor Home
@@ -153,7 +153,7 @@ void lcd_clear(void)
 void lcd_home(void)
 {
    lcd_Write(CURSOR_HOME,0);
-   _delay_ms(10);
+   _xdelay_ms(10);
 }
  
 // setzt den Cursor in Zeile y (1..4) Spalte x (0..15)
