@@ -16,7 +16,7 @@
 
 #define RF_Max_PacketPayload 32
 
-#define RF_CS_DATA_PORT PORTE
+#define RF_CS_DATA_PORT PORTD
 #define RF_CS_COM_PORT PORTD
 #define RF_CS_DATA_PIN 0
 #define RF_CS_COM_PIN 3
@@ -30,11 +30,11 @@
 #define RF_IRQ0_PORT PORTD
 #define RF_IRQ1_PORT PORTE
 #define RF_IRQ0_PIN 2
-#define RF_IRQ1_PIN 1
+#define RF_IRQ1_PIN 0
 
 //ÜBERPRÜFEN!!!!!!!!!
-#define RF_Reset_PORT PORTE
-#define RF_Reset_Pin 2
+#define RF_Reset_PORT PORTD
+#define RF_Reset_Pin 1
 
 #define RF_XTAL_FREQ 12.8
 
@@ -226,6 +226,7 @@ typedef struct RF_Status
 	uint8_t IsStuck;
 	RF_TimeSlot_t TimeSlots[RF_MaxDevices];
 	uint16_t CurrentSlotTime;
+	uint8_t PacketsLost;
 } RF_Status_t;
 
 

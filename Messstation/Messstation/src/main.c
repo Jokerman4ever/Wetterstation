@@ -8,10 +8,12 @@
 #include "LED.h"
 #include "ADC.h"
 #include <avr/interrupt.h>
-#include "com.h"11
+#include "com.h"
 
 //Prototypen
-void ConnectToBasestation(void);
+static void ConnectToBasestation(uint32_t time);
+static void alarm(uint32_t time);
+
 
 #define TEST
 
@@ -113,6 +115,11 @@ static void alarm(uint32_t time)
 	
 	RF_Sleep();
 	PMIC.CTRL = PMIC_LOLVLEN_bm; //Only RTC IRQ
+	
+	if(RF_CurrentStatus.PacketsLost > 3)
+	{
+		rtc_set_callback(ConnectToBasestation);
+	}
 }
 
 int main (void)
@@ -145,11 +152,6 @@ int main (void)
 		val = RF_Get_Command(0x01);
 	#endif	
 	
-	//////////////////////////////////////////////////////////////////////////
-	//LOG INTO BASE
-	//////////////////////////////////////////////////////////////////////////
-	ConnectToBasestation();
-	
 	//RF_Set_State(RF_State_Receive);
 	RF_Sleep();
 	
@@ -158,7 +160,7 @@ int main (void)
 //Initialisiere RTC & Sleepmanager
 	sleepmgr_init();
 	rtc_init();
-	rtc_set_callback(alarm);
+	rtc_set_callback(ConnectToBasestation);  //LOG INTO BASE
 	cpu_irq_enable();
 
 	/* We just initialized the counter so an alarm should trigger on next
@@ -173,10 +175,15 @@ int main (void)
 }
 
 
-void ConnectToBasestation(void)
+static void ConnectToBasestation(uint32_t time)
 {
 	uint8_t trys = 10;
 	uint8_t NPtrys = 10;
+	
+	
+	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
+	RF_Wakeup();
+	
 	RF_Packet_t p = RF_CreatePacket(&trys,0,RF_RECEIVE_ID,RF_Packet_Flags_Time);
 	while(trys-- > 0)
 	{
@@ -192,10 +199,24 @@ void ConnectToBasestation(void)
 			if(r.Flags & RF_Packet_Flags_Time)
 			{
 				uint16_t sleep = (r.Data[0]<<8 | r.Data[1]);
-				//TIM HIER MUSSTE SLEEPEN!!!!!
-				break;
+				
+				RF_Sleep();
+				PMIC.CTRL = PMIC_LOLVLEN_bm; //Enable Interrupt for RTC
+				
+				for (uint16_t i = 0; i < sleep % 1000; i++)
+				{
+					_delay_ms(1);
+				}
+				
+				rtc_set_callback(alarm);
+				rtc_set_alarm_relative(sleep / 1100);
+				
+				return;
 			}
 		}
 	}
-	//SYNC FAILED.... Was Nu?
+	
+	RF_Sleep();
+	PMIC.CTRL = PMIC_LOLVLEN_bm; //Enable Interrupt for RTC
+	rtc_set_alarm_relative(SLEEPCOUNT); //Retry after 5min
 }

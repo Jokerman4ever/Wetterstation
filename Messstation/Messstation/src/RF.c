@@ -97,7 +97,7 @@ void RF_Init(uint8_t dev_add)
 	//RF_IRQ0_PORT.PIN2CTRL = (PORT_ISC_RISING_gc);
 	//RF_IRQ0_PORT.INTCTRL |= (PORT_INT0LVL_HI_gc);
 	RF_IRQ1_PORT.INT0MASK = (1<<RF_IRQ1_PIN);
-	RF_IRQ1_PORT.PIN1CTRL = (PORT_ISC_RISING_gc);
+	RF_IRQ1_PORT.PIN0CTRL = (PORT_ISC_RISING_gc);
 	RF_IRQ1_PORT.INTCTRL |= (PORT_INT0LVL_HI_gc);
 #pragma endregion Interrupt Handling
 
@@ -519,6 +519,7 @@ void RF_HandleInterrupt(void)
 			RF_CurrentStatus.Acknowledgment = RF_Acknowledgments_State_Idle;
 			RF_Set_State(RF_State_StandBy);
 			RF_CurrentStatus.IsStuck=0;
+			RF_CurrentStatus.PacketsLost = 0;
 			//_delay_ms(2);
 		}
 	}
@@ -562,6 +563,7 @@ void RF_Update(void)
 				//Packet is lost no retransmition!
 				 RF_CurrentStatus.Acknowledgment = RF_Acknowledgments_State_Idle;
 				 RF_CurrentStatus.AckRetransmit=0;
+				 RF_CurrentStatus.PacketsLost++;
 			}
 		}
 	}
