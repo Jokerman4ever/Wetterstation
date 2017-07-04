@@ -56,7 +56,7 @@ static void Update_Timer_Init(void)
 	sysclk_enable_module(SYSCLK_PORT_C, SYSCLK_TC1); //TC1 SysClock Enable
 	TCC1.CTRLA = TC_CLKSEL_DIV1024_gc; //Presackler
 	TCC1.CTRLB = TC_WGMODE_NORMAL_gc;
-	TCC1.PER = 2; //Zähler Top-Wert
+	TCC1.PER = 20; //Zähler Top-Wert
 	TCC1.CNT = 0x00; //Reset Zähler-Wert
 	TCC1.INTCTRLA = TC_OVFINTLVL_MED_gc;
 }
@@ -585,7 +585,7 @@ void RF_Update(void)
 		RF_CurrentStatus.CurrentSlotTime = 0;
 	}
 
-	if(RF_CurrentStatus.CurrentSlotTime % 6000)//Alle 1Minute
+	if((RF_CurrentStatus.CurrentSlotTime % 6000) == 0)//Alle 1Minute
 	{
 		for (uint8_t i = 0; i < RF_MaxDevices; i++)
 		{
@@ -643,7 +643,7 @@ uint8_t RF_Get_SignalStrength(void)
 //Basisstation only
 uint8_t RF_RegisterDevice(uint8_t ID)
 {
-	for (uint8_t i = 0; i < RF_MaxDevices; i++)
+	for (uint8_t i = 1; i < RF_MaxDevices; i++)
 	{
 		if(RF_CheckDeviceSlot(i))
 		{
@@ -669,9 +669,9 @@ uint16_t RF_GetDeviceSleepTime(uint8_t ID)
 
 uint8_t RF_FindDevice(uint8_t ID)
 {
-	for (uint8_t i = 0; i < RF_MaxDevices; i++)
+	for (uint8_t i = 1; i < RF_MaxDevices; i++)
 	{
-		if(RF_CurrentStatus.TimeSlots[i].ID == ID)return 1;
+		if(RF_CurrentStatus.TimeSlots[i].ID == ID)return i;
 	}
 	return 0;
 }

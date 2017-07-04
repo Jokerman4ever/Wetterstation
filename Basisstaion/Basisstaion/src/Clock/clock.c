@@ -27,7 +27,7 @@ void clock_change_2MHZ(void)
 	//Update RF-Moduls-Frequency
 	state = sysclk_module_is_enabled(SYSCLK_PORT_C, SYSCLK_TC1);
 	sysclk_disable_module(SYSCLK_PORT_C, SYSCLK_TC1);
-	TCC1.PER = 2;	//RF-Update-Timer
+	TCC1.PER = 20;	//RF-Update-Timer
 	TCC1.CNT = 0;
 	SPID.CTRL |= SPI_PRESCALER_DIV4_gc; 
 	if(state){ sysclk_enable_module(SYSCLK_PORT_C, SYSCLK_TC1);}
@@ -53,7 +53,7 @@ void clock_change_32MHZ(void)
 	//Update RF-Moduls-Frequency
 	state = sysclk_module_is_enabled(SYSCLK_PORT_C, SYSCLK_TC1);
 	sysclk_disable_module(SYSCLK_PORT_C, SYSCLK_TC1);
-	TCC1.PER = 32;	//RF-Update-Timer
+	TCC1.PER = 320;	//RF-Update-Timer
 	TCC1.CNT = 0;
 	SPID.CTRL |= SPI_PRESCALER_DIV64_gc;
 	if(state){ sysclk_enable_module(SYSCLK_PORT_C, SYSCLK_TC1);}

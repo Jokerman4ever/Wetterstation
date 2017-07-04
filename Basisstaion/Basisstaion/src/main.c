@@ -82,7 +82,7 @@ void HandleClients(void)
 	if(RF_CurrentStatus.NewPacket)
 	{
 		RF_Packet_t p = RF_Get_Packet();
-		if(RF_FindDevice(p.Sender))
+		if(RF_FindDevice(p.Sender) > 0 && !(p.Flags & RF_Packet_Flags_Time))
 		{
 			if(p.Flags & RF_Packet_Flags_Weather)
 			{
@@ -92,13 +92,25 @@ void HandleClients(void)
 		}
 		else
 		{
+			if((p.Flags & RF_Packet_Flags_Time))
+			{
+				uint8_t index = RF_FindDevice(p.Sender);
+				RF_UnregisterDevice(index);
+			}
 			uint8_t id = RF_RegisterDevice(p.Sender);
 			uint16_t sleep = RF_GetDeviceSleepTime(id);
 			Packet_buffer[0] = (sleep>>8) & 0xff;
 			Packet_buffer[1] = sleep & 0xff;
 			p = RF_CreatePacket(Packet_buffer,2,p.Sender,RF_Packet_Flags_Time);
-			_delay_ms(500);//wait till the Messstation is in Receive mode!
+			_delay_ms(10);//wait till the Messstation is in Receive mode!
 			RF_Send_Packet(p);
+			while(RF_CurrentStatus.State == RF_State_Transmit){_delay_ms(1);}
+			while(RF_CurrentStatus.Acknowledgment != RF_Acknowledgments_State_Idle){_delay_ms(1);}
+			if(RF_CurrentStatus.AckResult == RF_Acknowledgments_Result_ERROR)
+			{
+				RF_UnregisterDevice(p.Sender);
+			}
+	
 		}
 	}
 }
