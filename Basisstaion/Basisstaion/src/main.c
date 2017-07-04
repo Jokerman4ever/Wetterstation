@@ -82,7 +82,7 @@ void HandleClients(void)
 	if(RF_CurrentStatus.NewPacket)
 	{
 		RF_Packet_t p = RF_Get_Packet();
-		if(RF_FindDevice(p.ID))
+		if(RF_FindDevice(p.Sender))
 		{
 			if(p.Flags & RF_Packet_Flags_Weather)
 			{

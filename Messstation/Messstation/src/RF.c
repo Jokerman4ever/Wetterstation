@@ -517,6 +517,7 @@ void RF_HandleInterrupt(void)
 		{
 			//Packet is ok ACK was received
 			RF_CurrentStatus.Acknowledgment = RF_Acknowledgments_State_Idle;
+			RF_CurrentStatus.AckResult = RF_Acknowledgments_Result_OK;
 			RF_Set_State(RF_State_StandBy);
 			RF_CurrentStatus.IsStuck=0;
 			RF_CurrentStatus.PacketsLost = 0;
@@ -562,6 +563,7 @@ void RF_Update(void)
 			{
 				//Packet is lost no retransmition!
 				 RF_CurrentStatus.Acknowledgment = RF_Acknowledgments_State_Idle;
+				 RF_CurrentStatus.AckResult = RF_Acknowledgments_Result_ERROR;
 				 RF_CurrentStatus.AckRetransmit=0;
 				 RF_CurrentStatus.PacketsLost++;
 			}
