@@ -16,7 +16,7 @@
 
 #define RF_Max_PacketPayload 32
 
-#define RF_CS_DATA_PORT PORTE
+#define RF_CS_DATA_PORT PORTD
 #define RF_CS_COM_PORT PORTD
 #define RF_CS_DATA_PIN 0
 #define RF_CS_COM_PIN 3
@@ -30,11 +30,11 @@
 #define RF_IRQ0_PORT PORTD
 #define RF_IRQ1_PORT PORTE
 #define RF_IRQ0_PIN 2
-#define RF_IRQ1_PIN 1
+#define RF_IRQ1_PIN 0
 
 //ÜBERPRÜFEN!!!!!!!!!
-#define RF_Reset_PORT PORTE
-#define RF_Reset_Pin 2
+#define RF_Reset_PORT PORTD
+#define RF_Reset_Pin 1
 
 #define RF_XTAL_FREQ 12.8
 
@@ -100,6 +100,8 @@ typedef enum RF_Packet_Flags{RF_Packet_Flags_Ack=0x01,RF_Packet_Flags_Time=0x02,
 #define RF_Packet_Flags_MASK 0xff
 
 typedef enum RF_Acknowledgments_State{RF_Acknowledgments_State_Pending,RF_Acknowledgments_State_Transmitted,RF_Acknowledgments_State_Idle,RF_Acknowledgments_State_Error}RF_Acknowledgments_State_t;
+
+typedef enum RF_Acknowledgments_Result{RF_Acknowledgments_Result_OK,RF_Acknowledgments_Result_ERROR}RF_Acknowledgments_Result_t;
 
 typedef enum RF_State{RF_State_Transmit=0x80,
 					RF_State_Receive=0x60,
@@ -221,11 +223,13 @@ typedef struct RF_Status
 	uint8_t IRQ1;
 	uint8_t NewPacket;
 	RF_Acknowledgments_State_t Acknowledgment;
+	RF_Acknowledgments_Result_t AckResult;
 	uint8_t AckTimeout;
 	uint8_t AckRetransmit;
 	uint8_t IsStuck;
 	RF_TimeSlot_t TimeSlots[RF_MaxDevices];
 	uint16_t CurrentSlotTime;
+	uint8_t PacketsLost;
 } RF_Status_t;
 
 
