@@ -97,11 +97,11 @@ ISR(USARTF0_RXC_vect)
 	//printf("hallo");
 	//segmenta_aus;
 	if( uart_str_complete == 0 )
-	{	
+	{
 		// wenn uart_string gerade in Verwendung, neues Zeichen verwerfen
 		//send_string("bin da");
 		// Daten werden erst in uart_string geschrieben, wenn nicht String-Ende/max Zeichenlänge erreicht ist/string gerade verarbeitet wird
-		if( nextChar != '\n' && nextChar != '\r' && uart_str_count < UART_MAXSTRLEN ) 
+		if( nextChar != '\n' && nextChar != '\r' && uart_str_count < UART_MAXSTRLEN )
 		{
 			uart_string[uart_str_count] = nextChar;
 			//	printf("%s\n\r", nextChar);
@@ -138,398 +138,413 @@ void server_configuration(void)
 
 
 
-		switch(init_schritt)
+	switch(init_schritt)
 
-		{
-			case -2: send_string("AT"); break;
-			case -1:send_string("AT+IPR=9600"); break;
+	{
+		case -2: send_string("AT"); break;
+		case -1:send_string("AT+IPR=9600"); break;
 
-			case 0:
+		case 0:
 
-			send_string("AT+CSQ");
-			//printf("AT+CSQ\n\r");
-			break;
+		send_string("AT+CSQ");
+		
+		break;
 
-			case 1:
-			send_string("AT+CREG?");
-			//			printf("AT+CREG?\n\r");
-			break;
+		case 1:
+		send_string("AT+CREG?");
+		//			printf("AT+CREG?\n\r");
+		break;
 
-			case 2: send_string("AT+CGACT?") ; break;
-			case 3: send_string("AT+CMEE=1");  break;
-			case 4: send_string("AT+CGATT=1"); break;
-			case 5: send_string("AT+CSTT=\"internet.t-d1.de\"");  break;
-			case 6: send_string("AT+CIICR"); break;
-			case 7: send_string("AT+CIFSR");break;
-			case 8: send_string("AT+CIPSTART=\"TCP\",\"74.124.194.252\",\"80\"\n\r"); break;
-			case 9: send_string("AT+CIPCLOSE=0");break;
-			case 10: send_string("AT+CFUN=1"); break;
-			case 11: send_string("AT+CPIN?"); break;
-			case 12: send_string("AT+CIPSERVER=1,80"); break;
-			case 13: send_string("AT+CIFSR"); break;
-			case 14: send_string("AT+CIPSTATUS"); break;
-
-
+		case 2: send_string("AT+CGACT?") ; break;
+		case 3: send_string("AT+CMEE=1");  break;
+		case 4: send_string("AT+CGATT=1"); break;
+		case 5: send_string("AT+CSTT=\"internet.t-d1.de\"");  break;
+		case 6: send_string("AT+CIICR"); break;
+		case 7: send_string("AT+CIFSR");break;
+		case 8: send_string("AT+CIPSTART=\"TCP\",\"74.124.194.252\",\"80\"\n\r"); break;
+		case 9: send_string("AT+CIPCLOSE=0");break;
+		case 10: send_string("AT+CFUN=1"); break;
+		case 11: send_string("AT+CPIN?"); break;
+		case 12: send_string("AT+CIPSERVER=1,80"); break;
+		case 13: send_string("AT+CIFSR"); break;
+		case 14: send_string("AT+CIPSTATUS"); break;
 
 
-		}
+
+
+	}
 }
 
 void server_configuration_auswertung(void)
 {
-			char mystring[]="OK";
+	char mystring[]="OK";
 
-			switch(init_schritt){
-				case -2:
-				if(!strcmp(mystring, uart_string))
-				{ 	printf("%s\n\r",&uart_string);
+	switch(init_schritt){
+		case -2:
+		if(!strcmp(mystring, uart_string))
+		{ 	printf("%s\n\r",&uart_string);
+			init_schritt++;
+			printf("%d\n\r",init_schritt);
+			warte_ok=0;
+			server_configuration();
+			
+		}
+
+		
+
+		else if(warte_ok==5)
+		{
+			//warte_ok++;
+			warte_ok=0;
+			//printf("hallo");
+			server_configuration();
+		}
+		case -1:
+		{
+			if(!strcmp(mystring, uart_string))
+			{
+				//printf("%s\n\r",&uart_string);
+				init_schritt++;
+				//printf("%d\n\r",init_schritt);
+				warte_ok=0;
+				server_configuration();
+			}
+			else if(warte_ok==5)
+			{
+				//warte_ok++;
+				warte_ok=0;
+				//printf("hallo");
+				server_configuration();
+			}
+			break;
+		}
+		case 0:
+		{
+			//BEFEHL AT+CSQ
+			if(!strcmp(mystring, uart_string))
+			{ 	//printf("%s\n\r",&uart_string);
+				init_schritt++;
+				//printf("%d\n\r",init_schritt);
+				warte_ok=0;
+				server_configuration();
+			}
+			else if(warte_ok==5)
+			{
+				//warte_ok++;
+				warte_ok=0;
+				//printf("hallo");
+				server_configuration();
+			}
+			break;
+		}
+		//BEFehl AT+CREG?
+		case 1:
+		{
+			if (!strcmp(mystring, uart_string))
+			{ 	
+			//printf("%s\n\r",&uart_string);
+				init_schritt++;
+				warte_ok=0;
+				//printf("%d\n\r",init_schritt);
+				server_configuration();
+			}
+
+			else if(warte_ok==5)
+			{
+				warte_ok=0;
+				server_configuration();
+			}
+			break;
+		}
+		case 2: //Befehl AT+CGACT?
+		
+			{
+				if (!strcmp(mystring, uart_string))
+				{ 	//printf("%s\n\r",&uart_string);
 					init_schritt++;
-					printf("%d\n\r",init_schritt);
 					warte_ok=0;
+					//printf("%d\n\r",init_schritt);
 					server_configuration();
-					
 				}
-
-				
 
 				else if(warte_ok==5)
-				 {
-					//warte_ok++;
-					warte_ok=0;
-					//printf("hallo");
-					server_configuration();
-				}
-				case -1:
 				{
-					if(!strcmp(mystring, uart_string))
-					{ 	
-						printf("%s\n\r",&uart_string);
-						init_schritt++;
-						printf("%d\n\r",init_schritt);
-						warte_ok=0;
-						server_configuration();
-					}
-					else if(warte_ok==5) 
-					{
-						//warte_ok++;
-						warte_ok=0;
-						//printf("hallo");
-						server_configuration();
-					}
-					break;
-				}
-				case 0:
-				{ 
-					//BEFEHL AT+CSQ
-					if(!strcmp(mystring, uart_string))
-					{ 	printf("%s\n\r",&uart_string);
-						init_schritt++;
-						printf("%d\n\r",init_schritt);
-						warte_ok=0;
-						server_configuration();
-					}
-					else if(warte_ok==5) 
-					{
-						//warte_ok++;
-						warte_ok=0;
-						//printf("hallo");
-						server_configuration();
-					}
-					break;
-				}
-				//BEFehl AT+CREG?
-				case 1:
-				{
-					/*if(!strcmp("+CREG: 0,1",uart_string))
-					{
-					printf("%s\n\r",&uart_string); }*/
-					if (!strcmp(mystring, uart_string))
-					{ 	printf("%s\n\r",&uart_string);
-						init_schritt++;
-						printf("%d\n\r",init_schritt);
-						warte_ok=0;
-						server_configuration();
-					}
-					else if(warte_ok==5) 
-					{
-						//warte_ok++;
-						warte_ok=0;
-						server_configuration();
-					}
-					break;
-				}
-				case 2: //Befehl AT+CGACT?
-				
-				/*if(!strcmp("+CGACT: 1,0",uart_string))
-				{
-				printf("%s\n\r",&uart_string); }
-
-				else if(!strcmp("+CGACT: 2,0",uart_string))
-				{
-				printf("%s\n\r",&uart_string); }
-
-				else if(!strcmp("+CGACT: 3,0",uart_string))
-				{
-				printf("%s\n\r",&uart_string); }*/
-				if (!strcmp(mystring, uart_string))
-				{ 	printf("%s\n\r",&uart_string);
-					init_schritt++;
-					printf("%d\n\r",init_schritt);
 					warte_ok=0;
 					server_configuration();
 				}
-
-				else if(warte_ok==5) {
-					//warte_ok++;
-					warte_ok=0;
-				server_configuration();}
-				break;
-
-				case 3: //BEFEHL AT+CMEE=!
-
-				if (!strcmp(mystring, uart_string))
-				{ 	printf("%s\n\r",&uart_string);
-					init_schritt++;
-					printf("%d\n\r",init_schritt);
-					warte_ok=0;
-					server_configuration();
-				}
-				else if(warte_ok==5) {
-					//warte_ok++;
-					warte_ok=0;
-				server_configuration();}
-				break;
-
-
-				case 4: //Befehl ATCGATT=1
-
-				if (!strcmp(mystring, uart_string))
-				{ 	printf("%s\n\r",&uart_string);
-					init_schritt++;
-					warte_ok=0;
-					printf("%d\n\r",init_schritt);
-					server_configuration();
-				}
-
-				else if(warte_ok==5) {
-					//	warte_ok++;
-					warte_ok=0;
-				server_configuration();}
-				break;
-
-				case 5 :
-				//Befehl AT+CSST="interne.t-d1.de
-				if (!strcmp(mystring, uart_string))
-				{ 	printf("%s\n\r",&uart_string);
-					init_schritt++;
-					warte_ok=0;
-					printf("%d\n\r",init_schritt);
-					server_configuration();
-				}
-
-				else if(warte_ok==5) {
-					//warte_ok++;
-					warte_ok=0;
-				server_configuration();}
-
-				break;
-
-				
-
-
-				
-				case 6 ://AT+CIIR
-
-				if (!strcmp(mystring, uart_string))
-				{ 	printf("%s\n\r",&uart_string);
-					init_schritt++;
-					warte_ok=0;
-					printf("%d\n\r",init_schritt);
-					server_configuration();
-				}
-
-				else if(warte_ok==5) {
-					//warte_ok++;
-					warte_ok=0;
-				server_configuration();}
-				break;
-
-				case 7: //AT CIFSR
-				printf("%s\n\r",&uart_string);
-				printf("Schritt %d\n\r",strlen(&uart_string));
-
-				if (strlen(&uart_string)==13)
-				{ 	printf("%s\n\r",&uart_string);
-					init_schritt++;
-					warte_ok=0;
-					printf("%d\n\r",init_schritt);
-					server_configuration();
-				}
-
-				else if(warte_ok==5) {
-					//warte_ok++;
-					warte_ok=0;
-				server_configuration();}
-				//printf("hallo");
-				/*if (!strcmp("ERROR", uart_string))
-				{
-				//init_schritt++;
-				//warte_ok=0;
-				/
-				server_configuration();
-				}
-
-				else  {
-				printf("%s\n\r wieso",uart_string);
-				init_schritt++;
-				printf("%d\n\r",init_schritt);
-				server_configuration();}*/
-				break;
-
-				case 8 :
-
-				if (!strcmp(mystring, uart_string))
-				{ 	printf("%s\n\r",&uart_string);
-					init_schritt++;
-					warte_ok=0;
-					printf("%d\n\r",init_schritt);
-					server_configuration();
-				}
-
-				/*else if(!strcmp("TCP connection success",&uart_string))
-
-				{printf("%s\n\r",&uart_string);}
-
-				
-				else if(!strcmp("CONNECT OK",&uart_string))
-
-				{printf("%s\n\r",&uart_string);}*/
-				
-
-				else if(warte_ok==5) {
-					warte_ok=0;
-				server_configuration();}
-				break;
-
-				case 9:
-
-				if (!strcmp("CLOSE OK", uart_string))
-				{ 	printf("%s\n\r",&uart_string);
-					init_schritt++;
-					warte_ok=0;
-					printf("%d\n\r",init_schritt);
-					server_configuration();
-				}
-
-				else if(warte_ok==5) {
-					warte_ok=0;
-				server_configuration();}
-				break;
-
-				
-				case 10:
-
-				if (!strcmp(mystring, uart_string))
-				{ 	printf("%s\n\r",&uart_string);
-					init_schritt++;
-					warte_ok=0;
-					printf("%d\n\r",init_schritt);
-					server_configuration();
-				}
-
-				else if(warte_ok==5) {
-					warte_ok=0;
-				server_configuration();}
-				break;
-
-				case 11:
-
-				/*	if(!strcmp("+CPIN: READY",uart_string))
-				{
-
-				printf("%s\n\r",&uart_string); }
-
-				else if(!strcmp(mystring,uart_string))
-				{
-
-				printf("%s\n\r",&uart_string); }*/
-				if (!strcmp("SIM is ready", uart_string))
-				{ 	printf("%s\n\r",&uart_string);
-					init_schritt++;
-					warte_ok=0;
-					printf("%d\n\r",init_schritt);
-					server_configuration();
-				}
-
-				else if(warte_ok==5) {
-					warte_ok=0;
-				server_configuration();}
-				break;
-
-				case 12 :
-
-				/*	if (!strcmp(mystring, uart_string))
-				{ 	printf("%s\n\r",&uart_string);}*/
-
-				if(!strcmp("SERVER OK",uart_string)){
-					init_schritt++;
-					warte_ok=0;
-					printf("%s\n\r",&uart_string);
-					printf("%d\n\r",init_schritt);
-					server_configuration();
-				}
-
-				else if(warte_ok==5) {
-					warte_ok=0;
-				server_configuration();}
-				break;
-
-				case 13 :
-
-				if (strlen(uart_string)==13)
-				{ 	printf("%s\n\r",&uart_string);
-					init_schritt++;
-					warte_ok=0;
-					printf("%d\n\r",init_schritt);
-					server_configuration();
-				}
-
-				else if(warte_ok==5) {
-					warte_ok=0;
-				server_configuration();}
-				break;
-
-
-				case 14:
-
-				/*if(!strcmp(mystring,uart_string))
-				{
-				printf("%s\n\r",&uart_string); }*/
-				if (!strcmp("STATE: SERVER LISTENING", uart_string))
-				{ 	printf("%s\n\r",&uart_string);
-					//init_schritt++;
-					warte_ok=0;
-					server_initialisierung=true;
-					printf("%d\n\r",init_schritt);
-					//server_configuration();
-				}
-
-				else if(warte_ok==5) {
-					warte_ok=0;
-				server_configuration();}
 				break;
 			}
-			//printf("%s",&mystring);
+
+		case 3: //BEFEHL AT+CMEE=!
+
+		{
+			if (!strcmp(mystring, uart_string))
+			{ 	//printf("%s\n\r",&uart_string);
+				init_schritt++;
+				warte_ok=0;
+				//printf("%d\n\r",init_schritt);
+				server_configuration();
+			}
+
+			else if(warte_ok==5)
+			{
+				warte_ok=0;
+				server_configuration();
+			}
+			break;
+		}
+
+		case 4: //Befehl ATCGATT=1
+	{
+		if (!strcmp(mystring, uart_string))
+		{ 	//printf("%s\n\r",&uart_string);
+			init_schritt++;
+			warte_ok=0;
+			//printf("%d\n\r",init_schritt);
+			server_configuration();
+		}
+
+		else if(warte_ok==5)
+		{
+			warte_ok=0;
+			server_configuration();
+		}
+		break;
+	}
+
+		case 5 :
+		//Befehl AT+CSST="interne.t-d1.de
+		{
+			if (!strcmp(mystring, uart_string))
+			{ //	printf("%s\n\r",&uart_string);
+				init_schritt++;
+				warte_ok=0;
+				//printf("%d\n\r",init_schritt);
+				server_configuration();
+			}
+
+			else if(warte_ok==5)
+			{
+				warte_ok=0;
+				server_configuration();
+			}
+			break;
+		}
+
+		
+
+
+		
+		case 6 ://AT+CIIR
+		{
+			if (!strcmp(mystring, uart_string))
+			{ //	printf("%s\n\r",&uart_string);
+				init_schritt++;
+				warte_ok=0;
+				//printf("%d\n\r",init_schritt);
+				server_configuration();
+			}
+
+			else if(warte_ok==5)
+			{
+				warte_ok=0;
+				server_configuration();
+			}
+			break;
+		}
+
+		case 7: //AT CIFSR
+		{
+			if (strlen(&uart_string)==13)
+			{ 	//printf("%s\n\r",&uart_string);
+				init_schritt++;
+				warte_ok=0;
+				//printf("%d\n\r",init_schritt);
+				server_configuration();
+			}
+
+			else if(warte_ok==5)
+			{
+				//warte_ok++;
+				warte_ok=0;
+				server_configuration();
+				
+			}
+			break;
+		}
+
+		
+		//printf("%s\n\r",&uart_string);
+		//printf("Schritt %d\n\r",strlen(&uart_string));
+
+		
+		//printf("hallo");
+		/*if (!strcmp("ERROR", uart_string))
+		{
+		//init_schritt++;
+		//warte_ok=0;
+		/
+		server_configuration();
+		}
+
+		else  {
+		printf("%s\n\r wieso",uart_string);
+		init_schritt++;
+		printf("%d\n\r",init_schritt);
+		server_configuration();}*/
+		
+
+		case 8 :
+
+		{
+			if (!strcmp(mystring, uart_string))
+			{ 	//printf("%s\n\r",&uart_string);
+				init_schritt++;
+				warte_ok=0;
+				//printf("%d\n\r",init_schritt);
+				server_configuration();
+			}
+
+			else if(warte_ok==5)
+			{
+				warte_ok=0;
+				server_configuration();
+			}
+			break;
+		}
+
+		case 9:
+
+		if (!strcmp("CLOSE OK", uart_string))
+		{ 	//printf("%s\n\r",&uart_string);
+			init_schritt++;
+			warte_ok=0;
+			//printf("%d\n\r",init_schritt);
+			server_configuration();
+		}
+
+		else if(warte_ok==5) {
+			warte_ok=0;
+		server_configuration();}
+		break;
+
+		
+		case 10:
+		{
+			if (!strcmp(mystring, uart_string))
+			{ //	printf("%s\n\r",&uart_string);
+				init_schritt++;
+				warte_ok=0;
+				//printf("%d\n\r",init_schritt);
+				server_configuration();
+			}
+
+			else if(warte_ok==5)
+			 {
+			warte_ok=0;
+			server_configuration();
+			 }
+		break;
+		}
+
+
+		case 11:
+
+		{
+			if (!strcmp("SIM is ready", uart_string))
+			{ 	//printf("%s\n\r",&uart_string);
+				init_schritt++;
+				warte_ok=0;
+				//printf("%d\n\r",init_schritt);
+				server_configuration();
+			}
+
+			else if(warte_ok==5)
+			{
+			warte_ok=0;
+			server_configuration();
+			}
+		break;
+		}
+		
+
+		case 12 :
+		{
+
+			if(!strcmp("SERVER OK",uart_string)){
+				init_schritt++;
+				warte_ok=0;
+				//printf("%s\n\r",&uart_string);
+				//printf("%d\n\r",init_schritt);
+				server_configuration();
+			}
+
+			else if(warte_ok==5)
+			{
+				warte_ok=0;
+				server_configuration();
+			}
+			break;
+		}
+
+	
+
+		case 13 :
+		{
+			if (strlen(uart_string)==13)
+			{ 	//printf("%s\n\r",&uart_string);
+				init_schritt++;
+				warte_ok=0;
+				//printf("%d\n\r",init_schritt);
+				server_configuration();
+			}
+
+			else if(warte_ok==5) 
+			{
+			warte_ok=0;
+			server_configuration();
+			}
+			
+		break;
+		}
+
+	
+
+
+		case 14:{
+
+		/*if(!strcmp(mystring,uart_string))
+		{
+		printf("%s\n\r",&uart_string); }*/
+		if (!strcmp("STATE: SERVER LISTENING", uart_string))
+		{ 	//printf("%s\n\r",&uart_string);
+			//init_schritt++;
+			warte_ok=0;
+			server_initialisierung=true;
+			//printf("%d\n\r",init_schritt);
+			//server_configuration();
+		}
+
+		else if(warte_ok==5)
+		{
+			warte_ok=0;
+		server_configuration();
+		}
+		
+		break;
+	}
+	
+	}
+	//printf("%s",&mystring);
 
 }
 
 
 void empfangen_string()
 {
-					
-	printf("hallo");
+	
+	//printf("hallo");
 
 }
 
 
-		

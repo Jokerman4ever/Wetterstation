@@ -29,22 +29,18 @@ void send_string(char *data);
 #define COM_H_
 #include <avr/io.h>
 #include <stdio.h>
-#define UART_MAXSTRLEN 20
+//#define UART_MAXSTRLEN 100
 //volatile char uart_string[UART_MAXSTRLEN + 1];
-void COM_Int_init(void);
+
 void com_init(void);
 void COM_Baudrate(void);
 void COM_Send(char);
 void COM_Send_string(char *);
 void interrupt_init();
 void empfangen_string();
- int uart_putchar(char c, FILE *stream);
- void coms_init (void);
- void server_configuration();
- void server_configuration_auswertung();
- void antwort_ok();
- 
- uint8_t server_initialisierung;
+void server_configuration();
+void server_configuration_auswertung();
+uint8_t server_initialisierung;
 
 
 
