@@ -11,9 +11,16 @@
 
 #include <asf.h>
 #include <util/delay.h>
+
+//IN FUNCTION void Flash_SPI_Init(void)
+//CHANGE THIS LINE IN FLASH.C TOO!
+//sysclk_enable_module(SYSCLK_PORT_E, SYSCLK_SPI);
+//............................|...................
+
 #define Flash_CS_PORT PORTE
-#define Flash_CS_Pin 0
-#define Flash_SPI_PORT PORTD
+#define Flash_CS_Pin 4
+#define Flash_SPI_PORT PORTE
+#define Flash_SPI_REG SPIE
 
 #define Flash_CS_HIGH() (Flash_CS_PORT.OUTSET = (1<<Flash_CS_Pin))//PC3 HIGH
 #define Flash_CS_LOW() (Flash_CS_PORT.OUTCLR = (1<<Flash_CS_Pin))//PC3 LOW
@@ -46,8 +53,8 @@ void Flash_sector_Erase(FlashAddress add);
 void Flash_chip_Erase(void);
 uint8_t Flash_check_ID(void);
 uint8_t Flash_isBusy(void);
-void SPI_putc(uint8_t data);
-uint8_t SPI_getc(void);
+//void SPI_putc(uint8_t data);
+//uint8_t SPI_getc(void);
 FlashAddress Flash_CreateAddress(uint8_t high,uint8_t mid,uint8_t low,uint8_t xlow);
 void Flash_SPI_Init(void);
 #endif /* FLASH_H_ */
