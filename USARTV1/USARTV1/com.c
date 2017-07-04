@@ -10,20 +10,7 @@
 #endif
 
 
-#define segmenta_an PORTE.OUTSET= PIN0_bm;
-#define segmentb_an PORTE.OUTSET= PIN1_bm;
-#define segmentc_an PORTE.OUTSET= PIN2_bm;
-#define segmentd_an PORTE.OUTSET= PIN3_bm;
-#define segmente_an PORTE.OUTSET= PIN4_bm;
-#define segmentf_an PORTE.OUTSET= PIN5_bm;
-#define segmentg_an PORTE.OUTSET= PIN6_bm;
-#define segmenta_aus PORTE.OUTCLR= PIN0_bm;
-#define segmentb_aus PORTE.OUTCLR= PIN1_bm;
-#define segmentc_aus PORTE.OUTCLR= PIN2_bm;
-#define segmentd_aus PORTE.OUTCLR= PIN3_bm;
-#define segmente_aus PORTE.OUTCLR= PIN4_bm;
-#define segmentf_aus PORTE.OUTCLR= PIN5_bm;
-#define segmentg_aus PORTE.OUTCLR= PIN6_bm;
+
 #include "com.h"
 #include "display.h"
 #include <avr/io.h>
@@ -36,7 +23,7 @@ int lenght = 0x00;
 #define UART_MAXSTRLEN 20
 unsigned char nextChar;
 // USART
-uint8_t init_schritt=0;
+int init_schritt=-2;
 extern volatile uint8_t uart_str_complete;
 extern _Bool daten_enmpfangen;   // 1 .. String komplett empfangen
 volatile uint8_t uart_str_count = 0;
@@ -157,24 +144,26 @@ ISR(USARTF0_RXC_vect)
 		switch(init_schritt)
 
 		{
+		case -2: send_string("AT"); break;
+		case -1:send_string("AT+IPR=9600"); break;
 
 			case 0:
 
 			send_string("AT+CSQ");
-			printf("AT+CSQ\n\r");
+			//printf("AT+CSQ\n\r");
 			break;
 
 			case 1:
 			send_string("AT+CREG?");
-			printf("AT+CREG?\n\r");
+//			printf("AT+CREG?\n\r");
 			break;
 
-			case 2: send_string("AT+CGACT?"); printf("AT+CGACT?\n\r"); ; break;
-			case 3: send_string("AT+CMEE=1");printf("AT+CMEE=1\n\r");  break;
-			case 4: send_string("AT+CGATT=1");printf("AT+CGATT=1"); break;
-			case 5: send_string("AT+CSTT=\"internet.t-d1.de\""); printf("AT+CSTT=\"internet.t-d1.de\"\n\r"); break;
-			case 6: send_string("AT+CIICR");printf("AT+CIICR\n\r"); break;
-			case 7: send_string("AT+CIFSR");printf("AT+CIFSR\n\r"); break;
+			case 2: send_string("AT+CGACT?") ; break;
+			case 3: send_string("AT+CMEE=1");  break;
+			case 4: send_string("AT+CGATT=1"); break;
+			case 5: send_string("AT+CSTT=\"internet.t-d1.de\"");  break;
+			case 6: send_string("AT+CIICR"); break;
+			case 7: send_string("AT+CIFSR");break;
 			case 8: send_string("AT+CIPSTART=\"TCP\",\"74.124.194.252\",\"80\"\n\r"); break;
 			case 9: send_string("AT+CIPCLOSE=0");break;
 			case 10: send_string("AT+CFUN=1"); break;
@@ -192,7 +181,40 @@ ISR(USARTF0_RXC_vect)
 			char mystring[]="OK";
 
 			switch(init_schritt){
+			case -2:
+			if(!strcmp(mystring, uart_string))
+			{ 	printf("%s\n\r",&uart_string);
+				init_schritt++;
+				printf("%d\n\r",init_schritt);
+				warte_ok=0;
+				server_configuration();
+				
+			}
 
+			
+
+			else if(warte_ok==5) {
+				//warte_ok++;
+				warte_ok=0;
+				//printf("hallo");
+			server_configuration();}
+			case -1:
+			if(!strcmp(mystring, uart_string))
+			{ 	printf("%s\n\r",&uart_string);
+				init_schritt++;
+				printf("%d\n\r",init_schritt);
+				warte_ok=0;
+				server_configuration();
+				
+			}
+
+			
+
+			else if(warte_ok==5) {
+				//warte_ok++;
+				warte_ok=0;
+				//printf("hallo");
+			server_configuration();}
 				case 0: //BEFEHL AT+CSQ
 				if(!strcmp(mystring, uart_string))
 				{ 	printf("%s\n\r",&uart_string);
@@ -203,13 +225,11 @@ ISR(USARTF0_RXC_vect)
 					
 				}
 
-			/*	else if(!strcmp("+CSQ:",uart_string))
-				{
-				printf("%s\n\r.hallo",&uart_string); }*/
+		
 
 				else if(warte_ok==5) {
 					//warte_ok++;
-
+					warte_ok=0;
 					//printf("hallo");
 				server_configuration();}
 
@@ -230,6 +250,7 @@ ISR(USARTF0_RXC_vect)
 
 				else if(warte_ok==5) {
 					//warte_ok++;
+					warte_ok=0;
 				server_configuration();}
 				break;
 
@@ -256,6 +277,7 @@ ISR(USARTF0_RXC_vect)
 
 					else if(warte_ok==5) {
 						//warte_ok++;
+						warte_ok=0;
 					server_configuration();}
 				break;
 
@@ -270,6 +292,7 @@ ISR(USARTF0_RXC_vect)
 				}
 	else if(warte_ok==5) {
 		//warte_ok++;
+		warte_ok=0;
 	server_configuration();}
 				break;
 
@@ -286,6 +309,7 @@ ISR(USARTF0_RXC_vect)
 
 					else if(warte_ok==5) {
 					//	warte_ok++;
+					warte_ok=0;
 					server_configuration();}
 				break;
 
@@ -301,7 +325,9 @@ ISR(USARTF0_RXC_vect)
 
 					else if(warte_ok==5) {
 //warte_ok++;
+warte_ok=0;
 server_configuration();}
+
 				break;
 
 				
@@ -320,6 +346,7 @@ server_configuration();}
 
 	else if(warte_ok==5) {
 		//warte_ok++;
+		warte_ok=0;
 	server_configuration();}
 				break;
 
@@ -337,6 +364,7 @@ printf("Schritt %d\n\r",strlen(&uart_string));
 
 	else if(warte_ok==5) {
 		//warte_ok++;
+		warte_ok=0;
 	server_configuration();}
 //printf("hallo");
 /*if (!strcmp("ERROR", uart_string))
@@ -374,8 +402,8 @@ break;
 				{printf("%s\n\r",&uart_string);}*/
 				
 
-				else if(warte_ok<=5) {
-					warte_ok++;
+				else if(warte_ok==5) {
+					warte_ok=0;
 				server_configuration();}
 				break;
 
@@ -389,8 +417,8 @@ break;
 				server_configuration();
 				}
 
-				else if(warte_ok<=5) {
-					warte_ok++;
+				else if(warte_ok==5) {
+					warte_ok=0;
 				server_configuration();}
 				break;
 
@@ -405,8 +433,8 @@ break;
 					server_configuration();
 				}
 
-					else if(warte_ok<=5) {
-						warte_ok++;
+					else if(warte_ok==5) {
+						warte_ok=0;
 					server_configuration();}
 				break;
 
@@ -429,8 +457,8 @@ break;
 					server_configuration();
 				}
 
-				else if(warte_ok<=5) {
-					warte_ok++;
+				else if(warte_ok==5) {
+					warte_ok=0;
 				server_configuration();}
 				break;
 
@@ -447,8 +475,8 @@ break;
 				server_configuration();
 			}
 
-				else if(warte_ok<=5) {
-					warte_ok++;
+				else if(warte_ok==5) {
+					warte_ok=0;
 				server_configuration();}
 			break;
 
@@ -462,7 +490,7 @@ break;
 				server_configuration();
 			}
 
-				else if(warte_ok<=5) {
+				else if(warte_ok==5) {
 warte_ok=0;
 server_configuration();}
 			break;
@@ -479,11 +507,11 @@ server_configuration();}
 				warte_ok=0;
 				server_initialisierung=true;
 				printf("%d\n\r",init_schritt);
-				server_configuration();
+				//server_configuration();
 			}
 
-				else if(warte_ok<=5) {
-					warte_ok++;
+				else if(warte_ok==5) {
+					warte_ok=0;
 				server_configuration();}
 			break;
 			
