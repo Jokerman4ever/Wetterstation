@@ -101,7 +101,7 @@ typedef enum RF_Packet_Flags{RF_Packet_Flags_Ack=0x01,RF_Packet_Flags_Time=0x02,
 
 typedef enum RF_Acknowledgments_State{RF_Acknowledgments_State_Pending,RF_Acknowledgments_State_Transmitted,RF_Acknowledgments_State_Idle,RF_Acknowledgments_State_Error}RF_Acknowledgments_State_t;
 
-typedef enum RF_Acknowledgments_Result{RF_Acknowledgments_Result_OK,RF_Acknowledgments_Result_ERROR}RF_Acknowledgments_Result_t;
+typedef enum RF_Acknowledgments_Result{RF_Acknowledgments_Result_OK,RF_Acknowledgments_Result_ERROR,RF_Acknowledgments_Result_Idle}RF_Acknowledgments_Result_t;
 
 typedef enum RF_State{RF_State_Transmit=0x80,
 					RF_State_Receive=0x60,

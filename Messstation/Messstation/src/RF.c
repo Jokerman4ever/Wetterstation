@@ -530,6 +530,7 @@ void RF_HandleInterrupt(void)
 		if(RF_CurrentConfig.UseAcknowledgments && RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Idle)
 		{
 			RF_CurrentStatus.Acknowledgment = RF_Acknowledgments_State_Pending;
+			RF_CurrentStatus.AckResult = RF_Acknowledgments_Result_Idle;
 			RF_CurrentStatus.AckTimeout = 0;
 			RF_CurrentStatus.AckRetransmit = 0;
 			RF_Set_State(RF_State_Receive);
