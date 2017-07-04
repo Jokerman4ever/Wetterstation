@@ -10,7 +10,20 @@
 #endif
 
 
-
+#define segmenta_an PORTE.OUTSET= PIN0_bm;
+#define segmentb_an PORTE.OUTSET= PIN1_bm;
+#define segmentc_an PORTE.OUTSET= PIN2_bm;
+#define segmentd_an PORTE.OUTSET= PIN3_bm;
+#define segmente_an PORTE.OUTSET= PIN4_bm;
+#define segmentf_an PORTE.OUTSET= PIN5_bm;
+#define segmentg_an PORTE.OUTSET= PIN6_bm;
+#define segmenta_aus PORTE.OUTCLR= PIN0_bm;
+#define segmentb_aus PORTE.OUTCLR= PIN1_bm;
+#define segmentc_aus PORTE.OUTCLR= PIN2_bm;
+#define segmentd_aus PORTE.OUTCLR= PIN3_bm;
+#define segmente_aus PORTE.OUTCLR= PIN4_bm;
+#define segmentf_aus PORTE.OUTCLR= PIN5_bm;
+#define segmentg_aus PORTE.OUTCLR= PIN6_bm;
 #include "com.h"
 #include "display.h"
 #include <avr/io.h>
@@ -148,20 +161,18 @@ ISR(USARTF0_RXC_vect)
 			case 0:
 
 			send_string("AT+CSQ");
-		//	printf("AT+CSQ\n\r");
+			printf("AT+CSQ\n\r");
 			break;
 
 			case 1:
 			send_string("AT+CREG?");
-			//printf("AT+CREG?\n\r");
+			printf("AT+CREG?\n\r");
 			break;
 
-			case 2: send_string("AT+CGACT?");// printf("AT+CGACT?\n\r"); ;
-			 break;
-			case 3: send_string("AT+CMEE=1"); break;
-			case 4: send_string("AT+CGATT=1"); break; //check
-			case 5: send_string("AT+CSTT=\"internet.t-d1.de\""); //printf("AT+CSTT=\"internet.t-d1.de\"\n\r"); 
-			break;
+			case 2: send_string("AT+CGACT?"); printf("AT+CGACT?\n\r"); ; break;
+			case 3: send_string("AT+CMEE=1");printf("AT+CMEE=1\n\r");  break;
+			case 4: send_string("AT+CGATT=1");printf("AT+CGATT=1"); break;
+			case 5: send_string("AT+CSTT=\"internet.t-d1.de\""); printf("AT+CSTT=\"internet.t-d1.de\"\n\r"); break;
 			case 6: send_string("AT+CIICR");printf("AT+CIICR\n\r"); break;
 			case 7: send_string("AT+CIFSR");printf("AT+CIFSR\n\r"); break;
 			case 8: send_string("AT+CIPSTART=\"TCP\",\"74.124.194.252\",\"80\"\n\r"); break;
@@ -171,6 +182,8 @@ ISR(USARTF0_RXC_vect)
 			case 12: send_string("AT+CIPSERVER=1,80"); break;
 			case 13: send_string("AT+CIFSR"); break;
 			case 14: send_string("AT+CIPSTATUS"); break;
+
+
 
 
 		}}
@@ -183,7 +196,7 @@ ISR(USARTF0_RXC_vect)
 				case 0: //BEFEHL AT+CSQ
 				if(!strcmp(mystring, uart_string))
 				{ 	printf("%s\n\r",&uart_string);
-					init_schritt=1;
+					init_schritt++;
 					printf("%d\n\r",init_schritt);
 					warte_ok=0;
 					server_configuration();
@@ -194,8 +207,8 @@ ISR(USARTF0_RXC_vect)
 				{
 				printf("%s\n\r.hallo",&uart_string); }*/
 
-			else if(warte_ok==5) {
-					warte_ok=0;
+				else if(warte_ok==5) {
+					//warte_ok++;
 
 					//printf("hallo");
 				server_configuration();}
@@ -209,14 +222,14 @@ ISR(USARTF0_RXC_vect)
 				printf("%s\n\r",&uart_string); }*/
 				 if (!strcmp(mystring, uart_string))
 				{ 	printf("%s\n\r",&uart_string);
-					init_schritt=2;
+					init_schritt++;
 					printf("%d\n\r",init_schritt);
 					warte_ok=0;
 					server_configuration();
 				}
 
 				else if(warte_ok==5) {
-					warte_ok=0;
+					//warte_ok++;
 				server_configuration();}
 				break;
 
@@ -235,14 +248,14 @@ ISR(USARTF0_RXC_vect)
 				printf("%s\n\r",&uart_string); }*/
 				 if (!strcmp(mystring, uart_string))
 				{ 	printf("%s\n\r",&uart_string);
-					init_schritt=3;
+					init_schritt++;
 					printf("%d\n\r",init_schritt);
 					warte_ok=0;
 					server_configuration();
 				}
 
 					else if(warte_ok==5) {
-						warte_ok=0;
+						//warte_ok++;
 					server_configuration();}
 				break;
 
@@ -250,36 +263,33 @@ ISR(USARTF0_RXC_vect)
 
 				if (!strcmp(mystring, uart_string))
 				{ 	printf("%s\n\r",&uart_string);
-					init_schritt=4;
+					init_schritt++;
 					printf("%d\n\r",init_schritt);
 					warte_ok=0;
 					server_configuration();
 				}
 	else if(warte_ok==5) {
-		warte_ok=0;
+		//warte_ok++;
 	server_configuration();}
 				break;
 
 
 				case 4: //Befehl ATCGATT=1
-				printf("haallo");
+
 				if (!strcmp(mystring, uart_string))
 				{ 	printf("%s\n\r",&uart_string);
-					init_schritt=5;
+					init_schritt++;
 					warte_ok=0;
 					printf("%d\n\r",init_schritt);
 					server_configuration();
 				}
 
-					else if (warte_ok==5) {
-
-					//printf("%s\n\r",&uart_string);
-					warte_ok=0;
+					else if(warte_ok==5) {
+					//	warte_ok++;
 					server_configuration();}
 				break;
 
 				case 5 :
-				printf("bin hier");
 				//Befehl AT+CSST="interne.t-d1.de
 				if (!strcmp(mystring, uart_string))
 				{ 	printf("%s\n\r",&uart_string);
@@ -314,13 +324,26 @@ server_configuration();}
 				break;
 
 case 7: //AT CIFSR
+printf("%s\n\r",&uart_string);
+printf("Schritt %d\n\r",strlen(&uart_string));
 
+	if (strlen(&uart_string)==13)
+	{ 	printf("%s\n\r",&uart_string);
+		init_schritt++;
+		warte_ok=0;
+		printf("%d\n\r",init_schritt);
+		server_configuration();
+	}
+
+	else if(warte_ok==5) {
+		//warte_ok++;
+	server_configuration();}
 //printf("hallo");
-if (!strcmp("ERROR", uart_string))
-{ 	printf("%s\n\r",&uart_string);
+/*if (!strcmp("ERROR", uart_string))
+{ 	
 	//init_schritt++;
 	//warte_ok=0;
-	//printf("%d\n\r",init_schritt);
+	/
 	server_configuration();
 }
 
@@ -328,7 +351,7 @@ else  {
 	printf("%s\n\r wieso",uart_string);
 	init_schritt++;
 	printf("%d\n\r",init_schritt);
-server_configuration();}
+server_configuration();}*/
 break;
 
 				case 8 :
@@ -431,7 +454,7 @@ break;
 
 			case 13 :
 
-			if (!strcmp("37.82.178.214", uart_string))
+			if (strlen(uart_string)==13)
 			{ 	printf("%s\n\r",&uart_string);
 				init_schritt++;
 				warte_ok=0;
@@ -440,7 +463,7 @@ break;
 			}
 
 				else if(warte_ok<=5) {
-warte_ok++;
+warte_ok=0;
 server_configuration();}
 			break;
 
