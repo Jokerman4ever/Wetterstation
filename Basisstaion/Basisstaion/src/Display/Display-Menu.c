@@ -77,22 +77,22 @@ void DSP_Refresh(uint8_t BS_BatState,uint8_t BS_GSMState,uint8_t BS_NumNode)
 	{
 		case BatLow:
 		{
-			*BatState = "o.."; // ich glaube das geht so nicht ????
+			DSP_CopyString("o..",&BatState);
 			break;
 		}
 		case BatMid:
 		{
-			*BatState = "oo.";
+			DSP_CopyString("oo.",&BatState);
 			break;
 		}
 		case BatHigh:
 		{
-			*BatState = "ooo";
+			DSP_CopyString("ooo",&BatState);
 			break;
 		}
 		default:
 		{
-			*BatState = "...";
+			DSP_CopyString("...",&BatState);
 			break;
 		}
 	}
@@ -102,22 +102,22 @@ void DSP_Refresh(uint8_t BS_BatState,uint8_t BS_GSMState,uint8_t BS_NumNode)
 	{
 		case GSMLow:
 		{
-			*GSMState = "|..";
+			DSP_CopyString("|..",&GSMState);
 			break;
 		}
 		case GSMMid:
 		{
-			*GSMState = "||.";
+			DSP_CopyString("||.",&GSMState);
 			break;
 		}
 		case GSMHigh:
 		{
-			*GSMState = "|||";
+			DSP_CopyString("|||",&GSMState);
 			break;
 		}
 		default:
 		{
-			*GSMState = "...";
+			DSP_CopyString("...",&GSMState);
 			break;
 		}
 	}	
@@ -127,6 +127,19 @@ void DSP_Refresh(uint8_t BS_BatState,uint8_t BS_GSMState,uint8_t BS_NumNode)
 	
 	//DSP_ChangePage();
 }
+
+
+// String Kopieren:
+void DSP_CopyString(const char* str, char* strout)
+{
+	uint8_t length = strlen(str);
+	for (uint8_t i = 0; i < length; i++)
+	{
+		*strout++=*str++;	
+	}
+}
+
+
 
 void DSP_ChangePage(uint8_t ID)
 {
@@ -182,7 +195,7 @@ void DSP_ChangePage(uint8_t ID)
 			CenterStringPGM(DStr_BSName,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,4);
-			sprintf(LineTemp,"  %d.%d.%d   %d:%d  ",Day,Month,Year,Minute,Hour);//das wird so nicht gehen, %d steht für decimal also eine zahl.... du übergibst nen string!!!
+			sprintf(LineTemp,"  %s.%s.%s   %s:%s  ",Day,Month,Year,Minute,Hour);//das wird so nicht gehen, %d steht für decimal also eine zahl.... du übergibst nen string!!!
 			lcd_Xstring(LineTemp,0);
 			break;
 		}

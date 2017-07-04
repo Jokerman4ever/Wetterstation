@@ -38,8 +38,8 @@ static void SPI_Init(void)
 
 	RF_SPI_PORT.DIRSET = (1<<7);//SCK
 
-	PORTD.PIN4CTRL |= PORT_OPC_PULLUP_gc; //CS?
-	SPID.CTRL = SPI_ENABLE_bm | SPI_MASTER_bm | SPI_PRESCALER_DIV4_gc | SPI_MODE_0_gc;
+	RF_SPI_PORT.PIN4CTRL |= PORT_OPC_PULLUP_gc; //CS?
+	RF_SPI_REG.CTRL = SPI_ENABLE_bm | SPI_MASTER_bm | SPI_PRESCALER_DIV4_gc | SPI_MODE_0_gc;
 	//sysclk_disable_module(SYSCLK_PORT_C, SYSCLK_SPI);
 
 	RF_CS_COM_PORT.DIRSET = (1<<RF_CS_COM_PIN);
@@ -281,7 +281,7 @@ void RF_Set_IRQSources(uint8_t irq0, uint8_t irq1, RF_TXIRQ1_t tx)
 	RF_Set_Command(RF_REG_FTXRXI,lastv);
 	
 	lastv = RF_Get_Command(RF_REG_FTPRI);
-	lastv |= (1<<3) | (1<<4);
+	lastv |= (1<<3) | (1<<4);//Set TX Flag
 	RF_Set_Command(RF_REG_FTPRI,lastv);
 	lastv = RF_Get_Command(RF_REG_FTPRI);
 }
@@ -586,7 +586,7 @@ void RF_Update(void)
 	{
 		for (uint8_t i = 0; i < RF_MaxDevices; i++)
 		{
-			if(RF_CheckDeviceSlot(i))
+			if(!RF_CheckDeviceSlot(i))
 			{
 				RF_CurrentStatus.TimeSlots[i].Timeout++;
 				if(RF_CurrentStatus.TimeSlots[i].Timeout > 30)//FEHLER ... Gerät hat sich seit 30 minuten nicht gemeldet! Wird aus dem TimeSlots entfernt!
@@ -661,7 +661,7 @@ void RF_UnregisterDevice(uint8_t ID)
 uint16_t RF_GetDeviceSleepTime(uint8_t ID)
 {
 	uint16_t s = ID* (300 / RF_MaxDevices);
-	return (300 - RF_CurrentStatus.CurrentSlotTime + s);
+	return (30000 - RF_CurrentStatus.CurrentSlotTime + s);
 }
 
 uint8_t RF_FindDevice(uint8_t ID)

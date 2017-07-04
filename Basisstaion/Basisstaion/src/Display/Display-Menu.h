@@ -75,5 +75,7 @@ void DSP_ChangePage(uint8_t ID);
 void DSP_ScrollMenu(uint8_t dir);
 void DSP_SelectMenu(void);
 void DSP_Refresh(uint8_t BS_BatState, uint8_t BS_GSMState, uint8_t BS_NumNode);
+void DSP_CopyString(const char* str, char* strout);
+
 
 #endif /*DISPLAYMENU_H_*/
