@@ -6,9 +6,13 @@
 #include "RF.h"
 #include "Storage/FileSys.h"
 #include "Storage/eeprom_driver.h"
+#include "GSM/com.h"
 
 void HandleClients(void);
 void CheckFirstrun(void);
+
+volatile uint8_t uart_str_complete = 0;
+uint8_t daten_enmpfangen=false;
 
 ISR(PORTE_INT0_vect)
 {
@@ -36,6 +40,13 @@ int main (void)
 	uint8_t val = RF_Get_Command(0x01);
 	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
 	RF_Set_State(RF_State_Receive);
+	
+	
+	//SERVER
+	//com_init();
+	//server_configuration();
+	//------
+	
 	sei();
 
 	while(1)
@@ -45,6 +56,13 @@ int main (void)
 		/*if(RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Idle)
 		 RF_Send_Packet(p);*/
 		HandleClients();
+		
+		if(uart_str_complete==1)
+		{
+			uart_str_complete=0;
+		}
+
+		
 	}
 }
 
@@ -59,10 +77,6 @@ void CheckFirstrun(void)
 
 
 uint8_t Packet_buffer[20];
-
-
-
-
 void HandleClients(void)
 {
 	if(RF_CurrentStatus.NewPacket)
