@@ -187,6 +187,7 @@ static void ConnectToBasestation(uint32_t time)
 	RF_Packet_t p = RF_CreatePacket(&trys,0,RF_RECEIVE_ID,RF_Packet_Flags_Time);
 	while(trys-- > 0)
 	{
+		NPtrys = 10;
 		RF_Send_Packet(p);
 		while(RF_CurrentStatus.State == RF_State_Transmit){_delay_ms(1);}
 		while(RF_CurrentStatus.Acknowledgment != RF_Acknowledgments_State_Idle){_delay_ms(1);}
@@ -203,13 +204,19 @@ static void ConnectToBasestation(uint32_t time)
 				RF_Sleep();
 				PMIC.CTRL = PMIC_LOLVLEN_bm; //Enable Interrupt for RTC
 				
-				for (uint16_t i = 0; i < sleep % 1000; i++)
+				for (uint16_t i = 0; i < sleep % 100; i++)
 				{
-					_delay_ms(1);
+					_delay_ms(10);
 				}
 				
 				rtc_set_callback(alarm);
-				rtc_set_alarm_relative(sleep / 1100);
+				
+				#ifdef TEST
+					rtc_set_alarm_relative(sleep / 1100);
+				#endif
+				#ifndef TEST
+					rtc_set_alarm_relative(sleep/ 110);
+				#endif
 				
 				return;
 			}
