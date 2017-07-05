@@ -9,6 +9,7 @@
 #include "ADC.h"
 #include <avr/interrupt.h>
 #include "com.h"
+#include "Sensoren/BME280.h"
 
 //Prototypen
 static void ConnectToBasestation(uint32_t time);
@@ -73,21 +74,15 @@ static void alarm(uint32_t time)
 	PORTA.OUTTGL = 0x01;
 	
 	//Read Sensor Data
-	DHT_on(); //wait for 2s befor Read!!!
-	PORTA.OUTSET = 0xff;
 	i2c_enable();
-	BMP_read(&meas_data.pressure, &meas_data.temperature);	//takes 4ms
-	BH1750_read(&meas_data.lux);	//takes 24ms
-	/* Wind-/Regensensor here */
-	
+	BME280_read(&meas_data.pressure, &meas_data.temperature, &meas_data.humidity);
 	i2c_disable();
-
-	bat = ADCA_GetValue(ADC_CH0, ADC_CH_MUXPOS_PIN0_gc); //Read Bat-Status
 	
-	_delay_ms(2000);
-	DHT_read(&meas_data.humidity, &tf);
-	DHT_off();
-	PORTA.OUTCLR = 0xff;
+	com_enable();
+	/* Wind-/Regensensor here */
+	com_disable();
+	
+	bat = ADCA_GetValue(ADC_CH0, ADC_CH_MUXPOS_PIN0_gc); //Read Bat-Status
 	
 	//Simulation Wind oder so was in der Art... keine Ahnung
 	if(meas_data.winddirection == 0)
@@ -132,7 +127,6 @@ int main (void)
 	osc_disable(OSC_ID_RC2MHZ);
 */
 	
-	PORTA.DIRSET = 0xff;
 	_delay_ms(1000);
 
 //Initialisiere Interfaces	
@@ -142,9 +136,8 @@ int main (void)
 
 //Initialisiere Sensoren	
 	i2c_enable();
-	BMP_init();
+	BME280_init();
 	i2c_disable();
-	DHT_init();
 	
 //Initialisiere RF-Modul
 	RF_Init(0x05);

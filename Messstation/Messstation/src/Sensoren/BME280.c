@@ -8,6 +8,7 @@
 
 #include "i2c.h"
 #include "Sensoren/BME280.h"
+#include <util/delay.h>
 
 #define BME_ADDR 0b01110110
 
@@ -78,7 +79,7 @@ static bool is_busy(void)
 	bool status = false;
 	if(i2c_read_byte(BME_ADDR, 0xF3, &data)) //Check "Start of conversion"-Bit
 	{
-		if(data & 0x04)
+		if((data & 0x04) != 0)
 		{
 			status = true;
 		}
@@ -91,14 +92,29 @@ bool BME280_read(uint16_t* druck, int16_t* temp, uint16_t* feuchte)
 	uint8_t data[8];
 	int32_t ut, x1, x2, t, t_fine, up, uh;
 	uint32_t p, h;
+	
+	uint8_t ctrl = (1 << 0) | (1 << 2) | (0x05 << 5);
+
+	i2c_read_byte(BME_ADDR, 0xD0, &data[0]);
+	i2c_read_byte(BME_ADDR, 0xF5, &data[1]);
 
 	//Read Temp
-	i2c_write_byte(BME_ADDR, 0xF4, 0x25); //Start conversion
-	while(is_busy());	//Wait until conversion finished
-	i2c_read(BME_ADDR, 0xF6, data, 8); //Read Data
+	i2c_write_byte(BME_ADDR, 0xF2, 0x00); // Set humidity oversampling to 1;
+	i2c_write_byte(BME_ADDR, 0xF4, ctrl); //Start conversion
+	while(is_busy()){_delay_ms(1);}	//Wait until conversion finished
+	i2c_read(BME_ADDR, 0xF7, data, 8); //Read Data
 	
 	//Temp compensation
-	ut = (int32_t)( (((uint32_t)data[4]) << 12) | (((uint32_t)data[3]) << 4) | ((uint32_t)data[2] >> 4));
+	ut = (int32_t)( (((uint32_t)data[3]) << 12) | (((uint32_t)data[4]) << 4) | ((((uint32_t)data[5] >> 4)) & 0x0F));
+	
+	//ut = (int32_t)( (((uint32_t)data[3]) << 8) | (((uint32_t)data[4]) << 0));
+	
+	int32_t var1, var2, T;
+	var1  = ((((ut>>3) - ((int32_t)BMEcalibrationData.dig_T1<<1))) * ((int32_t)BMEcalibrationData.dig_T2)) >> 11;
+	var2  = (((((ut>>4) - ((int32_t)BMEcalibrationData.dig_T1)) * ((ut>>4) - ((int32_t)BMEcalibrationData.dig_T1))) >> 12) *    ((int32_t)BMEcalibrationData.dig_T3)) >> 14;
+	t_fine = var1 + var2;
+	T  = (t_fine * 5 + 128) >> 8;
+	*temp = T;
 	
 	/* calculate x1*/
 	x1 = (((ut >> 3) - ((int32_t)BMEcalibrationData.dig_T1 << 1)) * ((int32_t)BMEcalibrationData.dig_T2)) >> 11;
@@ -112,7 +128,9 @@ bool BME280_read(uint16_t* druck, int16_t* temp, uint16_t* feuchte)
 	
 	
 	//Druck compensation
-	up = (int32_t)((((uint32_t)(data[7])) << 12) | (((uint32_t)(data[6])) << 4) | ((uint32_t)data[5] >>	4));
+	up = (int32_t)((((uint32_t)(data[0])) << 12) | (((uint32_t)(data[1])) << 4) | ((uint32_t)data[2] >>	4));
+	
+	up = (int32_t)((((uint32_t)(data[0])) << 8) | (((uint32_t)(data[1])) << 0));
 	
 	/* calculate x1*/
 	x1 = (t_fine >> 1) - (int32_t)64000;
@@ -151,7 +169,7 @@ bool BME280_read(uint16_t* druck, int16_t* temp, uint16_t* feuchte)
 	
 	
 	//Humidity compensation
-	uh = (int32_t)((((uint32_t)(data[1])) << 8) | ((uint32_t)(data[0])));
+	uh = (int32_t)((((uint32_t)(data[6])) << 8) | ((uint32_t)(data[7])));
 	
 	/* calculate x1*/
 	x1 = (t_fine - ((int32_t)76800));
