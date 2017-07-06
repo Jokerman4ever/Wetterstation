@@ -13,7 +13,7 @@
 #include "string.h"
 #include <avr/interrupt.h>
 int lenght = 0x00;
-#define UART_MAXSTRLEN 32
+#define UART_MAXSTRLEN 64
 unsigned char nextChar;
 // USART
 int init_schritt=-2;
@@ -30,7 +30,7 @@ uint8_t kommando_senden;
 int Counter = 0x00;
 uint8_t warte_ok=0;
 uint8_t recBuffer[UART_MAXSTRLEN];
-
+uint8_t waitForString=1;
 void com_init(void)
 {
 	sysclk_enable_module(SYSCLK_PORT_F, SYSCLK_USART0);
@@ -41,7 +41,17 @@ void com_init(void)
 	//USARTF0.CTRLA = USART_RXCINTLVL_HI_gc;
 	USARTF0.CTRLB = USART_TXEN_bm | USART_RXEN_bm;
 	USARTF0.CTRLC = USART_CHSIZE_8BIT_gc;
-	PORTF.DIR |= 0x08;
+	waitForString=1;
+	PORTF.DIR = (1<<3)|(1<<4);
+	PORTF.OUTCLR = (1<<4);
+	_delay_ms(200);
+	PORTF.OUTSET = (1<<4);
+	_delay_ms(3000);
+	/*PORTF.OUTSET = (1<<4);
+	_delay_ms(200);
+	PORTF.OUTCLR = (1<<4);
+	_delay_ms(150);
+	PORTF.OUTSET = (1<<4);*/
 }
 
 void com_baud()
@@ -97,27 +107,47 @@ void com_ausgabe(uint8_t data)
 	while(!(USARTF0.STATUS & USART_TXCIF_bm)); // Überprüfung ob fertig mit schreiben
 }
 
+uint8_t com_getChar(uint8_t* error)
+{
+	uint8_t t = 100;
+	uint8_t nc = 0;
+	*error = 0;
+	//)_delay_us(5);
+	while( !(USARTF0.STATUS & USART_RXCIF_bm) && t-- > 1) _delay_us(100);
+	if(t <= 1){*error = 1; return 0;}
+	nc = USARTF0.DATA;
+	return nc;
+}
+
 
 uint8_t com_getString(uint8_t* buffer)
 {
 	uint8_t len=0;
 	uint8_t nC=0;
-	do 
+	uint8_t trys=5;
+	uint8_t error=0;
+	while( !(USARTF0_STATUS & USART_RXCIF_bm)) _delay_us(50);
+	while(trys-- > 0)
 	{
-		while( !(USARTF0_STATUS & USART_RXCIF_bm) ); //Interesting DRIF didn't work.  
-		//while(!(USARTF0.STATUS & USART_RXCIF_bm));
-		nC = USARTF0.DATA;
-		*buffer++=nC;
-		len++;
-	} 
-	while (nC != '\r');
+		do 
+		{
+			nC = com_getChar(&error);
+			if(error)break;
+			if(nC != '\r')buffer[len++]=nC;
+		} 
+		while (nC != '\r' && len < UART_MAXSTRLEN);
+		nC=0;
+		//_delay_ms(10);
+	}
 	return len;
 }
 
 
 ISR(USARTF0_RXC_vect)
 {
-	nextChar = USARTF0.DATA;
+	com_getString(recBuffer);
+	waitForString=0;
+	/*nextChar = USARTF0.DATA;
 
 	//printf("hallo");
 	//segmenta_aus;
@@ -155,7 +185,7 @@ ISR(USARTF0_RXC_vect)
 			else{ empfangen_string(); }
 			//
 		}
-	}
+	}*/
 }
 
 void server_configuration(void)
@@ -171,13 +201,13 @@ void server_configuration(void)
 		//			printf("AT+CREG?\n\r");
 		break;
 
-		case 2: send_string("AT+CGACT?") ; break;
-		case 3: send_string("AT+CMEE=1");  break;
+		//case 2: send_string("AT+CGACT?") ; break;
+		case 2: init_schritt++; case 3: send_string("AT+CMEE=1");  break;
 		case 4: send_string("AT+CGATT=1"); break;
 		case 5: send_string("AT+CSTT=\"internet.t-d1.de\"");  break;
 		case 6: send_string("AT+CIICR"); break;
 		case 7: send_string("AT+CIFSR");break;
-		case 8: send_string("AT+CIPSTART=\"TCP\",\"74.124.194.252\",\"80\"\n\r"); break;
+		case 8: send_string("AT+CIPSTART=\"TCP\",\"74.124.194.252\",\"80\""); break;
 		case 9: send_string("AT+CIPCLOSE=0");break;
 		case 10: send_string("AT+CFUN=1"); break;
 		case 11: send_string("AT+CPIN?"); break;
@@ -186,36 +216,83 @@ void server_configuration(void)
 		case 14: send_string("AT+CIPSTATUS"); break;
 	}
 	uint8_t reclen= com_getString(recBuffer);
+	//
+	//while(waitForString)_delay_ms(1);
+	server_configuration_auswertung(reclen);
 	
 }
 
-void server_configuration_auswertung(void)
+uint8_t com_getNextMsg(uint8_t* str,uint8_t off,uint8_t len)
+{
+	for (uint8_t i = off; i < len; i++)
+	{
+		if(str[i] == '\n')return i;
+	}
+	return 0;
+}
+
+uint8_t com_StrCmp(uint8_t* str1,uint8_t off1,uint8_t len1,const uint8_t* str2)
+{
+	uint8_t len2 = strlen(str2);
+	uint8_t max = len1 < len2 ? len1 : len2;
+	for (uint8_t i = 0; i < max; i++)
+	{
+		if(str1[i+off1] != str2[i])return 0;
+	}
+	return 1;
+}
+
+void server_configuration_auswertung(uint8_t len)
 {
 	char mystring[]="OK";
-
-	switch(init_schritt){
-		case -2:
-		if(!strcmp(mystring, uart_string))
-		{ 	printf("%s\n\r",&uart_string);
-			init_schritt++;
-			printf("%d\n\r",init_schritt);
-			warte_ok=0;
-			server_configuration();
-			
-		}
-
-		
-
-		else if(warte_ok==5)
+	uint8_t index=0;
+	if(init_schritt < 11)
+	{
+		while(index < len)
 		{
-			//warte_ok++;
-			warte_ok=0;
-			//printf("hallo");
-			server_configuration();
+			index = com_getNextMsg(recBuffer,index+1,len);
+			if(index == 0)break;
+			if(com_StrCmp(recBuffer,index+1,2,"OK"))
+			{
+				init_schritt++;
+				_delay_ms(5000);
+				server_configuration();
+			}
+			else if(com_StrCmp(recBuffer,index+1,5,"ERROR"))
+			{
+				init_schritt=-2;
+				_delay_ms(5000);
+				server_configuration();
+			}
 		}
+	}
+	return;
+	
+	switch(init_schritt)
+	{
+		case -2:
+		{
+			if(com_StrCmp(recBuffer,3,2,"OK"))
+			{ 	
+				//printf("%s\n\r",&uart_string);
+				init_schritt++;
+				//printf("%d\n\r",init_schritt);
+				warte_ok=0;
+				server_configuration();
+			}
+			else if(warte_ok==5)
+			{
+				//warte_ok++;
+				warte_ok=0;
+				//printf("hallo");
+				server_configuration();
+			}
+			break;
+		}
+
 		case -1:
 		{
-			if(!strcmp(mystring, uart_string))
+			if(com_StrCmp(recBuffer,3,2,"OK"))
 			{
 				//printf("%s\n\r",&uart_string);
 				init_schritt++;
@@ -542,7 +619,7 @@ void server_configuration_auswertung(void)
 		else if(warte_ok==5)
 		{
 			warte_ok=0;
-		server_configuration();
+			server_configuration();
 		}
 		
 		break;

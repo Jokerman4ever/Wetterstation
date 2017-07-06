@@ -45,6 +45,7 @@ int main (void)
 	//SERVER
 	com_init();
 	server_configuration();
+	
 	//------
 	
 	
