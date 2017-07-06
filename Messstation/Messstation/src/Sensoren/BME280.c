@@ -47,27 +47,32 @@ void BME280_init(void)
 {
 	uint8_t buffer[26];
 
+	i2c_read_byte(BME_ADDR, 0xD0, &buffer[0]);
+	i2c_read_byte(BME_ADDR, 0xF5, &buffer[1]);
+
 	i2c_read(BME_ADDR, 0x88, buffer, 26);
-	BMEcalibrationData.dig_T1 = (buffer[0] <<8) + buffer[1];
-	BMEcalibrationData.dig_T2 = (buffer[2] <<8) + buffer[3];
-	BMEcalibrationData.dig_T3 = (buffer[4] <<8) + buffer[5];
-	BMEcalibrationData.dig_P1 = (buffer[6] <<8) + buffer[7];
-	BMEcalibrationData.dig_P2 = (buffer[8] <<8) + buffer[9];
-	BMEcalibrationData.dig_P3 = (buffer[10] <<8) + buffer[11];
-	BMEcalibrationData.dig_P4 = (buffer[12] <<8) + buffer[13];
-	BMEcalibrationData.dig_P5 = (buffer[14] <<8) + buffer[15];
-	BMEcalibrationData.dig_P6 = (buffer[16] <<8) + buffer[17];
-	BMEcalibrationData.dig_P7 = (buffer[18] <<8) + buffer[19];
-	BMEcalibrationData.dig_P8 = (buffer[20] <<8) + buffer[21];
-	BMEcalibrationData.dig_P9 = (buffer[22] <<8) + buffer[23];
+	BMEcalibrationData.dig_T1 = ((uint16_t)buffer[1] <<8) + buffer[0];
+	BMEcalibrationData.dig_T2 = ((int16_t)buffer[3] <<8) + buffer[2];
+	BMEcalibrationData.dig_T3 = ((int16_t)buffer[5] <<8) + buffer[4];
+	BMEcalibrationData.dig_P1 = (buffer[7] <<8) + buffer[6];
+	BMEcalibrationData.dig_P2 = (buffer[9] <<8) + buffer[8];
+	BMEcalibrationData.dig_P3 = (buffer[11] <<8) + buffer[10];
+	BMEcalibrationData.dig_P4 = (buffer[13] <<8) + buffer[12];
+	BMEcalibrationData.dig_P5 = (buffer[15] <<8) + buffer[14];
+	BMEcalibrationData.dig_P6 = (buffer[17] <<8) + buffer[16];
+	BMEcalibrationData.dig_P7 = (buffer[19] <<8) + buffer[18];
+	BMEcalibrationData.dig_P8 = (buffer[21] <<8) + buffer[20];
+	BMEcalibrationData.dig_P9 = (buffer[23] <<8) + buffer[22];
 	BMEcalibrationData.dig_H1 = buffer[25];
 	
-	i2c_read(BME_ADDR, 0xE1, buffer, 15);
-	BMEcalibrationData.dig_H2 = (buffer[0] <<8) + buffer[1];
-	BMEcalibrationData.dig_H3 = buffer[3];
-	BMEcalibrationData.dig_H4 = (buffer[4] <<8) + buffer[5];
-	BMEcalibrationData.dig_H5 = (buffer[6] <<8) + buffer[7];
-	BMEcalibrationData.dig_H6 = buffer[8];
+	i2c_read_byte(BME_ADDR, 0xA1, &BMEcalibrationData.dig_H1);
+	
+	i2c_read(BME_ADDR, 0xE1, buffer, 10);
+	BMEcalibrationData.dig_H2 = (buffer[1] << 8) + buffer[0];
+	BMEcalibrationData.dig_H3 = buffer[2];
+	BMEcalibrationData.dig_H4 = (buffer[3] << 4) + (buffer[4] & 0x0F);
+	BMEcalibrationData.dig_H5 = (buffer[5] << 4) + (buffer[4] >> 4);
+	BMEcalibrationData.dig_H6 = buffer[6];
 	
 	i2c_write_byte(BME_ADDR, 0xF2, 0x01); // Set humidity oversampling to 1;
 	i2c_write_byte(BME_ADDR, 0xF4, 0x24); // Set Persure & Temp oversampling to 1;
@@ -77,15 +82,24 @@ static bool is_busy(void)
 {
 	uint8_t data;
 	bool status = false;
-	if(i2c_read_byte(BME_ADDR, 0xF3, &data)) //Check "Start of conversion"-Bit
+	if(i2c_read_byte(BME_ADDR, 0xF4, &data))
+	{
+		if((data & 0x03) != 0)
+		{
+			return true;
+		}
+	}
+/*	if(i2c_read_byte(BME_ADDR, 0xF3, &data)) //Check "Start of conversion"-Bit
 	{
 		if((data & 0x04) != 0)
 		{
 			status = true;
 		}
-	}
+	}*/
 	return status;
 }
+
+int32_t v_x1_u32r;  
 
 bool BME280_read(uint16_t* druck, int16_t* temp, uint16_t* feuchte)
 {
@@ -93,28 +107,18 @@ bool BME280_read(uint16_t* druck, int16_t* temp, uint16_t* feuchte)
 	int32_t ut, x1, x2, t, t_fine, up, uh;
 	uint32_t p, h;
 	
-	uint8_t ctrl = (1 << 0) | (1 << 2) | (0x05 << 5);
+	uint8_t ctrl = (1 << 0) | (1 << 2) | (0x01 << 5);
 
-	i2c_read_byte(BME_ADDR, 0xD0, &data[0]);
-	i2c_read_byte(BME_ADDR, 0xF5, &data[1]);
+	//i2c_write_byte(BME_ADDR, 0xF5, (0x04 << 2));
 
 	//Read Temp
-	i2c_write_byte(BME_ADDR, 0xF2, 0x00); // Set humidity oversampling to 1;
+	i2c_write_byte(BME_ADDR, 0xF2, 0x01); // Set humidity oversampling to 1;
 	i2c_write_byte(BME_ADDR, 0xF4, ctrl); //Start conversion
 	while(is_busy()){_delay_ms(1);}	//Wait until conversion finished
 	i2c_read(BME_ADDR, 0xF7, data, 8); //Read Data
 	
 	//Temp compensation
-	ut = (int32_t)( (((uint32_t)data[3]) << 12) | (((uint32_t)data[4]) << 4) | ((((uint32_t)data[5] >> 4)) & 0x0F));
-	
-	//ut = (int32_t)( (((uint32_t)data[3]) << 8) | (((uint32_t)data[4]) << 0));
-	
-	int32_t var1, var2, T;
-	var1  = ((((ut>>3) - ((int32_t)BMEcalibrationData.dig_T1<<1))) * ((int32_t)BMEcalibrationData.dig_T2)) >> 11;
-	var2  = (((((ut>>4) - ((int32_t)BMEcalibrationData.dig_T1)) * ((ut>>4) - ((int32_t)BMEcalibrationData.dig_T1))) >> 12) *    ((int32_t)BMEcalibrationData.dig_T3)) >> 14;
-	t_fine = var1 + var2;
-	T  = (t_fine * 5 + 128) >> 8;
-	*temp = T;
+	ut = (int32_t)( (((int32_t)data[3]) << 12) | (((int32_t)data[4]) << 4) | ((((int32_t)data[5] >> 4)) & 0x0F));
 	
 	/* calculate x1*/
 	x1 = (((ut >> 3) - ((int32_t)BMEcalibrationData.dig_T1 << 1)) * ((int32_t)BMEcalibrationData.dig_T2)) >> 11;
@@ -128,10 +132,8 @@ bool BME280_read(uint16_t* druck, int16_t* temp, uint16_t* feuchte)
 	
 	
 	//Druck compensation
-	up = (int32_t)((((uint32_t)(data[0])) << 12) | (((uint32_t)(data[1])) << 4) | ((uint32_t)data[2] >>	4));
-	
-	up = (int32_t)((((uint32_t)(data[0])) << 8) | (((uint32_t)(data[1])) << 0));
-	
+	up = (int32_t)((((uint32_t)(data[0])) << 12) | (((uint32_t)(data[1])) << 4) | (((uint32_t)data[2] >> 4) & 0x0F));
+		
 	/* calculate x1*/
 	x1 = (t_fine >> 1) - (int32_t)64000;
 	/* calculate x2*/

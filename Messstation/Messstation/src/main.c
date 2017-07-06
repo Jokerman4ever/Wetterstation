@@ -17,9 +17,11 @@ static void alarm(uint32_t time);
 
 
 #define TEST
+//#define NOLOGON
+
 
 #define  RF_RECEIVE_ID 1
-#define SLEEPTIME 10	//Wake up every x seconds
+#define SLEEPTIME 30	//Wake up every x seconds
 #define SLEEPCOUNT ((SLEEPTIME / 1.1) - 1) //Calculate Value for RTC
 
 ISR(PORTE_INT0_vect)
@@ -49,6 +51,7 @@ typedef struct MeassurmentData_t
 
 
 uint8_t data[12];
+
 
 //One Time Step -> 1.1s
 //Addiert eins für den nächsten Wake-Up
@@ -111,10 +114,13 @@ static void alarm(uint32_t time)
 	RF_Sleep();
 	PMIC.CTRL = PMIC_LOLVLEN_bm; //Only RTC IRQ
 	
+	
+	#ifdef NOLOGON
 	if(RF_CurrentStatus.PacketsLost > 3)
 	{
 		rtc_set_callback(ConnectToBasestation);
 	}
+	#endif	
 }
 
 int main (void)
@@ -153,7 +159,13 @@ int main (void)
 //Initialisiere RTC & Sleepmanager
 	sleepmgr_init();
 	rtc_init();
-	rtc_set_callback(ConnectToBasestation);  //LOG INTO BASE
+	
+	#ifdef NOLOGON
+		rtc_set_callback(alarm);
+	#endif
+	#ifndef NOLOGON
+		rtc_set_callback(ConnectToBasestation);  //LOG INTO BASE
+	#endif
 	cpu_irq_enable();
 
 	/* We just initialized the counter so an alarm should trigger on next
