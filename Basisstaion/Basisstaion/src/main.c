@@ -40,14 +40,14 @@ int main (void)
 	uint8_t val = RF_Get_Command(0x01);
 	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
 	RF_Set_State(RF_State_Receive);
-	
+	sei();	
 	
 	//SERVER
-	//com_init();
-	//server_configuration();
+	com_init();
+	server_configuration();
 	//------
 	
-	sei();
+	
 
 	while(1)
 	{

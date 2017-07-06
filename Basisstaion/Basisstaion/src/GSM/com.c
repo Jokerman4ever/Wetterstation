@@ -7,15 +7,13 @@
 
 
 #include "com.h"
+
 //#include "display.h"
-#include <avr/io.h>
-#include <stdio.h>
-#include <stdbool.h>
 //#include "coms.h"
 #include "string.h"
 #include <avr/interrupt.h>
 int lenght = 0x00;
-#define UART_MAXSTRLEN 20
+#define UART_MAXSTRLEN 32
 unsigned char nextChar;
 // USART
 int init_schritt=-2;
@@ -31,18 +29,19 @@ uint8_t kommando_senden;
 
 int Counter = 0x00;
 uint8_t warte_ok=0;
-
+uint8_t recBuffer[UART_MAXSTRLEN];
 
 void com_init(void)
 {
+	sysclk_enable_module(SYSCLK_PORT_F, SYSCLK_USART0);
 	//PORTE.DIR = 0xFF;
 	//PORTE.OUT = 0xFF;
 	USARTF0.BAUDCTRLB = 0;
 	USARTF0.BAUDCTRLA = 12;
-	USARTF0.CTRLA = USART_RXCINTLVL_HI_gc;
+	//USARTF0.CTRLA = USART_RXCINTLVL_HI_gc;
 	USARTF0.CTRLB = USART_TXEN_bm | USART_RXEN_bm;
 	USARTF0.CTRLC = USART_CHSIZE_8BIT_gc;
-	PORTF.DIR = 0x08;
+	PORTF.DIR |= 0x08;
 }
 
 void com_baud()
@@ -70,23 +69,49 @@ void send_string(char data[])
 	
 	while(Counter < length)
 	{
-		while (!(USARTF0.STATUS & USART_DREIF_bm));
-		USARTF0.DATA = data[Counter];
+		com_ausgabe(data[Counter]);
 		//	printf("%c",data[Counter]);
 		Counter++;
 	}
 	
 	Counter = 0x00;
-	while (!( USARTF0.STATUS & USART_DREIF_bm));
+	com_ausgabe(0x0A);
+	com_ausgabe(0x0D);
+	/*while (!( USARTF0.STATUS & USART_DREIF_bm));
 	USARTF0.DATA = 0x0A;
 	while (!( USARTF0.STATUS & USART_DREIF_bm));
-	USARTF0.DATA = 0x0D;
+	USARTF0.DATA = 0x0D;*/
 }
 
 void interrupt_init()
 {
 	PMIC.CTRL |= PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;													// Interrupts (Highlevel, Mediumlevel und Lowlevel freigeben)
 	sei();
+}
+
+void com_ausgabe(uint8_t data)
+{
+	while(!(USARTF0.STATUS & USART_DREIF_bm)); // Überprüfung ob fertig mit schreiben
+	USARTF0.STATUS |= USART_TXCIF_bm;
+	USARTF0.DATA = data;
+	while(!(USARTF0.STATUS & USART_TXCIF_bm)); // Überprüfung ob fertig mit schreiben
+}
+
+
+uint8_t com_getString(uint8_t* buffer)
+{
+	uint8_t len=0;
+	uint8_t nC=0;
+	do 
+	{
+		while( !(USARTF0_STATUS & USART_RXCIF_bm) ); //Interesting DRIF didn't work.  
+		//while(!(USARTF0.STATUS & USART_RXCIF_bm));
+		nC = USARTF0.DATA;
+		*buffer++=nC;
+		len++;
+	} 
+	while (nC != '\r');
+	return len;
 }
 
 
@@ -135,23 +160,14 @@ ISR(USARTF0_RXC_vect)
 
 void server_configuration(void)
 {
-
-
-
 	switch(init_schritt)
-
 	{
 		case -2: send_string("AT"); break;
 		case -1:send_string("AT+IPR=9600"); break;
 
-		case 0:
+		case 0:send_string("AT+CSQ");break;
 
-		send_string("AT+CSQ");
-		
-		break;
-
-		case 1:
-		send_string("AT+CREG?");
+		case 1:send_string("AT+CREG?");
 		//			printf("AT+CREG?\n\r");
 		break;
 
@@ -168,11 +184,9 @@ void server_configuration(void)
 		case 12: send_string("AT+CIPSERVER=1,80"); break;
 		case 13: send_string("AT+CIFSR"); break;
 		case 14: send_string("AT+CIPSTATUS"); break;
-
-
-
-
 	}
+	uint8_t reclen= com_getString(recBuffer);
+	
 }
 
 void server_configuration_auswertung(void)

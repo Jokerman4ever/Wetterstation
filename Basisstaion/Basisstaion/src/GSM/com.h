@@ -29,6 +29,8 @@ void send_string(char *data);
 #define COM_H_
 #include <avr/io.h>
 #include <stdio.h>
+#include <asf.h>
+#include <stdbool.h>
 //#define UART_MAXSTRLEN 100
 //volatile char uart_string[UART_MAXSTRLEN + 1];
 
@@ -40,6 +42,8 @@ void interrupt_init();
 void empfangen_string();
 void server_configuration();
 void server_configuration_auswertung();
+uint8_t com_getString(uint8_t* buffer);
+void com_ausgabe(uint8_t data);
 uint8_t server_initialisierung;
 
 
