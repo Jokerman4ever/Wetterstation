@@ -111,16 +111,38 @@ static void alarm(uint32_t time)
 	while(RF_CurrentStatus.State == RF_State_Transmit){_delay_ms(1);}
 	while(RF_CurrentStatus.Acknowledgment != RF_Acknowledgments_State_Idle){_delay_ms(1);}
 	
-	RF_Sleep();
-	PMIC.CTRL = PMIC_LOLVLEN_bm; //Only RTC IRQ
+	#ifndef NOLOGON
+	RF_Set_State(RF_State_Receive);
+	_delay_ms(100);
 	
+	//Check for new Timeslot
+	if(RF_CurrentStatus.NewPacket) 
+	{
+		RF_Packet_t r = RF_Get_Packet();
+		if(r.Flags & RF_Packet_Flags_Time)
+		{
+			uint16_t sleep = (r.Data[0]<<8 | r.Data[1]);
+			uint8_t ms_sleep = (sleep % 100) - 10;
+			
+			//Sleep to new Timeslot
+			for (uint16_t i = 0; i < ms_sleep; i++)	{_delay_ms(10); }
+			#ifdef TEST
+			rtc_set_alarm_relative(sleep / 1100);
+			#endif
+			#ifndef TEST
+			rtc_set_alarm_relative(sleep/ 110);
+			#endif
+		}
+	}
 	
-	#ifdef NOLOGON
 	if(RF_CurrentStatus.PacketsLost > 3)
 	{
 		rtc_set_callback(ConnectToBasestation);
 	}
-	#endif	
+	#endif
+	
+	RF_Sleep();
+	PMIC.CTRL = PMIC_LOLVLEN_bm; //Only RTC IRQ
 }
 
 int main (void)

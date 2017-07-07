@@ -102,6 +102,8 @@ void RF_Init(uint8_t dev_add)
 #pragma endregion Interrupt Handling
 
 	
+	RF_Set_TXPower(RF_TX_Power_13DB);
+	
 	RF_Set_Command(RF_REG_RSTHI,128);//Signal Level interrupt threshold -> this is used for RSSI Interrupt
 	RF_Set_Frequency(868.4);//Set frequency for Europa!
 	RF_Set_Modem();
