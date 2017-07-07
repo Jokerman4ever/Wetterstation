@@ -34,7 +34,8 @@ int main (void)
 	EEPROM_DisableMapping();
 	CheckFirstrun();
 	FS_Init();
-	
+	PORTF.DIR = (1<<4);//JUST FOR TEST!!!!
+	PORTF.OUTCLR = (1<<4);//JUST FOR TEST!!!!
 	RF_Packet_t p = RF_CreatePacket(buffer,1,0x09,0);
 	RF_Init(0x01);
 	uint8_t val = RF_Get_Command(0x01);
@@ -43,8 +44,8 @@ int main (void)
 	sei();	
 	
 	//SERVER
-	com_init();
-	server_configuration();
+	//com_init();
+	//server_configuration();
 	
 	//------
 	
@@ -85,6 +86,10 @@ void HandleClients(void)
 		RF_Packet_t p = RF_Get_Packet();
 		if(RF_FindDevice(p.Sender) > 0 && !(p.Flags & RF_Packet_Flags_Time))
 		{
+			PORTF.OUTSET = (1<<4);//JUST FOR TEST!!!!
+			_delay_ms(500);//JUST FOR TEST!!!!
+			PORTF.OUTCLR = (1<<4);//JUST FOR TEST!!!!
+			
 			if(p.Flags & RF_Packet_Flags_Weather)
 			{
 				FS_StationRecord_t* r = FS_CreateStationRecordArray(p.Data);
