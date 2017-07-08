@@ -6,7 +6,6 @@
  */ 
 #include "RF.h"
 #include <ASF/common/services/clock/sysclk.h>
-#include <util/atomic.h>
 static void RF_Send_DataHW(uint8_t data);
 static uint8_t RF_Get_DataHW(void);
 
@@ -17,15 +16,15 @@ RF_Config_t RF_CurrentConfig;
 
 static void SPI_putc(uint8_t data)
 {
-	SPID.DATA = data;
-	while(!(SPID.STATUS & SPI_IF_bm));
+	RF_SPI_REG.DATA = data;
+	while(!(RF_SPI_REG.STATUS & SPI_IF_bm));
 }
 
 static uint8_t SPI_getc(void)
 {
-	SPID.DATA = 0x00; //Dummy Byte
-	while(!(SPID.STATUS & SPI_IF_bm));//Wait
-	return SPID.DATA;//return data
+	RF_SPI_REG.DATA = 0x00; //Dummy Byte
+	while(!(RF_SPI_REG.STATUS & SPI_IF_bm));//Wait
+	return RF_SPI_REG.DATA;//return data
 }
 
 static void SPI_Init(void)
@@ -38,8 +37,8 @@ static void SPI_Init(void)
 
 	RF_SPI_PORT.DIRSET = (1<<7);//SCK
 
-	PORTD.PIN4CTRL |= PORT_OPC_PULLUP_gc; //CS?
-	SPID.CTRL = SPI_ENABLE_bm | SPI_MASTER_bm | SPI_PRESCALER_DIV4_gc | SPI_MODE_0_gc;
+	RF_SPI_PORT.PIN4CTRL |= PORT_OPC_PULLUP_gc; //CS?
+	RF_SPI_REG.CTRL = SPI_ENABLE_bm | SPI_MASTER_bm | SPI_PRESCALER_DIV4_gc | SPI_MODE_0_gc;
 	//sysclk_disable_module(SYSCLK_PORT_C, SYSCLK_SPI);
 
 	RF_CS_COM_PORT.DIRSET = (1<<RF_CS_COM_PIN);
@@ -102,7 +101,7 @@ void RF_Init(uint8_t dev_add)
 #pragma endregion Interrupt Handling
 
 	
-	RF_Set_TXPower(RF_TX_Power_13DB);
+	RF_Set_TXPower(RF_TX_Power_13DB);//Set Transmitpower
 	
 	RF_Set_Command(RF_REG_RSTHI,128);//Signal Level interrupt threshold -> this is used for RSSI Interrupt
 	RF_Set_Frequency(868.4);//Set frequency for Europa!
@@ -368,7 +367,7 @@ uint8_t RF_Set_Command(uint8_t reg,uint8_t val)
 	SPI_putc(r);
 	SPI_putc(val);
 	RF_CS_COM_HIGH();
-	return SPID.DATA;
+	return RF_SPI_REG.DATA;
 }
 
 uint8_t RF_Get_Command(uint8_t reg)

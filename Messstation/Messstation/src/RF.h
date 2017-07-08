@@ -21,6 +21,7 @@
 #define RF_CS_DATA_PIN 0
 #define RF_CS_COM_PIN 3
 #define RF_SPI_PORT PORTD
+#define RF_SPI_REG SPID
 
 //ÜBERPRÜFEN!!!!!!!!!
 //CHANGE THIS LINE IN RF.C TOO!!!
