@@ -36,7 +36,7 @@ int main (void)
 	FS_Init();
 	PORTF.DIR = (1<<4);//JUST FOR TEST!!!!
 	PORTF.OUTCLR = (1<<4);//JUST FOR TEST!!!!
-	RF_Packet_t p = RF_CreatePacket(buffer,1,0x09,0);
+	RF_Packet_t p = RF_CreatePacket(buffer,1,0x09,0);//JUST FOR TEST!!!!
 	RF_Init(0x01);
 	uint8_t val = RF_Get_Command(0x01);
 	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
@@ -59,6 +59,7 @@ int main (void)
 		 RF_Send_Packet(p);*/
 		HandleClients();
 		
+		//Brauchen wir das jetzt noch???
 		if(uart_str_complete==1)
 		{
 			uart_str_complete=0;

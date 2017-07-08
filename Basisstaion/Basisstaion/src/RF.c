@@ -571,6 +571,7 @@ void RF_Update(void)
 		
 	if(RF_CurrentConfig.UseAcknowledgments && RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Transmitted)
 	{
+		//Hardware error!!! No Transmitted interrupt was generated from RF Modul!
 		if(RF_CurrentStatus.AckTimeout++ > 100)
 		{
 			RF_CurrentStatus.AckTimeout = 0;
