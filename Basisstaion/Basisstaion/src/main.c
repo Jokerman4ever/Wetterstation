@@ -102,9 +102,11 @@ void HandleClients(void)
 			if((p.Flags & RF_Packet_Flags_Time))
 			{
 				uint8_t index = RF_FindDevice(p.Sender);
+				//Überprüfen ob index > 0 -> gerät war nicht eingetragen!!!
 				RF_UnregisterDevice(index);
 			}
 			uint8_t id = RF_RegisterDevice(p.Sender);
+			//überprfüung machen wenn id == 0 -> kein zeitschlitz vorhanden!
 			uint16_t sleep = RF_GetDeviceSleepTime(id);
 			Packet_buffer[0] = (sleep>>8) & 0xff;
 			Packet_buffer[1] = sleep & 0xff;
