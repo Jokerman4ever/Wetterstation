@@ -42,23 +42,15 @@ void com_init(void)
 	USARTF0.CTRLB = USART_TXEN_bm | USART_RXEN_bm;
 	USARTF0.CTRLC = USART_CHSIZE_8BIT_gc;
 	waitForString=1;
-	PORTF.DIR = (1<<3)|(1<<4);
+	PORTF.DIR = (1<<3)|(1<<4);//TX(3) und RST(4) auf ausgang
 	PORTF.OUTCLR = (1<<4);
-	_delay_ms(200);
+	_delay_ms(200);//Modul reset
 	PORTF.OUTSET = (1<<4);
-	_delay_ms(3000);
-	/*PORTF.OUTSET = (1<<4);
-	_delay_ms(200);
-	PORTF.OUTCLR = (1<<4);
-	_delay_ms(150);
-	PORTF.OUTSET = (1<<4);*/
+	_delay_ms(3000);//Wait till Modul has finished startup
 }
 
 void com_baud()
 {
-	
-	//USART_Baudrate_Set(&USART, 12, 0);
-	
 	USARTF0.BAUDCTRLB=0;
 	USARTF0.BAUDCTRLA=12;
 }

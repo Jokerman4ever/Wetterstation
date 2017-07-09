@@ -55,8 +55,6 @@ int main (void)
 	{
 		if(RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Idle && RF_CurrentStatus.State != RF_State_Receive)RF_Set_State(RF_State_Receive);
 		_xdelay_ms(10);
-		/*if(RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Idle)
-		 RF_Send_Packet(p);*/
 		HandleClients();
 		
 		//Brauchen wir das jetzt noch???
@@ -79,47 +77,49 @@ void CheckFirstrun(void)
 }
 
 
-uint8_t Packet_buffer[20];
+uint8_t Packet_buffer[6];
 void HandleClients(void)
 {
 	if(RF_CurrentStatus.NewPacket)
 	{
 		RF_Packet_t p = RF_Get_Packet();
-		if(RF_FindDevice(p.Sender) > 0 && !(p.Flags & RF_Packet_Flags_Time))
+		if(p.Flags & RF_Packet_Flags_Time)
 		{
-			PORTF.OUTSET = (1<<4);//JUST FOR TEST!!!!
-			_delay_ms(500);//JUST FOR TEST!!!!
-			PORTF.OUTCLR = (1<<4);//JUST FOR TEST!!!!
-			
-			if(p.Flags & RF_Packet_Flags_Weather)
+			uint8_t index = RF_FindDevice(p.Sender);
+			//wenn index == 0 ->gerät war nicht eingetragen!!!
+			if(index>0)RF_UnregisterDevice(index);
+			uint8_t id = RF_RegisterDevice(p.Sender);
+			if(id > 0)
 			{
-				FS_StationRecord_t* r = FS_CreateStationRecordArray(p.Data);
-				FS_WriteRecord(r);
+				uint16_t sleep = RF_GetDeviceSleepTime(id);
+				Packet_buffer[0] = (sleep>>8) & 0xff;
+				Packet_buffer[1] = sleep & 0xff;
+				p = RF_CreatePacket(Packet_buffer,2,p.Sender,RF_Packet_Flags_Time);
+				_xdelay_ms(10);//wait till the Messstation is in Receive mode!
+				RF_Send_Packet(p);
+				while(RF_CurrentStatus.State == RF_State_Transmit){_delay_ms(1);}
+				while(RF_CurrentStatus.Acknowledgment != RF_Acknowledgments_State_Idle){_delay_ms(1);}
+				if(RF_CurrentStatus.AckResult == RF_Acknowledgments_Result_ERROR)
+				{
+					RF_UnregisterDevice(p.Sender);
+				}
 			}
+			//Else -> ERROR keine timeslots mehr frei!
 		}
 		else
 		{
-			if((p.Flags & RF_Packet_Flags_Time))
+			if(RF_FindDevice(p.Sender) > 0)
 			{
-				uint8_t index = RF_FindDevice(p.Sender);
-				//Überprüfen ob index > 0 -> gerät war nicht eingetragen!!!
-				RF_UnregisterDevice(index);
+				PORTF.OUTSET = (1<<4);//JUST FOR TEST!!!!
+				_delay_ms(500);//JUST FOR TEST!!!!
+				PORTF.OUTCLR = (1<<4);//JUST FOR TEST!!!!
+				
+				if(p.Flags & RF_Packet_Flags_Weather)
+				{
+					FS_StationRecord_t* r = FS_CreateStationRecordArray(p.Data);
+					FS_WriteRecord(r);
+				}
 			}
-			uint8_t id = RF_RegisterDevice(p.Sender);
-			//überprfüung machen wenn id == 0 -> kein zeitschlitz vorhanden!
-			uint16_t sleep = RF_GetDeviceSleepTime(id);
-			Packet_buffer[0] = (sleep>>8) & 0xff;
-			Packet_buffer[1] = sleep & 0xff;
-			p = RF_CreatePacket(Packet_buffer,2,p.Sender,RF_Packet_Flags_Time);
-			_delay_ms(10);//wait till the Messstation is in Receive mode!
-			RF_Send_Packet(p);
-			while(RF_CurrentStatus.State == RF_State_Transmit){_delay_ms(1);}
-			while(RF_CurrentStatus.Acknowledgment != RF_Acknowledgments_State_Idle){_delay_ms(1);}
-			if(RF_CurrentStatus.AckResult == RF_Acknowledgments_Result_ERROR)
-			{
-				RF_UnregisterDevice(p.Sender);
-			}
-	
 		}
 	}
 }
