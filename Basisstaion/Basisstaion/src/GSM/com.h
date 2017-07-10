@@ -34,10 +34,8 @@ void send_string(char *data);
 #include <util/delay.h>
 //#define UART_MAXSTRLEN 100
 //volatile char uart_string[UART_MAXSTRLEN + 1];
-
+uint8_t COM_check_string(uint8_t len, const char* antwort,uint8_t laenge_antwort);
 void com_init(void);
-void COM_Baudrate(void);
-void COM_Send(char);
 void COM_Send_string(char *);
 void interrupt_init();
 void empfangen_string();

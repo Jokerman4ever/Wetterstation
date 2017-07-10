@@ -7,22 +7,16 @@
 
 
 #include "com.h"
-
-//#include "display.h"
-//#include "coms.h"
 #include "string.h"
 #include <avr/interrupt.h>
 int lenght = 0x00;
 #define UART_MAXSTRLEN 64
 unsigned char nextChar;
-// USART
-int init_schritt=-2;
+int init_schritt=-3;
 extern volatile uint8_t uart_str_complete;
 extern uint8_t daten_enmpfangen;   // 1 .. String komplett empfangen
 volatile uint8_t uart_str_count = 0;
 volatile char uart_string[UART_MAXSTRLEN + 1]="";
-
-
 extern uint8_t server_initialisierung= false;
 uint8_t kommando_senden;
 
@@ -43,24 +37,14 @@ void com_init(void)
 	USARTF0.CTRLC = USART_CHSIZE_8BIT_gc;
 	waitForString=1;
 	PORTF.DIR = (1<<3)|(1<<4);//TX(3) und RST(4) auf ausgang
-	PORTF.OUTCLR = (1<<4);
+	//WIrd hier nicht mehr benötigt (RESet GSM
+	/*PORTF.OUTCLR = (1<<4);
 	_delay_ms(200);//Modul reset
 	PORTF.OUTSET = (1<<4);
-	_delay_ms(3000);//Wait till Modul has finished startup
-}
-
-void com_baud()
-{
-	USARTF0.BAUDCTRLB=0;
-	USARTF0.BAUDCTRLA=12;
+	_delay_ms(3000);//Wait till Modul has finished startup*/
 }
 
 
-void char_ausgabe(char s)
-{
-	while (!( USARTF0.STATUS & USART_DREIF_bm));
-	USARTF0.DATA = s;
-}
 
 void send_string(char data[])
 {
@@ -84,7 +68,7 @@ void send_string(char data[])
 	while (!( USARTF0.STATUS & USART_DREIF_bm));
 	USARTF0.DATA = 0x0D;*/
 }
-
+// Damit SABA zu hause testen kann
 void interrupt_init()
 {
 	PMIC.CTRL |= PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;													// Interrupts (Highlevel, Mediumlevel und Lowlevel freigeben)
@@ -134,7 +118,7 @@ uint8_t com_getString(uint8_t* buffer)
 	return len;
 }
 
-
+// Wird später beim Interrupt benötigt
 ISR(USARTF0_RXC_vect)
 {
 	com_getString(recBuffer);
@@ -180,10 +164,18 @@ ISR(USARTF0_RXC_vect)
 	}*/
 }
 
+// Hier sind die einzelnen Schritte für die Serverkonfiguration 
 void server_configuration(void)
 {
 	switch(init_schritt)
-	{
+	{   case -3: {
+		PORTF.OUTCLR = (1<<4);
+		_delay_ms(200);//Modul reset
+		PORTF.OUTSET = (1<<4);
+		_delay_ms(3000);//Wait till Modul has finished startup
+		break;
+
+	}
 		case -2: send_string("AT"); break;
 		case -1:send_string("AT+IPR=9600"); break;
 
@@ -234,319 +226,71 @@ uint8_t com_StrCmp(uint8_t* str1,uint8_t off1,uint8_t len1,const uint8_t* str2)
 	return 1;
 }
 
+uint8_t COM_check_string(uint8_t len, const char* antwort, uint8_t laenge_antwort)
+
+{
+    uint8_t index=0;
+	while(index < len)
+	{
+		index = com_getNextMsg(recBuffer,index+1,len);
+		if(index == 0)break;
+		if(com_StrCmp(recBuffer,index+1,laenge_antwort,&antwort))
+		{
+			
+			return 1;
+		}
+
+		
+	/*	else if(com_StrCmp(recBuffer,index+1,5,"ERROR"))
+		{
+			init_schritt=-2;
+			_delay_ms(5000);
+			server_configuration();
+		}*/
+	}
+
+}
+
 void server_configuration_auswertung(uint8_t len)
 {
 	char mystring[]="OK";
-	uint8_t index=0;
+	
 	if(init_schritt < 11)
 	{
-		while(index < len)
-		{
-			index = com_getNextMsg(recBuffer,index+1,len);
-			if(index == 0)break;
-			if(com_StrCmp(recBuffer,index+1,2,"OK"))
-			{
-				init_schritt++;
-				_delay_ms(5000);
-				server_configuration();
-			}
-			else if(com_StrCmp(recBuffer,index+1,5,"ERROR"))
-			{
-				init_schritt=-2;
-				_delay_ms(5000);
-				server_configuration();
-			}
-		}
+	if(COM_check_string(len,"OK", 2))
+	{
+
+	init_schritt++;
+	_delay_ms(5000);
+	server_configuration();
+	}
+	else if(COM_check_string(len,"ERROR", 5))
+	{
+	init_schritt=-3;
+	_delay_ms(5000);
+	server_configuration();
+	}
 	}
 	return;
 	
 	switch(init_schritt)
 	{
-		case -2:
-		{
-			if(com_StrCmp(recBuffer,3,2,"OK"))
-			{ 	
-				//printf("%s\n\r",&uart_string);
-				init_schritt++;
-				//printf("%d\n\r",init_schritt);
-				warte_ok=0;
-				server_configuration();
-			}
-			else if(warte_ok==5)
-			{
-				//warte_ok++;
-				warte_ok=0;
-				//printf("hallo");
-				server_configuration();
-			}
-			break;
-		}
-
-		case -1:
-		{
-			if(com_StrCmp(recBuffer,3,2,"OK"))
-			{
-				//printf("%s\n\r",&uart_string);
-				init_schritt++;
-				//printf("%d\n\r",init_schritt);
-				warte_ok=0;
-				server_configuration();
-			}
-			else if(warte_ok==5)
-			{
-				//warte_ok++;
-				warte_ok=0;
-				//printf("hallo");
-				server_configuration();
-			}
-			break;
-		}
-		case 0:
-		{
-			//BEFEHL AT+CSQ
-			if(!strcmp(mystring, uart_string))
-			{ 	//printf("%s\n\r",&uart_string);
-				init_schritt++;
-				//printf("%d\n\r",init_schritt);
-				warte_ok=0;
-				server_configuration();
-			}
-			else if(warte_ok==5)
-			{
-				//warte_ok++;
-				warte_ok=0;
-				//printf("hallo");
-				server_configuration();
-			}
-			break;
-		}
-		//BEFehl AT+CREG?
-		case 1:
-		{
-			if (!strcmp(mystring, uart_string))
-			{ 	
-			//printf("%s\n\r",&uart_string);
-				init_schritt++;
-				warte_ok=0;
-				//printf("%d\n\r",init_schritt);
-				server_configuration();
-			}
-
-			else if(warte_ok==5)
-			{
-				warte_ok=0;
-				server_configuration();
-			}
-			break;
-		}
-		case 2: //Befehl AT+CGACT?
-		
-			{
-				if (!strcmp(mystring, uart_string))
-				{ 	//printf("%s\n\r",&uart_string);
-					init_schritt++;
-					warte_ok=0;
-					//printf("%d\n\r",init_schritt);
-					server_configuration();
-				}
-
-				else if(warte_ok==5)
-				{
-					warte_ok=0;
-					server_configuration();
-				}
-				break;
-			}
-
-		case 3: //BEFEHL AT+CMEE=!
-
-		{
-			if (!strcmp(mystring, uart_string))
-			{ 	//printf("%s\n\r",&uart_string);
-				init_schritt++;
-				warte_ok=0;
-				//printf("%d\n\r",init_schritt);
-				server_configuration();
-			}
-
-			else if(warte_ok==5)
-			{
-				warte_ok=0;
-				server_configuration();
-			}
-			break;
-		}
-
-		case 4: //Befehl ATCGATT=1
-	{
-		if (!strcmp(mystring, uart_string))
-		{ 	//printf("%s\n\r",&uart_string);
-			init_schritt++;
-			warte_ok=0;
-			//printf("%d\n\r",init_schritt);
-			server_configuration();
-		}
-
-		else if(warte_ok==5)
-		{
-			warte_ok=0;
-			server_configuration();
-		}
-		break;
-	}
-
-		case 5 :
-		//Befehl AT+CSST="interne.t-d1.de
-		{
-			if (!strcmp(mystring, uart_string))
-			{ //	printf("%s\n\r",&uart_string);
-				init_schritt++;
-				warte_ok=0;
-				//printf("%d\n\r",init_schritt);
-				server_configuration();
-			}
-
-			else if(warte_ok==5)
-			{
-				warte_ok=0;
-				server_configuration();
-			}
-			break;
-		}
-
-		
-
-
-		
-		case 6 ://AT+CIIR
-		{
-			if (!strcmp(mystring, uart_string))
-			{ //	printf("%s\n\r",&uart_string);
-				init_schritt++;
-				warte_ok=0;
-				//printf("%d\n\r",init_schritt);
-				server_configuration();
-			}
-
-			else if(warte_ok==5)
-			{
-				warte_ok=0;
-				server_configuration();
-			}
-			break;
-		}
-
-		case 7: //AT CIFSR
-		{
-			if (strlen(&uart_string)==13)
-			{ 	//printf("%s\n\r",&uart_string);
-				init_schritt++;
-				warte_ok=0;
-				//printf("%d\n\r",init_schritt);
-				server_configuration();
-			}
-
-			else if(warte_ok==5)
-			{
-				//warte_ok++;
-				warte_ok=0;
-				server_configuration();
-				
-			}
-			break;
-		}
-
-		
-		//printf("%s\n\r",&uart_string);
-		//printf("Schritt %d\n\r",strlen(&uart_string));
-
-		
-		//printf("hallo");
-		/*if (!strcmp("ERROR", uart_string))
-		{
-		//init_schritt++;
-		//warte_ok=0;
-		/
-		server_configuration();
-		}
-
-		else  {
-		printf("%s\n\r wieso",uart_string);
-		init_schritt++;
-		printf("%d\n\r",init_schritt);
-		server_configuration();}*/
-		
-
-		case 8 :
-
-		{
-			if (!strcmp(mystring, uart_string))
-			{ 	//printf("%s\n\r",&uart_string);
-				init_schritt++;
-				warte_ok=0;
-				//printf("%d\n\r",init_schritt);
-				server_configuration();
-			}
-
-			else if(warte_ok==5)
-			{
-				warte_ok=0;
-				server_configuration();
-			}
-			break;
-		}
-
-		case 9:
-
-		if (!strcmp("CLOSE OK", uart_string))
-		{ 	//printf("%s\n\r",&uart_string);
-			init_schritt++;
-			warte_ok=0;
-			//printf("%d\n\r",init_schritt);
-			server_configuration();
-		}
-
-		else if(warte_ok==5) {
-			warte_ok=0;
-		server_configuration();}
-		break;
-
-		
-		case 10:
-		{
-			if (!strcmp(mystring, uart_string))
-			{ //	printf("%s\n\r",&uart_string);
-				init_schritt++;
-				warte_ok=0;
-				//printf("%d\n\r",init_schritt);
-				server_configuration();
-			}
-
-			else if(warte_ok==5)
-			 {
-			warte_ok=0;
-			server_configuration();
-			 }
-		break;
-		}
-
-
 		case 11:
 
 		{
-			if (!strcmp("SIM is ready", uart_string))
-			{ 	//printf("%s\n\r",&uart_string);
-				init_schritt++;
-				warte_ok=0;
-				//printf("%d\n\r",init_schritt);
-				server_configuration();
-			}
+				if(COM_check_string(len,"SIM is ready", 12))
+				{
 
-			else if(warte_ok==5)
-			{
-			warte_ok=0;
-			server_configuration();
-			}
+					init_schritt++;
+					_delay_ms(5000);
+					server_configuration();
+				}
+				else if(COM_check_string(len,"ERROR", 5))
+				{
+					init_schritt=-3;
+					_delay_ms(5000);
+					server_configuration();
+			    }
 		break;
 		}
 		
@@ -554,19 +298,21 @@ void server_configuration_auswertung(uint8_t len)
 		case 12 :
 		{
 
-			if(!strcmp("SERVER OK",uart_string)){
-				init_schritt++;
-				warte_ok=0;
-				//printf("%s\n\r",&uart_string);
-				//printf("%d\n\r",init_schritt);
-				server_configuration();
-			}
+			
+	
+	if(COM_check_string(len,"SERVER OK", 9))
+	{
 
-			else if(warte_ok==5)
-			{
-				warte_ok=0;
-				server_configuration();
-			}
+		init_schritt++;
+		_delay_ms(5000);
+		server_configuration();
+	}
+	else if(COM_check_string(len,"ERROR", 5))
+	{
+		init_schritt=-3;
+		_delay_ms(5000);
+		server_configuration();
+	}
 			break;
 		}
 
@@ -574,19 +320,20 @@ void server_configuration_auswertung(uint8_t len)
 
 		case 13 :
 		{
-			if (strlen(uart_string)==13)
-			{ 	//printf("%s\n\r",&uart_string);
-				init_schritt++;
-				warte_ok=0;
-				//printf("%d\n\r",init_schritt);
-				server_configuration();
-			}
+	
+	if(COM_check_string(len,"OK", 2))
+	{
 
-			else if(warte_ok==5) 
-			{
-			warte_ok=0;
-			server_configuration();
-			}
+		init_schritt++;
+		_delay_ms(5000);
+		server_configuration();
+	}
+	else if(COM_check_string(len,"ERROR", 5))
+	{
+		init_schritt=-3;
+		_delay_ms(5000);
+		server_configuration();
+	}
 			
 		break;
 		}
@@ -599,20 +346,21 @@ void server_configuration_auswertung(uint8_t len)
 		/*if(!strcmp(mystring,uart_string))
 		{
 		printf("%s\n\r",&uart_string); }*/
-		if (!strcmp("STATE: SERVER LISTENING", uart_string))
-		{ 	//printf("%s\n\r",&uart_string);
-			//init_schritt++;
-			warte_ok=0;
-			server_initialisierung=true;
-			//printf("%d\n\r",init_schritt);
-			//server_configuration();
-		}
 
-		else if(warte_ok==5)
-		{
-			warte_ok=0;
-			server_configuration();
-		}
+	
+	if(COM_check_string(len,"STATE: SERVER LISTENING", 23))
+	{
+
+		init_schritt++;
+		_delay_ms(5000);
+		server_configuration();
+	}
+	else if(COM_check_string(len,"ERROR", 5))
+	{
+		init_schritt=-3;
+		_delay_ms(5000);
+		server_configuration();
+	}
 		
 		break;
 	}
