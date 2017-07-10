@@ -44,8 +44,8 @@ int main (void)
 	sei();	
 	
 	//SERVER
-	//com_init();
-	//server_configuration();
+	com_init();
+	server_configuration();
 	
 	//------
 	
@@ -83,7 +83,7 @@ void HandleClients(void)
 	if(RF_CurrentStatus.NewPacket)
 	{
 		RF_Packet_t p = RF_Get_Packet();
-		if(p.Flags & RF_Packet_Flags_Time)
+		if(p.Flags & RF_Packet_Flags_Time || RF_FindDevice(p.Sender) == 0)
 		{
 			uint8_t index = RF_FindDevice(p.Sender);
 			//wenn index == 0 ->gerät war nicht eingetragen!!!
@@ -117,7 +117,7 @@ void HandleClients(void)
 				if(p.Flags & RF_Packet_Flags_Weather)
 				{
 					FS_StationRecord_t* r = FS_CreateStationRecordArray(p.Data);
-					FS_WriteRecord(r);
+					//FS_WriteRecord(r);
 				}
 			}
 		}
