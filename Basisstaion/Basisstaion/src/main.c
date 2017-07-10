@@ -28,14 +28,14 @@ int main (void)
 {
 	uint8_t buffer[3];
 	sysclk_init();
-	clock_change_2MHZ();
+	clock_change_32MHZ();
 	Flash_SPI_Init();
 	EEPROM_FlushBuffer();
 	EEPROM_DisableMapping();
 	CheckFirstrun();
 	FS_Init();
-	PORTF.DIR = (1<<4);//JUST FOR TEST!!!!
-	PORTF.OUTCLR = (1<<4);//JUST FOR TEST!!!!
+	//PORTF.DIR = (1<<4);//JUST FOR TEST!!!!
+	//PORTF.OUTCLR = (1<<4);//JUST FOR TEST!!!!
 	RF_Packet_t p = RF_CreatePacket(buffer,1,0x09,0);//JUST FOR TEST!!!!
 	RF_Init(0x01);
 	uint8_t val = RF_Get_Command(0x01);
@@ -110,9 +110,9 @@ void HandleClients(void)
 		{
 			if(RF_FindDevice(p.Sender) > 0)
 			{
-				PORTF.OUTSET = (1<<4);//JUST FOR TEST!!!!
-				_delay_ms(500);//JUST FOR TEST!!!!
-				PORTF.OUTCLR = (1<<4);//JUST FOR TEST!!!!
+				//PORTF.OUTSET = (1<<4);//JUST FOR TEST!!!!
+				//_delay_ms(500);//JUST FOR TEST!!!!
+				//PORTF.OUTCLR = (1<<4);//JUST FOR TEST!!!!
 				
 				if(p.Flags & RF_Packet_Flags_Weather)
 				{

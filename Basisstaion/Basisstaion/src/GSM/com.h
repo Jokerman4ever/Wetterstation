@@ -31,7 +31,7 @@ void send_string(char *data);
 #include <stdio.h>
 #include <asf.h>
 #include <stdbool.h>
-#include <util/delay.h>
+#include <Clock/Xdelay.h>
 //#define UART_MAXSTRLEN 100
 //volatile char uart_string[UART_MAXSTRLEN + 1];
 uint8_t COM_check_string(uint8_t len, const char* antwort,uint8_t laenge_antwort);
