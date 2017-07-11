@@ -232,11 +232,8 @@ typedef struct RF_Status
 	uint16_t CurrentSlotTime;
 	uint8_t PacketsLost;
 } RF_Status_t;
-
-
-
-
-void RF_Init(uint8_t dev_add);
+	
+void RF_Init(uint8_t dev_add, uint8_t syncw_num);
 void RF_Set_State(RF_State_t state);
 void RF_Set_Band(RF_Band_t band);
 void RF_Set_Modulation(RF_Modulation_t mod);
@@ -248,6 +245,7 @@ void RF_Set_ClockOutput(uint8_t enable);
 void RF_Set_TXPower(RF_TX_Power_t power);
 void RF_Set_Address(uint8_t add);
 void RF_Set_Sync(uint8_t* sync,uint8_t len);
+void RF_Set_Sync_Num(uint8_t syncw_num);
 void RF_Set_PayloadLenght(uint8_t len);
 void RF_Set_FIFOAccess(RF_FIFOAccess_t access);
 void RF_Set_IRQSources(uint8_t irq0, uint8_t irq1,RF_TXIRQ1_t tx);

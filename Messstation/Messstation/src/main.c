@@ -21,7 +21,7 @@ static void alarm(uint32_t time);
 
 
 #define  RF_RECEIVE_ID 1
-#define SLEEPTIME 30	//Wake up every x seconds
+#define SLEEPTIME 5	//Wake up every x seconds
 #define SLEEPCOUNT ((SLEEPTIME / 1.1) - 1) //Calculate Value for RTC
 
 ISR(PORTE_INT0_vect)
@@ -50,8 +50,7 @@ typedef struct MeassurmentData_t
 } MeassurmentData_t;
 
 
-uint8_t data[12];
-
+uint8_t id, syncw_num;
 
 //One Time Step -> 1.1s
 //Addiert eins für den nächsten Wake-Up
@@ -64,8 +63,6 @@ static void alarm(uint32_t time)
 	 */
 	rtc_set_alarm(time + SLEEPCOUNT);
 	
-	
-	int16_t tf;
 	uint16_t bat;
 	bool wind_con = true;
 	
@@ -85,7 +82,7 @@ static void alarm(uint32_t time)
 	/* Wind-/Regensensor here */
 	com_disable();
 	
-	bat = ADCA_GetValue(ADC_CH0, ADC_CH_MUXPOS_PIN0_gc); //Read Bat-Status
+	bat = ADCA_GetValue(ADC_CH0, ADC_CH_MUXPOS_PIN2_gc); //Batteriestatus lesen...
 	
 	//Simulation Wind oder so was in der Art... keine Ahnung
 	if(meas_data.winddirection == 0)
@@ -99,9 +96,19 @@ static void alarm(uint32_t time)
 		meas_data.windlevel <<= 1;
 	}	
 	
-	
 	//Send Data
 	RF_Wakeup();
+	
+	if((id != ((PORTA.IN & 0xF0) >> 4)) || (syncw_num != (PORTB.IN & 0x0F)))
+	{
+		id = (PORTA.IN & 0xF0) >> 4;
+		syncw_num = PORTB.IN & 0x0F;
+		
+		RF_Set_Address(16+id);//Set Device local address!
+		RF_CurrentStatus.LocalDeviceAdd = 16+id;
+		
+		RF_Set_Sync_Num(syncw_num);
+	}
 	
 	if(wind_con){ packet = RF_CreatePacket((uint8_t *)&meas_data, 10, RF_RECEIVE_ID, RF_Packet_Flags_Weather); }
 	else{ packet = RF_CreatePacket((uint8_t *)&meas_data, 6, RF_RECEIVE_ID, RF_Packet_Flags_Weather); }
@@ -113,7 +120,7 @@ static void alarm(uint32_t time)
 	
 	#ifndef NOLOGON
 	RF_Set_State(RF_State_Receive);
-	_delay_ms(100);
+	_delay_ms(50);
 	
 	//Check for new Timeslot
 	if(RF_CurrentStatus.NewPacket) 
@@ -168,7 +175,23 @@ int main (void)
 	i2c_disable();
 	
 //Initialisiere RF-Modul
-	RF_Init(0x05);
+	
+	PORTA.DIRCLR = 0xF0;
+	PORTA.PIN4CTRL |= PORT_OPC_PULLUP_gc;
+	PORTA.PIN5CTRL |= PORT_OPC_PULLUP_gc;
+	PORTA.PIN6CTRL |= PORT_OPC_PULLUP_gc;
+	PORTA.PIN7CTRL |= PORT_OPC_PULLUP_gc;
+	
+	PORTB.DIRCLR = 0x0F;
+	PORTB.PIN0CTRL |= PORT_OPC_PULLUP_gc;
+	PORTB.PIN1CTRL |= PORT_OPC_PULLUP_gc;
+	PORTB.PIN2CTRL |= PORT_OPC_PULLUP_gc;
+	PORTB.PIN3CTRL |= PORT_OPC_PULLUP_gc;
+	
+	id = (PORTA.IN & 0xF0) >> 4;
+	syncw_num = PORTB.IN & 0x0F;
+
+	RF_Init(16+id, syncw_num);
 	#ifdef TEST
 		val = RF_Get_Command(0x01);
 	#endif	

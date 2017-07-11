@@ -14,6 +14,23 @@ RF_Packet_t RF_LastReceivedPacket;
 RF_Status_t RF_CurrentStatus;
 RF_Config_t RF_CurrentConfig;
 
+uint8_t RF_Syncwords[16][4] = {{'S','Y','N','C'},
+{'L','I','N','K'},
+{'U','S','E','R'},
+{'H','O','S','T'},
+{'D','A','T','A'},
+{'S','A','F','E'},
+{'C','H','I','P'},
+{'C','A','L','L'},
+{'G','A','T','E'},
+{'I','C','O','N'},
+{'F','U','N','K'},
+{'W','I','N','D'},
+{'R','A','I','N'},
+{'T','E','M','P'},
+{'P','O','R','T'},
+{'V','O','L','T'}};
+
 static void SPI_putc(uint8_t data)
 {
 	RF_SPI_REG.DATA = data;
@@ -61,7 +78,7 @@ static void Update_Timer_Init(void)
 	sysclk_disable_module(SYSCLK_PORT_C, SYSCLK_TC1); //TC1 SysClock Enable
 }
 
-void RF_Init(uint8_t dev_add)
+void RF_Init(uint8_t dev_add, uint8_t syncw_num)
 {
 	
 	RF_Reset_PORT.DIRSET = (1<<RF_Reset_Pin);
@@ -69,7 +86,7 @@ void RF_Init(uint8_t dev_add)
 	_delay_ms(5);//Wait
 	RF_Reset_PORT.OUTCLR = (1<<RF_Reset_Pin);
 	_delay_ms(200);//Wait to respond
-	
+		
 	Update_Timer_Init();
 	SPI_Init();
 	RF_Set_Modulation(RF_Modulation_FSK);
@@ -82,8 +99,7 @@ void RF_Init(uint8_t dev_add)
 	RF_Set_Mode(RF_Mode_Packet);//Enable Packetmode
 	RF_Set_PacketConfig(1,1,1,RF_Preamble_3,RF_AddressFilter_NODEADD_00);//Configure packetmode to CRC check|Whitening|Variable packet payload|3 Bytes Preamble|Adress Filter->Node Adress and Broadcast!
 	RF_Set_PayloadLenght(RF_Max_PacketPayload);//Bytes!
-	uint8_t syncw[4] = {'S','Y','N','C'};
-	RF_Set_Sync(syncw,4);
+	RF_Set_Sync_Num(syncw_num);
 	RF_Set_IRQSources(RF_RXIRQ0_Packet_FIFOEMPTY, RF_RXIRQ1_Packet_CRCOK,RF_TXIRQ1_TXDONE);
 	RF_IRQ0_PORT.DIRCLR = (1<<RF_IRQ0_PIN);//Set as Input
 	RF_IRQ1_PORT.DIRCLR = (1<<RF_IRQ1_PIN);//Set as Input
@@ -256,6 +272,11 @@ void RF_Set_Sync(uint8_t* sync,uint8_t len)
 	{
 		RF_Set_Command(RF_REG_SYNCV31 +i,sync[i]);
 	}
+}
+
+void RF_Set_Sync_Num(uint8_t syncw_num)
+{
+	RF_Set_Sync(&RF_Syncwords[syncw_num][0], 4);
 }
 
 void RF_Set_PayloadLenght(uint8_t len)
