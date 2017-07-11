@@ -37,7 +37,7 @@ int main (void)
 	//PORTF.DIR = (1<<4);//JUST FOR TEST!!!!
 	//PORTF.OUTCLR = (1<<4);//JUST FOR TEST!!!!
 	RF_Packet_t p = RF_CreatePacket(buffer,1,0x09,0);//JUST FOR TEST!!!!
-	RF_Init(0x01);
+	RF_Init(0x01, 0);
 	//RF_Sleep();
 	uint8_t val = RF_Get_Command(0x01);
 	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
