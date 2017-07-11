@@ -234,10 +234,22 @@ static void ConnectToBasestation(uint32_t time)
 	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
 	RF_Wakeup();
 	
+	if((id != ((PORTA.IN & 0xF0) >> 4)) || (syncw_num != (PORTB.IN & 0x0F)))
+	{
+		id = (PORTA.IN & 0xF0) >> 4;
+		syncw_num = PORTB.IN & 0x0F;
+		
+		RF_Set_Address(16+id);//Set Device local address!
+		RF_CurrentStatus.LocalDeviceAdd = 16+id;
+		
+		RF_Set_Sync_Num(syncw_num);
+	}
+	
 	RF_Packet_t p = RF_CreatePacket(&trys,0,RF_RECEIVE_ID,RF_Packet_Flags_Time);
 	while(trys-- > 0)
 	{
 		NPtrys = 10;
+		p = RF_CreatePacket(&trys,0,RF_RECEIVE_ID,RF_Packet_Flags_Time);
 		RF_Send_Packet(p);
 		while(RF_CurrentStatus.State == RF_State_Transmit){_delay_ms(1);}
 		while(RF_CurrentStatus.Acknowledgment != RF_Acknowledgments_State_Idle){_delay_ms(1);}
