@@ -56,6 +56,7 @@ static void SPI_Init(void)
 
 	RF_SPI_PORT.PIN4CTRL |= PORT_OPC_PULLUP_gc; //CS?
 	RF_SPI_REG.CTRL = SPI_ENABLE_bm | SPI_MASTER_bm | SPI_PRESCALER_DIV4_gc | SPI_MODE_0_gc;
+	if(XDELAY_ISFAST) {RF_SPI_REG.CTRL |= SPI_PRESCALER_DIV64_gc;}
 	//sysclk_disable_module(SYSCLK_PORT_C, SYSCLK_SPI);
 
 	RF_CS_COM_PORT.DIRSET = (1<<RF_CS_COM_PIN);
@@ -72,7 +73,7 @@ static void Update_Timer_Init(void)
 	sysclk_enable_module(SYSCLK_PORT_C, SYSCLK_TC1); //TC1 SysClock Enable
 	TCC1.CTRLA = TC_CLKSEL_DIV1024_gc; //Presackler
 	TCC1.CTRLB = TC_WGMODE_NORMAL_gc;
-	TCC1.PER = 20; //Zähler Top-Wert
+	TCC1.PER = XDELAY_ISFAST ? 320 : 20; //Zähler Top-Wert
 	TCC1.CNT = 0x00; //Reset Zähler-Wert
 	TCC1.INTCTRLA = TC_OVFINTLVL_MED_gc;
 }

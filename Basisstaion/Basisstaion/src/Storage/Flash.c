@@ -1,5 +1,6 @@
 #include "Flash.h"
 #include <asf.h>
+#include "Clock/Xdelay.h"
 /*
  * Flash.c
  *
@@ -27,6 +28,7 @@ void Flash_SPI_Init(void)
 
 	Flash_SPI_PORT.PIN4CTRL |= PORT_OPC_PULLUP_gc; //CS?
 	Flash_SPI_REG.CTRL = SPI_ENABLE_bm | SPI_MASTER_bm | SPI_PRESCALER_DIV4_gc | SPI_MODE_0_gc;
+	if(XDELAY_ISFAST){Flash_SPI_REG.CTRL |= SPI_PRESCALER_DIV64_gc;}
 	//sysclk_disable_module(SYSCLK_PORT_C, SYSCLK_SPI);
 
 	Flash_CS_PORT.DIRSET = (1<<Flash_CS_Pin);

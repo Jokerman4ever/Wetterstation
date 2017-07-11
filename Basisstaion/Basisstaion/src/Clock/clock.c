@@ -37,10 +37,10 @@ void clock_change_2MHZ(void)
 	
 	
 		
-	state = sysclk_module_is_enabled(SYSCLK_PORT_D, SYSCLK_SPI);
-	sysclk_enable_module(SYSCLK_PORT_D, SYSCLK_SPI);
+	state = sysclk_module_is_enabled(SYSCLK_PORT_E, SYSCLK_SPI);
+	sysclk_enable_module(SYSCLK_PORT_E, SYSCLK_SPI);
 	SPIE.CTRL |= SPI_PRESCALER_DIV4_gc; //Flash
-	if(!state){ sysclk_disable_module(SYSCLK_PORT_D, SYSCLK_SPI);}
+	if(!state){ sysclk_disable_module(SYSCLK_PORT_E, SYSCLK_SPI);}
 			
 	cpu_irq_restore(flags);
 }
@@ -72,10 +72,10 @@ void clock_change_32MHZ(void)
 	
 	
 	
-	state = sysclk_module_is_enabled(SYSCLK_PORT_D, SYSCLK_SPI);
-	sysclk_enable_module(SYSCLK_PORT_D, SYSCLK_SPI);
+	state = sysclk_module_is_enabled(SYSCLK_PORT_E, SYSCLK_SPI);
+	sysclk_enable_module(SYSCLK_PORT_E, SYSCLK_SPI);
 	SPIE.CTRL |= SPI_PRESCALER_DIV64_gc; //Flash
-	if(!state){ sysclk_disable_module(SYSCLK_PORT_D, SYSCLK_SPI);}
+	if(!state){ sysclk_disable_module(SYSCLK_PORT_E, SYSCLK_SPI);}
 	
 	cpu_irq_restore(flags);
 }
