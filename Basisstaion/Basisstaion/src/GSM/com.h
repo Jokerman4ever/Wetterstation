@@ -39,13 +39,12 @@ void com_init(void);
 void COM_Send_string(char *);
 void interrupt_init();
 void empfangen_string();
-void server_configuration();
+void server_configuration(uint8_t step);
 void server_configuration_auswertung(uint8_t len);
 uint8_t com_getString(uint8_t* buffer);
 void com_ausgabe(uint8_t data);
 uint8_t com_StrCmp(uint8_t* str1,uint8_t off1,uint8_t len1,const uint8_t* str2);
 uint8_t server_initialisierung;
-
 
 
 

@@ -10,7 +10,7 @@
 
 void HandleClients(void);
 void CheckFirstrun(void);
-
+extern int8_t init_schritt;
 volatile uint8_t uart_str_complete = 0;
 uint8_t daten_enmpfangen=false;
 
@@ -28,7 +28,7 @@ int main (void)
 {
 	uint8_t buffer[3];
 	sysclk_init();
-	clock_change_32MHZ();
+	clock_change_2MHZ();
 	Flash_SPI_Init();
 	EEPROM_FlushBuffer();
 	EEPROM_DisableMapping();
@@ -38,32 +38,25 @@ int main (void)
 	//PORTF.OUTCLR = (1<<4);//JUST FOR TEST!!!!
 	RF_Packet_t p = RF_CreatePacket(buffer,1,0x09,0);//JUST FOR TEST!!!!
 	RF_Init(0x01);
+	//RF_Sleep();
 	uint8_t val = RF_Get_Command(0x01);
 	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
 	RF_Set_State(RF_State_Receive);
-	sei();	
+	sei();
 	
 	//SERVER
-	com_init();
-	server_configuration();
-	
-	//------
-	
+	/*com_init();
+	for (; init_schritt < 15;)
+	{
+		server_configuration(init_schritt);
+	}*/
 	
 
 	while(1)
 	{
 		if(RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Idle && RF_CurrentStatus.State != RF_State_Receive)RF_Set_State(RF_State_Receive);
 		_xdelay_ms(10);
-		HandleClients();
-		
-		//Brauchen wir das jetzt noch???
-		if(uart_str_complete==1)
-		{
-			uart_str_complete=0;
-		}
-
-		
+		HandleClients();		
 	}
 }
 

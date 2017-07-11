@@ -36,7 +36,8 @@ void com_init(void)
 	USARTF0.CTRLB = USART_TXEN_bm | USART_RXEN_bm;
 	USARTF0.CTRLC = USART_CHSIZE_8BIT_gc;
 	waitForString=1;
-	PORTF.DIR = (1<<3)|(1<<4);//TX(3) und RST(4) auf ausgang
+	PORTF.DIRSET = (1<<3);//TX(3) und RST(4) auf ausgang
+	PORTF.DIRCLR = (1<<4);//RST
 	//WIrd hier nicht mehr benötigt (RESet GSM
 	/*PORTF.OUTCLR = (1<<4);
 	_delay_ms(200);//Modul reset
@@ -82,6 +83,7 @@ void com_ausgabe(uint8_t data)
 	USARTF0.DATA = data;
 	while(!(USARTF0.STATUS & USART_TXCIF_bm)); // Überprüfung ob fertig mit schreiben
 }
+uint8_t NCC;
 
 uint8_t com_getChar(uint8_t* error)
 {
@@ -89,10 +91,11 @@ uint8_t com_getChar(uint8_t* error)
 	uint8_t nc = 0;
 	*error = 0;
 	//)_delay_us(5);
-	while( !(USARTF0.STATUS & USART_RXCIF_bm) && t-- > 1) _xdelay_us(10);
-	if(t <= 1){*error = 1; return 0;}
-	nc = USARTF0.DATA;
-	return nc;
+	while( !(USARTF0.STATUS & USART_RXCIF_bm) && t-- > 1) _xdelay_us(5);
+	if(t <= 1)
+	{*error = 1; return 0;}
+	NCC = USARTF0.DATA;
+	return NCC;
 }
 
 
@@ -103,7 +106,13 @@ uint8_t com_getString(uint8_t* buffer)
 	uint8_t trys=5;
 	uint8_t error=0;
 	while( !(USARTF0_STATUS & USART_RXCIF_bm)) _xdelay_us(50);
-	while(trys-- > 0)
+	while(!error)
+	{
+		nC = com_getChar(&error);
+		if(error)break;
+		if(nC != '\r')buffer[leni++]=nC;
+	}
+	/*while(trys-- > 0)
 	{
 		do 
 		{
@@ -115,7 +124,7 @@ uint8_t com_getString(uint8_t* buffer)
 		while (nC != '\n' && leni < UART_MAXSTRLEN);
 		nC=0;
 		//while( !(USARTF0_STATUS & USART_RXCIF_bm)) _delay_us(50);
-	}
+	}*/
 	return leni;
 }
 
@@ -166,24 +175,29 @@ ISR(USARTF0_RXC_vect)
 }
 
 // Hier sind die einzelnen Schritte für die Serverkonfiguration 
-void server_configuration(void)
+void server_configuration(uint8_t step)
 {
+	for (uint8_t i = 0; i <UART_MAXSTRLEN; i++)
+	{
+		recBuffer[i]=0;
+	}
 	switch(init_schritt)
 	{   
 		case -3:
 		 {
-			PORTF.OUTCLR = (1<<4);
-			_xdelay_ms(200);//Modul reset
+			//PORTF.OUTCLR = (1<<4);
+			//_xdelay_ms(200);//Modul reset
 			PORTF.OUTSET = (1<<4);
-			_xdelay_ms(3000);//Wait till Modul has finished startup
+			//_xdelay_ms(3000);//Wait till Modul has finished startup
 			break;
 		}
 		case -2: send_string("AT"); break;
 		case -1:send_string("AT+IPR=38400"); break;
-		case 0:send_string("AT+CSQ");break;
-		case 1:send_string("AT+CREG?"); break;
+		case 0:send_string("AT+CSQ"); break;
+		case 1: init_schritt++;
+		case 2:send_string("AT+CREG?");  break;
 		//case 2: send_string("AT+CGACT?") ; break;
-		case 2: init_schritt++; case 3: send_string("AT+CMEE=1");  break;
+		case 3: send_string("AT+CMEE=1");  break;
 		case 4: send_string("AT+CGATT=1"); break;
 		case 5: send_string("AT+CSTT=\"internet.t-d1.de\"");  break;
 		case 6: send_string("AT+CIICR"); break;
@@ -199,8 +213,7 @@ void server_configuration(void)
 	if(init_schritt == -3)
 	{
 		init_schritt++;
-		_xdelay_ms(5000);
-		server_configuration();
+		//server_configuration(init_schritt);
 		return;
 	}
 	uint8_t reclen= com_getString(recBuffer);
@@ -248,24 +261,64 @@ uint8_t COM_check_string(uint8_t len, const char* antwort, uint8_t laenge_antwor
 
 void server_configuration_auswertung(uint8_t len)
 {
+	if(len <= 2){_xdelay_ms(5000);return;}
+	if(init_schritt == 0)
+	{
+		
+		for (uint8_t i = 0; i < UART_MAXSTRLEN; i++)
+		{
+			if(recBuffer[i] == ':')
+			{
+				i+=2;
+				if(recBuffer[i] != '0')
+				{
+					init_schritt++;
+					break;
+				}
+			}
+		}
+		return;
+	}
+	
+	if(init_schritt == 2)
+	{
+		for (uint8_t i = 0; i < UART_MAXSTRLEN; i++)
+		{
+			if(recBuffer[i] == ':')
+			{
+				for(uint8_t c = i; c < UART_MAXSTRLEN; c++)
+				{
+					if(recBuffer[c] == ',')
+					{
+						c++;
+						if(recBuffer[c] == '1')
+						{
+							init_schritt++;
+							return;
+						}
+					}
+				}
+			}
+		}
+		_xdelay_ms(2000);
+		return;
+	}
+	
 	if(init_schritt < 11)
 	{
-		if(len == 1){_xdelay_ms(2000);server_configuration();}
 		if(COM_check_string(len,"OK", 2))
 		{
 			init_schritt++;
 			_xdelay_ms(2000);
-			server_configuration();
 		}
 		else if(COM_check_string(len,"ERROR", 5))
 		{
 			//init_schritt=-3;
 			_xdelay_ms(2000);
-			server_configuration();
 		}
 	}
 	return;
-	
+	/*
 	switch(init_schritt)
 	{
 		case 11:
@@ -336,10 +389,6 @@ void server_configuration_auswertung(uint8_t len)
 
 		case 14:{
 
-		/*if(!strcmp(mystring,uart_string))
-		{
-		printf("%s\n\r",&uart_string); }*/
-
 	
 	if(COM_check_string(len,"STATE: SERVER LISTENING", 23))
 	{
@@ -360,6 +409,7 @@ void server_configuration_auswertung(uint8_t len)
 	
 	}
 	//printf("%s",&mystring);
+	*/
 
 }
 
