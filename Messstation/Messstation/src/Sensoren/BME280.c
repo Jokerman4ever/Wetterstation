@@ -47,8 +47,7 @@ void BME280_init(void)
 {
 	uint8_t buffer[26];
 
-	i2c_read_byte(BME_ADDR, 0xD0, &buffer[0]);
-	i2c_read_byte(BME_ADDR, 0xF5, &buffer[1]);
+	//i2c_read_byte(BME_ADDR, 0xD0, &buffer[0]); //Read Deviece-ID
 
 	i2c_read(BME_ADDR, 0x88, buffer, 26);
 	BMEcalibrationData.dig_T1 = ((uint16_t)buffer[1] <<8) + buffer[0];
@@ -64,9 +63,7 @@ void BME280_init(void)
 	BMEcalibrationData.dig_P8 = (buffer[21] <<8) + buffer[20];
 	BMEcalibrationData.dig_P9 = (buffer[23] <<8) + buffer[22];
 	BMEcalibrationData.dig_H1 = buffer[25];
-	
-	i2c_read_byte(BME_ADDR, 0xA1, &BMEcalibrationData.dig_H1);
-	
+		
 	i2c_read(BME_ADDR, 0xE1, buffer, 10);
 	BMEcalibrationData.dig_H2 = (buffer[1] << 8) + buffer[0];
 	BMEcalibrationData.dig_H3 = buffer[2];
@@ -82,7 +79,7 @@ static bool is_busy(void)
 {
 	uint8_t data;
 	bool status = false;
-	if(i2c_read_byte(BME_ADDR, 0xF4, &data))
+	if(i2c_read_byte(BME_ADDR, 0xF4, &data)) //Check Opperation-Mode
 	{
 		if((data & 0x03) != 0)
 		{
@@ -107,13 +104,9 @@ bool BME280_read(uint16_t* druck, int16_t* temp, uint16_t* feuchte)
 	int32_t ut, x1, x2, t, t_fine, up, uh;
 	uint32_t p, h;
 	
-	uint8_t ctrl = (1 << 0) | (1 << 2) | (0x01 << 5);
-
-	//i2c_write_byte(BME_ADDR, 0xF5, (0x04 << 2));
-
 	//Read Temp
 	i2c_write_byte(BME_ADDR, 0xF2, 0x01); // Set humidity oversampling to 1;
-	i2c_write_byte(BME_ADDR, 0xF4, ctrl); //Start conversion
+	i2c_write_byte(BME_ADDR, 0xF4, 0x25); //Start conversion
 	while(is_busy()){_delay_ms(1);}	//Wait until conversion finished
 	i2c_read(BME_ADDR, 0xF7, data, 8); //Read Data
 	

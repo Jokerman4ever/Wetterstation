@@ -29,9 +29,6 @@ ISR(PORTE_INT0_vect)
 	RF_HandleInterrupt();
 }
 
-float power;
-uint8_t val;
-
 ISR(TCC1_OVF_vect)
 {
 	RF_Update();
@@ -193,7 +190,7 @@ int main (void)
 
 	RF_Init(16+id, syncw_num);
 	#ifdef TEST
-		val = RF_Get_Command(0x01);
+		uint8_t val = RF_Get_Command(0x01);
 	#endif	
 	
 	//RF_Set_State(RF_State_Receive);
@@ -266,10 +263,7 @@ static void ConnectToBasestation(uint32_t time)
 				RF_Sleep();
 				PMIC.CTRL = PMIC_LOLVLEN_bm; //Enable Interrupt for RTC
 				
-				for (uint16_t i = 0; i < sleep % 100; i++)
-				{
-					_delay_ms(10);
-				}
+				for (uint16_t i = 0; i < sleep % 100; i++)	{ _delay_ms(10); }
 				
 				rtc_set_callback(alarm);
 				
