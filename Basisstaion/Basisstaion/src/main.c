@@ -13,6 +13,7 @@ void CheckFirstrun(void);
 extern int8_t init_schritt;
 volatile uint8_t uart_str_complete = 0;
 uint8_t daten_enmpfangen=false;
+uint8_t Packet_buffer[10];
 
 ISR(PORTE_INT0_vect)
 {
@@ -22,6 +23,7 @@ ISR(PORTE_INT0_vect)
 ISR(TCC1_OVF_vect)
 {
 	RF_Update();
+	FS_Update();
 }
 
 int main (void)
@@ -43,7 +45,8 @@ int main (void)
 	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
 	RF_Set_State(RF_State_Receive);
 	sei();
-	
+
+	com_init();
 	//SERVER
 	/*com_init();
 	for (; init_schritt < 15;)
@@ -55,8 +58,27 @@ int main (void)
 	while(1)
 	{
 		if(RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Idle && RF_CurrentStatus.State != RF_State_Receive)RF_Set_State(RF_State_Receive);
-		_xdelay_ms(10);
-		HandleClients();		
+		_xdelay_us(500);
+		HandleClients();	
+		if(com_hasData())
+		{
+			uint8_t len = com_getString(Packet_buffer);
+			if(len>1)
+			{
+				if(com_StrCmp(Packet_buffer,0,10,"TIME"))
+				{
+					uint32_t time = ((uint32_t)Packet_buffer[4]<<24)|((uint32_t)Packet_buffer[5]<<16)|((uint32_t)Packet_buffer[6]<<8)|(uint32_t)Packet_buffer[7];
+					FS_SetUnix(time);
+					com_send_string("OK");
+				}
+				if(com_StrCmp(Packet_buffer,0,10,"RST"))
+				{
+					FS_FirstRun();
+					FS_Init();
+					com_send_string("OK");
+				}
+			}
+		}	
 	}
 }
 
@@ -70,7 +92,7 @@ void CheckFirstrun(void)
 }
 
 
-uint8_t Packet_buffer[6];
+
 void HandleClients(void)
 {
 	if(RF_CurrentStatus.NewPacket)
@@ -110,7 +132,9 @@ void HandleClients(void)
 				if(p.Flags & RF_Packet_Flags_Weather)
 				{
 					FS_StationRecord_t* r = FS_CreateStationRecordArray(p.Data);
-					//FS_WriteRecord(r);
+					r->Unix = FS_CurrentStatus.CurrentUnix;
+					r->ID = p.Sender;
+					FS_WriteRecord(r);
 				}
 			}
 		}

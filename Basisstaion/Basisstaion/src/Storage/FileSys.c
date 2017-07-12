@@ -503,6 +503,11 @@ uint32_t FS_GetUnix(void)
 	return 0;
 }
 
+void FS_SetUnix(uint32_t unix)
+{
+	FS_CurrentStatus.CurrentUnix = unix;
+}
+
 FS_StationRecord_t* FS_CreateStationRecord(uint16_t temp,uint16_t pres,uint16_t humid, uint8_t light,uint8_t rain,uint8_t windlvl,uint8_t winddir)
 {
 	FS_TempRecord.Temperature = temp;

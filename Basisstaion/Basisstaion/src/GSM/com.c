@@ -31,18 +31,22 @@ void com_init(void)
 	//PORTE.DIR = 0xFF;
 	//PORTE.OUT = 0xFF;
 	USARTF0.BAUDCTRLB = 0;
-	USARTF0.BAUDCTRLA = 12;
+	USARTF0.BAUDCTRLA = 12;//9600baud
 	//USARTF0.CTRLA = USART_RXCINTLVL_HI_gc;
 	USARTF0.CTRLB = USART_TXEN_bm | USART_RXEN_bm;
 	USARTF0.CTRLC = USART_CHSIZE_8BIT_gc;
 	waitForString=1;
-	PORTF.DIRSET = (1<<3);//TX(3) und RST(4) auf ausgang
-	PORTF.DIRCLR = (1<<4);//RST
+	PORTF.DIRSET = (1<<3)|(1<<4);//TX(3) und RST(4) auf ausgang
 	//WIrd hier nicht mehr benötigt (RESet GSM
 	/*PORTF.OUTCLR = (1<<4);
 	_delay_ms(200);//Modul reset
 	PORTF.OUTSET = (1<<4);
 	_delay_ms(3000);//Wait till Modul has finished startup*/
+}
+
+uint8_t com_hasData(void)
+{
+	return((USARTF0_STATUS & USART_RXCIF_bm));
 }
 
 
@@ -161,10 +165,10 @@ void server_configuration(uint8_t step)
 	{   
 		case -3:
 		 {
-			//PORTF.OUTCLR = (1<<4);
-			//_xdelay_ms(200);//Modul reset
+			PORTF.OUTCLR = (1<<4);
+			_xdelay_ms(200);//Modul reset
 			PORTF.OUTSET = (1<<4);
-			//_xdelay_ms(3000);//Wait till Modul has finished startup
+			_xdelay_ms(3000);//Wait till Modul has finished startup
 			break;
 		}
 		case -2: com_send_string("AT"); break;
