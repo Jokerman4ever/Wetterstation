@@ -69,6 +69,7 @@ void FS_Init(void)
 	FS_CurrentStatus.NextErrorAddress = (uint16_t)EEPROM_ReadDWord(FS_EEPROM_StartAddress+9);
 	FS_CurrentStatus.ErrorLogFull = EEPROM_ReadByte(FS_EEPROM_StartAddress+13);
 	FS_CurrentStatus.LastSearchResult=-1;
+	FS_UpdateFileSys();
 }
 
 void FS_FirstRun(void)

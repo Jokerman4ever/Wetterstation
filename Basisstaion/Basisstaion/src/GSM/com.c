@@ -10,7 +10,7 @@
 #include "string.h"
 #include <avr/interrupt.h>
 int lenght = 0x00;
-#define UART_MAXSTRLEN 64
+
 unsigned char nextChar;
 int init_schritt=-3;
 extern volatile uint8_t uart_str_complete;
@@ -31,7 +31,7 @@ void com_init(void)
 	//PORTE.DIR = 0xFF;
 	//PORTE.OUT = 0xFF;
 	USARTF0.BAUDCTRLB = 0;
-	USARTF0.BAUDCTRLA = 51;
+	USARTF0.BAUDCTRLA = 12;
 	//USARTF0.CTRLA = USART_RXCINTLVL_HI_gc;
 	USARTF0.CTRLB = USART_TXEN_bm | USART_RXEN_bm;
 	USARTF0.CTRLC = USART_CHSIZE_8BIT_gc;
@@ -46,31 +46,23 @@ void com_init(void)
 }
 
 
-
-void send_string(char data[])
+void com_send_string(char data[])
 {
 	uint8_t length = 0x00;
 	uint8_t Counter = 0x00;
-	
 	length = strlen(data);
 	
 	while(Counter < length)
 	{
 		com_ausgabe(data[Counter]);
-		//	printf("%c",data[Counter]);
 		Counter++;
 	}
-	
-	Counter = 0x00;
 	com_ausgabe(0x0A);
 	com_ausgabe(0x0D);
-	/*while (!( USARTF0.STATUS & USART_DREIF_bm));
-	USARTF0.DATA = 0x0A;
-	while (!( USARTF0.STATUS & USART_DREIF_bm));
-	USARTF0.DATA = 0x0D;*/
 }
+
 // Damit SABA zu hause testen kann
-void interrupt_init()
+void interrupt_init(void)
 {
 	PMIC.CTRL |= PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;													// Interrupts (Highlevel, Mediumlevel und Lowlevel freigeben)
 	sei();
@@ -83,7 +75,6 @@ void com_ausgabe(uint8_t data)
 	USARTF0.DATA = data;
 	while(!(USARTF0.STATUS & USART_TXCIF_bm)); // Überprüfung ob fertig mit schreiben
 }
-uint8_t NCC;
 
 uint8_t com_getChar(uint8_t* error)
 {
@@ -94,16 +85,14 @@ uint8_t com_getChar(uint8_t* error)
 	while( !(USARTF0.STATUS & USART_RXCIF_bm) && t-- > 1) _xdelay_us(5);
 	if(t <= 1)
 	{*error = 1; return 0;}
-	NCC = USARTF0.DATA;
-	return NCC;
+	nc = USARTF0.DATA;
+	return nc;
 }
-
 
 uint8_t com_getString(uint8_t* buffer)
 {
 	uint8_t leni=0;
 	uint8_t nC=0;
-	uint8_t trys=5;
 	uint8_t error=0;
 	while( !(USARTF0_STATUS & USART_RXCIF_bm)) _xdelay_us(50);
 	while(!error)
@@ -112,19 +101,6 @@ uint8_t com_getString(uint8_t* buffer)
 		if(error)break;
 		if(nC != '\r')buffer[leni++]=nC;
 	}
-	/*while(trys-- > 0)
-	{
-		do 
-		{
-			nC = com_getChar(&error);
-			if(error){break;}
-			if(nC != '\r')buffer[leni++]=nC;
-		} 
-		//nC != '\r' &&
-		while (nC != '\n' && leni < UART_MAXSTRLEN);
-		nC=0;
-		//while( !(USARTF0_STATUS & USART_RXCIF_bm)) _delay_us(50);
-	}*/
 	return leni;
 }
 
@@ -191,24 +167,24 @@ void server_configuration(uint8_t step)
 			//_xdelay_ms(3000);//Wait till Modul has finished startup
 			break;
 		}
-		case -2: send_string("AT"); break;
-		case -1:send_string("AT+IPR=38400"); break;
-		case 0:send_string("AT+CSQ"); break;
+		case -2: com_send_string("AT"); break;
+		case -1:com_send_string("AT+IPR=38400"); break;
+		case 0:com_send_string("AT+CSQ"); break;
 		case 1: init_schritt++;
-		case 2:send_string("AT+CREG?");  break;
+		case 2:com_send_string("AT+CREG?");  break;
 		//case 2: send_string("AT+CGACT?") ; break;
-		case 3: send_string("AT+CMEE=1");  break;
-		case 4: send_string("AT+CGATT=1"); break;
-		case 5: send_string("AT+CSTT=\"internet.t-d1.de\"");  break;
-		case 6: send_string("AT+CIICR"); break;
-		case 7: send_string("AT+CIFSR");break;
-		case 8: send_string("AT+CIPSTART=\"TCP\",\"74.124.194.252\",\"80\""); break;
-		case 9: send_string("AT+CIPCLOSE=0");break;
-		case 10: send_string("AT+CFUN=1"); break;
-		case 11: send_string("AT+CPIN?"); break;
-		case 12: send_string("AT+CIPSERVER=1,80"); break;
-		case 13: send_string("AT+CIFSR"); break;
-		case 14: send_string("AT+CIPSTATUS"); break;
+		case 3: com_send_string("AT+CMEE=1");  break;
+		case 4: com_send_string("AT+CGATT=1"); break;
+		case 5: com_send_string("AT+CSTT=\"internet.t-d1.de\"");  break;
+		case 6: com_send_string("AT+CIICR"); break;
+		case 7: com_send_string("AT+CIFSR");break;
+		case 8: com_send_string("AT+CIPSTART=\"TCP\",\"74.124.194.252\",\"80\""); break;
+		case 9: com_send_string("AT+CIPCLOSE=0");break;
+		case 10: com_send_string("AT+CFUN=1"); break;
+		case 11: com_send_string("AT+CPIN?"); break;
+		case 12: com_send_string("AT+CIPSERVER=1,80"); break;
+		case 13: com_send_string("AT+CIFSR"); break;
+		case 14: com_send_string("AT+CIPSTATUS"); break;
 	}
 	if(init_schritt == -3)
 	{
@@ -221,42 +197,6 @@ void server_configuration(uint8_t step)
 	//while(waitForString)_delay_ms(1);
 	server_configuration_auswertung(reclen);
 	
-}
-
-uint8_t com_getNextMsg(uint8_t* str,uint8_t off,uint8_t len)
-{
-	for (uint8_t i = off; i < len; i++)
-	{
-		if(str[i] == '\n')return i;
-	}
-	return 0;
-}
-
-uint8_t com_StrCmp(uint8_t* str1,uint8_t off1,uint8_t len1,const uint8_t* str2)
-{
-	uint8_t len2 = strlen(str2);
-	uint8_t max = len1 < len2 ? len1 : len2;
-	for (uint8_t i = 0; i < max; i++)
-	{
-		if(str1[i+off1] != str2[i])return 0;
-	}
-	return 1;
-}
-
-uint8_t COM_check_string(uint8_t len, const char* antwort, uint8_t laenge_antwort)
-{
-    uint8_t index=0;
-	while(index < len)
-	{
-		index = com_getNextMsg(recBuffer,index+1,len);
-		if(index == 0)break;
-		if(com_StrCmp(recBuffer,index+1,laenge_antwort,antwort))
-		{
-			return 1;
-		}
-	}
-	return 0;
-
 }
 
 void server_configuration_auswertung(uint8_t len)
@@ -306,12 +246,12 @@ void server_configuration_auswertung(uint8_t len)
 	
 	if(init_schritt < 11)
 	{
-		if(COM_check_string(len,"OK", 2))
+		if(com_check_string(len,"OK", 2))
 		{
 			init_schritt++;
 			_xdelay_ms(2000);
 		}
-		else if(COM_check_string(len,"ERROR", 5))
+		else if(com_check_string(len,"ERROR", 5))
 		{
 			//init_schritt=-3;
 			_xdelay_ms(2000);
@@ -413,12 +353,39 @@ void server_configuration_auswertung(uint8_t len)
 
 }
 
-
-void empfangen_string()
+uint8_t com_getNextMsg(uint8_t* str,uint8_t off,uint8_t len)
 {
-	
-	//printf("hallo");
-
+	for (uint8_t i = off; i < len; i++)
+	{
+		if(str[i] == '\n')return i;
+	}
+	return 0;
 }
 
+uint8_t com_StrCmp(uint8_t* str1,uint8_t off1,uint8_t len1,const char* str2)
+{
+	uint8_t len2 = strlen(str2);
+	uint8_t max = len1 < len2 ? len1 : len2;
+	for (uint8_t i = 0; i < max; i++)
+	{
+		if(str1[i+off1] != str2[i])return 0;
+	}
+	return 1;
+}
+
+uint8_t com_check_string(uint8_t len, const char* antwort, uint8_t laenge_antwort)
+{
+    uint8_t index=0;
+	while(index < len)
+	{
+		index = com_getNextMsg(recBuffer,index+1,len);
+		if(index == 0)break;
+		if(com_StrCmp(recBuffer,index+1,laenge_antwort,antwort))
+		{
+			return 1;
+		}
+	}
+	return 0;
+
+}
 

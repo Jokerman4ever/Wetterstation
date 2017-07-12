@@ -40,14 +40,14 @@ void PGM_ReadStr(const char* str,char* dest,uint8_t start)
 #define DStr_BSSyncWort PSTR			("    Syncwort        ")
 #define DStr_BSFehler PSTR				("    **Fehler   **   ")
 
-uint8_t BatState[4] = "...";
-uint8_t GSMState[4] = "...";
+char BatState[4] = "...";
+char GSMState[4] = "...";
 uint8_t NumNode = 0;
-uint8_t Day[3] = "00";
-uint8_t Month[3] = "00";
-uint8_t Year[3] = "00";
-uint8_t Minute[3] = "00";
-uint8_t Hour[3] = "00";
+char Day[3] = "00";
+char Month[3] = "00";
+char Year[3] = "00";
+char Minute[3] = "00";
+char Hour[3] = "00";
 // Fehlerliste:
 uint8_t Fehler[20][50] = {};
 uint8_t Anzahl_Fehler = 0;
@@ -77,22 +77,22 @@ void DSP_Refresh(uint8_t BS_BatState,uint8_t BS_GSMState,uint8_t BS_NumNode)
 	{
 		case BatLow:
 		{
-			DSP_CopyString("o..",&BatState);
+			DSP_CopyString("o..",BatState);
 			break;
 		}
 		case BatMid:
 		{
-			DSP_CopyString("oo.",&BatState);
+			DSP_CopyString("oo.",BatState);
 			break;
 		}
 		case BatHigh:
 		{
-			DSP_CopyString("ooo",&BatState);
+			DSP_CopyString("ooo",BatState);
 			break;
 		}
 		default:
 		{
-			DSP_CopyString("...",&BatState);
+			DSP_CopyString("...",BatState);
 			break;
 		}
 	}
@@ -102,22 +102,22 @@ void DSP_Refresh(uint8_t BS_BatState,uint8_t BS_GSMState,uint8_t BS_NumNode)
 	{
 		case GSMLow:
 		{
-			DSP_CopyString("|..",&GSMState);
+			DSP_CopyString("|..",GSMState);
 			break;
 		}
 		case GSMMid:
 		{
-			DSP_CopyString("||.",&GSMState);
+			DSP_CopyString("||.",GSMState);
 			break;
 		}
 		case GSMHigh:
 		{
-			DSP_CopyString("|||",&GSMState);
+			DSP_CopyString("|||",GSMState);
 			break;
 		}
 		default:
 		{
-			DSP_CopyString("...",&GSMState);
+			DSP_CopyString("...",GSMState);
 			break;
 		}
 	}	
