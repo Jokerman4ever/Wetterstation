@@ -157,11 +157,7 @@ ISR(USARTF0_RXC_vect)
 			//server_configuration()
 			//server_configuration(uart_string);
 
-			if(com_StrCmp(uart_string,0,2,"GET")==1)
-			{
-			client_anfrage_auswertung();
-
-			}
+		
 		}
 	}
 }

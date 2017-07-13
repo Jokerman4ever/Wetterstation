@@ -7,10 +7,11 @@
 #include "Storage/FileSys.h"
 #include "Storage/eeprom_driver.h"
 #include "GSM/com.h"
-
+#include "Http/server.h"
 void HandleClients(void);
 void CheckFirstrun(void);
 extern int8_t init_schritt;
+extern  char uart_string[UART_MAXSTRLEN + 1];
 volatile uint8_t uart_str_complete = 0;
 uint8_t daten_enmpfangen=false;
 uint8_t Packet_buffer[10];
@@ -57,6 +58,18 @@ int main (void)
 
 	while(1)
 	{
+
+	if(uart_str_complete==1)
+	{
+
+	uart_str_complete=0;
+		if(com_StrCmp(uart_string,0,2,"GET")==1)
+		{
+			client_anfrage_auswertung();
+
+		}
+
+	}
 		if(RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Idle && RF_CurrentStatus.State != RF_State_Receive)RF_Set_State(RF_State_Receive);
 		_xdelay_us(500);
 		HandleClients();	
