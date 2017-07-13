@@ -16,7 +16,7 @@ int init_schritt=-3;
 extern volatile uint8_t uart_str_complete;
 extern uint8_t daten_enmpfangen;   // 1 .. String komplett empfangen
 volatile uint8_t uart_str_count = 0;
-volatile char uart_string[UART_MAXSTRLEN + 1]="";
+volatile uint8_t uart_string[UART_MAXSTRLEN + 1]="";
 extern uint8_t server_initialisierung= false;
 uint8_t kommando_senden;
 
@@ -32,7 +32,7 @@ void com_init(void)
 	//PORTE.OUT = 0xFF;
 	USARTF0.BAUDCTRLB = 0;
 	USARTF0.BAUDCTRLA = 12;//9600baud
-	//USARTF0.CTRLA = USART_RXCINTLVL_HI_gc;
+	USARTF0.CTRLA = USART_RXCINTLVL_HI_gc;
 	USARTF0.CTRLB = USART_TXEN_bm | USART_RXEN_bm;
 	USARTF0.CTRLC = USART_CHSIZE_8BIT_gc;
 	waitForString=1;
@@ -65,20 +65,19 @@ void com_send_string(char data[])
 	com_ausgabe(0x0D);
 }
 
-void com_send_antwortclient(char messwert[], uint16_t wert){
-uint8_t length = 0x00;
-uint8_t Counter = 0x00;
-length = strlen(messwert);
-
-while(Counter < length)
+void com_send_antwortclient(char messwert[], uint16_t wert)
 {
-	com_ausgabe(messwert[Counter]);
-	Counter++;
-}
-com_ausgabe(0x0A);
-com_ausgabe(0x0D);
+	uint8_t length = 0x00;
+	uint8_t Counter = 0x00;
+	length = strlen(messwert);
 
-
+	while(Counter < length)
+	{
+		com_ausgabe(messwert[Counter]);
+		Counter++;
+	}
+	com_ausgabe(0x0A);
+	com_ausgabe(0x0D);
 }
 // Damit SABA zu hause testen kann
 void interrupt_init(void)
@@ -126,7 +125,6 @@ uint8_t com_getString(uint8_t* buffer)
 // Wird später beim Interrupt benötigt
 ISR(USARTF0_RXC_vect)
 {
-	com_getString(recBuffer);
 	waitForString=0;
 	nextChar = USARTF0.DATA;
 

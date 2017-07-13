@@ -59,21 +59,20 @@ int main (void)
 	while(1)
 	{
 
-	if(uart_str_complete==1)
-	{
-
-	uart_str_complete=0;
-		if(com_StrCmp(uart_string,0,2,"GET")==1)
+		if(uart_str_complete==1)
 		{
-			client_anfrage_auswertung();
 
+			uart_str_complete=0;
+			if(com_StrCmp(uart_string,0,2,"GET")==1)
+			{
+				client_anfrage_auswertung();
+			}
 		}
-
-	}
+		
 		if(RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Idle && RF_CurrentStatus.State != RF_State_Receive)RF_Set_State(RF_State_Receive);
 		_xdelay_us(500);
 		HandleClients();	
-		if(com_hasData())
+		/*if(com_hasData())
 		{
 			uint8_t len = com_getString(Packet_buffer);
 			if(len>1)
@@ -91,7 +90,7 @@ int main (void)
 					com_send_string("OK");
 				}
 			}
-		}	
+		}*/	
 	}
 }
 

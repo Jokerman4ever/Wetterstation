@@ -34,12 +34,21 @@ char client_rahmen1[]="<html>"
 uint8_t client_anfrage_auswertung(){
 
 FS_GetRecords(FS_CurrentStatus.CurrentUnix,&record);
+for (i = 0; i < length; i++)
+{
+//sendet alles com_ausgabe
+//%s
+//if(erstes == %)
+{
+	//i++
+	//switch(zweites)
+	//case F
+	//case L
+	
+}	
+}
 	//Rahmen
-	com_send_string("<html>"
-	"<head>"
-	"<title>Wetterstation</title>"
-	"</head>"
-	"<body>"
+	com_send_string("<html><head><title>Wetterstation</title></head><body>"
 	"<h1 style=\"color:red;\">System Design Projekt 2017: Wetterstation</h1>");
 	com_send_antwortclient("Regenaktivität:&nbsp;<b>%d</b><br>",&record.RainState);
 	com_send_antwortclient("Windgeschwindigkeit:&nbsp;<b>%d km/h</b><br>",&record.WindLevel);
