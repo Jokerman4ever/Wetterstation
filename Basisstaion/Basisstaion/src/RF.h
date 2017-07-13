@@ -97,7 +97,7 @@ typedef enum RF_TXIRQ1{RF_TXIRQ1_TXDONE=0x08, RF_TXIRQ1_FIFOFULL=0x00}RF_TXIRQ1_
 #define RF_FLAG_FIFOEMPTY 0x02
 #define RF_FLAG_FIFOOVERRUN 0x01
 
-typedef enum RF_Packet_Flags{RF_Packet_Flags_Ack=0x01,RF_Packet_Flags_Time=0x02,RF_Packet_Flags_Weather=0x04}RF_Packet_Flags_t;
+typedef enum RF_Packet_Flags{RF_Packet_Flags_Ack=0x01,RF_Packet_Flags_Time=0x02,RF_Packet_Flags_Weather=0x04,RF_Packet_Flags_ALLSensors=0x08,RF_Packet_Flags_BatLow=0x10}RF_Packet_Flags_t;
 #define RF_Packet_Flags_MASK 0xff
 
 typedef enum RF_Acknowledgments_State{RF_Acknowledgments_State_Pending,RF_Acknowledgments_State_Transmitted,RF_Acknowledgments_State_Idle,RF_Acknowledgments_State_Error}RF_Acknowledgments_State_t;

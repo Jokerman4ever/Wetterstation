@@ -46,7 +46,7 @@ int main (void)
 	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
 	RF_Set_State(RF_State_Receive);
 	sei();
-
+	
 	com_init();
 	//SERVER
 	/*com_init();
@@ -144,10 +144,16 @@ void HandleClients(void)
 				
 				if(p.Flags & RF_Packet_Flags_Weather)
 				{
-					FS_StationRecord_t* r = FS_CreateStationRecordArray(p.Data);
+					com_ausgabe(p.Sender);
+					com_ausgabe(p.ID);
+					for (uint8_t i = 0; i < 10; i++)
+					{
+						com_ausgabe(p.Data[i]);
+					}
+					/*FS_StationRecord_t* r = FS_CreateStationRecordArray(p.Data);
 					r->Unix = FS_CurrentStatus.CurrentUnix;
 					r->ID = p.Sender;
-					FS_WriteRecord(r);
+					FS_WriteRecord(r);*/
 				}
 			}
 		}
