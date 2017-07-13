@@ -71,7 +71,7 @@ void FS_Update(void);
 uint8_t FS_FindRecord(uint32_t unix,uint32_t* recordOut);
 //FlashAddress FS_CreateNextAddress(void);
 uint32_t FS_GetRecordUnix(uint32_t record);
-uint8_t FS_GetRecords(uint32_t unix,FS_StationRecord_t* fs);
+uint8_t FS_GetRecords(uint32_t unix,FS_StationRecord_t* fs); //wichtig
 uint32_t FS_GetUnix(void);
 void FS_ResetRecordSearch(void);
 

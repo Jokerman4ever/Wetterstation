@@ -10,7 +10,7 @@
 #include "string.h"
 #include <avr/interrupt.h>
 int lenght = 0x00;
-
+#include "Http/server.h"
 unsigned char nextChar;
 int init_schritt=-3;
 extern volatile uint8_t uart_str_complete;
@@ -65,6 +65,21 @@ void com_send_string(char data[])
 	com_ausgabe(0x0D);
 }
 
+void com_send_antwortclient(char messwert[], uint16_t wert){
+uint8_t length = 0x00;
+uint8_t Counter = 0x00;
+length = strlen(messwert);
+
+while(Counter < length)
+{
+	com_ausgabe(messwert[Counter]);
+	Counter++;
+}
+com_ausgabe(0x0A);
+com_ausgabe(0x0D);
+
+
+}
 // Damit SABA zu hause testen kann
 void interrupt_init(void)
 {
@@ -113,7 +128,7 @@ ISR(USARTF0_RXC_vect)
 {
 	com_getString(recBuffer);
 	waitForString=0;
-	/*nextChar = USARTF0.DATA;
+	nextChar = USARTF0.DATA;
 
 	//printf("hallo");
 	//segmenta_aus;
@@ -142,16 +157,13 @@ ISR(USARTF0_RXC_vect)
 			//server_configuration()
 			//server_configuration(uart_string);
 
-			if(server_initialisierung==false)
+			if(com_StrCmp(uart_string,0,2,"GET")==1)
 			{
-				warte_ok++;
-				server_configuration_auswertung();
-			}
+			client_anfrage_auswertung();
 
-			else{ empfangen_string(); }
-			//
+			}
 		}
-	}*/
+	}
 }
 
 // Hier sind die einzelnen Schritte für die Serverkonfiguration 

@@ -36,6 +36,7 @@ void send_string(char *data);
 uint8_t com_check_string(uint8_t len, const char* antwort,uint8_t laenge_antwort);
 void com_init(void);
 void com_send_string(char *);
+void com_send_antwortclient(char *, uint16_t wert);
 void interrupt_init(void);
 void server_configuration(uint8_t step);
 void server_configuration_auswertung(uint8_t len);
