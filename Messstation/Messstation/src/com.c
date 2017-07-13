@@ -8,6 +8,7 @@
 #include "com.h"
 #include <stdio.h>
 #include <ASF/common/services/clock/sysclk.h>
+#include <util/delay.h>
 
 #define COM_INTERFACE USARTC0
 #define COM_PORT PORTC
@@ -32,6 +33,7 @@ void com_init(void)
 	PORTC.OUTSET = (1<<TX_PIN);
 	PORTC.DIRSET = (1<<TX_PIN);
 		
+	com_enable();	
 	//Set Baudrate
 	COM_INTERFACE.BAUDCTRLA = (F_CPU/16/BAUD-1) & 0xff;
 	COM_INTERFACE.BAUDCTRLB = (F_CPU/16/BAUD-1) >> 8;
@@ -42,6 +44,7 @@ void com_init(void)
 	
 	//Enable Interface
 	COM_INTERFACE.CTRLB = USART_TXEN_bm | USART_RXEN_bm;
+	com_disable();
 }
 
 void com_putc(uint8_t data)
@@ -57,6 +60,19 @@ uint8_t com_getc(void)
 	COM_INTERFACE.STATUS |= USART_RXCIF_bm;
 	while(!(COM_INTERFACE.STATUS & USART_RXCIF_bm));
 	return COM_INTERFACE.DATA;
+}
+
+bool com_getc_timeout(uint8_t *data)
+{
+	uint8_t timeout = 0;
+	COM_INTERFACE.STATUS |= USART_RXCIF_bm;
+	while(!(COM_INTERFACE.STATUS & USART_RXCIF_bm))
+	{
+		_delay_us(195);
+		if (timeout++ == 0xFF) {return false;} //Timeout after 50ms
+	}
+	*data = COM_INTERFACE.DATA;
+	return true;
 }
 
 void com_enable()
