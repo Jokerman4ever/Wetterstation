@@ -35,7 +35,7 @@ uint8_t client_anfrage_auswertung(){
 
 FS_GetRecords(FS_CurrentStatus.CurrentUnix,&record);
 	//Rahmen
-	com_send_string("<html>"
+/*	com_send_string("<html>"
 	"<head>"
 	"<title>Wetterstation</title>"
 	"</head>"
@@ -50,7 +50,7 @@ FS_GetRecords(FS_CurrentStatus.CurrentUnix,&record);
     com_send_string("<br>"
     "<b>Anmerkung:</b><br>einfacher Prototyp zu Testzwecken, kein endgültiges Design!"
     "</body>"
-    "</html>");
+    "</html>");*/
 }
 
 
