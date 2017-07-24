@@ -61,7 +61,7 @@ static void alarm(uint32_t time)
 	rtc_set_alarm(time + SLEEPCOUNT);
 	
 	uint16_t bat;
-	bool wind_con = true;
+	bool wind_con;
 	
 	RF_Packet_t packet;
 	MeassurmentData_t meas_data;
@@ -77,22 +77,18 @@ static void alarm(uint32_t time)
 	
 	com_enable();
 	/* Wind-/Regensensor here */
+	com_putc(0xFF);
+	wind_con = com_getc_timeout(&meas_data.windlevel);
+	if(wind_con) 
+	{
+		com_getc_timeout(&meas_data.lux);
+		com_getc_timeout(&meas_data.rainstate);
+		meas_data.rainstate = 255 - meas_data.rainstate;
+	}
 	com_disable();
 	
 	bat = ADCA_GetValue(ADC_CH0, ADC_CH_MUXPOS_PIN2_gc); //Batteriestatus lesen...
-	
-	//Simulation Wind oder so was in der Art... keine Ahnung
-	if(meas_data.winddirection == 0)
-	{
-		meas_data.windlevel = 0x01;
-		meas_data.winddirection = 0x01;
-	}
-	else
-	{
-		meas_data.winddirection <<= 1;
-		meas_data.windlevel <<= 1;
-	}	
-	
+		
 	//Send Data
 	RF_Wakeup();
 	
@@ -107,7 +103,7 @@ static void alarm(uint32_t time)
 		RF_Set_Sync_Num(syncw_num);
 	}
 	
-	if(wind_con){ packet = RF_CreatePacket((uint8_t *)&meas_data, 10, RF_RECEIVE_ID, RF_Packet_Flags_Weather); }
+	if(wind_con){ packet = RF_CreatePacket((uint8_t *)&meas_data, 10, RF_RECEIVE_ID, RF_Packet_Flags_Weather | RF_Packet_Flags_AllSensors); }
 	else{ packet = RF_CreatePacket((uint8_t *)&meas_data, 6, RF_RECEIVE_ID, RF_Packet_Flags_Weather); }
 	RF_Send_Packet(packet);
 	

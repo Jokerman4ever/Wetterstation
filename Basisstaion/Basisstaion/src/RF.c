@@ -9,11 +9,12 @@
 static void RF_Send_DataHW(uint8_t data);
 static uint8_t RF_Get_DataHW(void);
 
-RF_Packet_t RF_CurrentPacket;
-RF_Packet_t RF_LastReceivedPacket;
-RF_Status_t RF_CurrentStatus;
-RF_Config_t RF_CurrentConfig;
+RF_Packet_t RF_CurrentPacket;//Used to create a packet with the RF_CreatePacket function
+RF_Packet_t RF_LastReceivedPacket;//Stores the last received packet
+RF_Status_t RF_CurrentStatus;//Stores the information about the RF-Modul
+RF_Config_t RF_CurrentConfig;//Can be used to configure the RF-Modul
 
+//List of RF-Modul Syncword network identifiers
 uint8_t RF_Syncwords[16][4] = {{'S','Y','N','C'},
 {'L','I','N','K'},
 {'U','S','E','R'},
@@ -31,12 +32,14 @@ uint8_t RF_Syncwords[16][4] = {{'S','Y','N','C'},
 {'P','O','R','T'},
 {'V','O','L','T'}};
 
+//Puts one char onto the SPI bus
 static void SPI_putc(uint8_t data)
 {
 	RF_SPI_REG.DATA = data;
 	while(!(RF_SPI_REG.STATUS & SPI_IF_bm));
 }
 
+//Gets one char from the SPI bus
 static uint8_t SPI_getc(void)
 {
 	RF_SPI_REG.DATA = 0x00; //Dummy Byte
@@ -44,6 +47,7 @@ static uint8_t SPI_getc(void)
 	return RF_SPI_REG.DATA;//return data
 }
 
+//Configures the SPI interface for the RF-Modul
 static void SPI_Init(void)
 {
 	sysclk_enable_module(SYSCLK_PORT_D, SYSCLK_SPI);
@@ -68,6 +72,8 @@ static void SPI_Init(void)
 	//PORTC.OUT |= (1<<3) | (1<<4)|(1<<5)|(1<<7);//CS auf High
 }
 
+//Configures and enables the Update timer for the RF-Modul
+//This timer will tick every 10ms
 static void Update_Timer_Init(void)
 {
 	sysclk_enable_module(SYSCLK_PORT_C, SYSCLK_TC1); //TC1 SysClock Enable
@@ -132,6 +138,7 @@ void RF_Init(uint8_t dev_add, uint8_t syncw_num)
 	//Modulation: FSK
 }
 
+//Used to set the state of the modul
 void RF_Set_State(RF_State_t state)
 {
 	uint8_t lastv = RF_Get_Command(RF_REG_GCON);
@@ -140,6 +147,8 @@ void RF_Set_State(RF_State_t state)
 	RF_CurrentStatus.State = state;
 }
 
+//With this function the RF-Modul can be put to sleep
+//The update timer will be disabled aswell as the SPI interface
 void RF_Sleep(void)
 {
 	TCC1.CTRLA = TC_CLKSEL_OFF_gc;
@@ -156,6 +165,7 @@ void RF_Sleep(void)
 	RF_SPI_PORT.OUTCLR = (1<<7);	
 }
 
+//With this function the RF-Modul can be woken up to normal operation
 void RF_Wakeup(void)
 {
 	//sysclk_enable_module(SYSCLK_PORT_D, SYSCLK_SPI); //Enable SPI
@@ -183,6 +193,7 @@ void RF_Set_Modem(void)
 	RF_Set_Command(RF_REG_TXCON,lastv);
 }
 
+//Used to configure the desired band
 void RF_Set_Band(RF_Band_t band)
 {
 	uint8_t lastv = RF_Get_Command(RF_REG_GCON);
@@ -190,6 +201,8 @@ void RF_Set_Band(RF_Band_t band)
 	RF_Set_Command(RF_REG_GCON,lastv);
 }
 
+//Used to configure the desired Modulation
+//The only tested configuration is FSK!!!
 void RF_Set_Modulation(RF_Modulation_t mod)
 {
 	uint8_t lastv = RF_Get_Command(RF_REG_DMOD);
@@ -197,6 +210,8 @@ void RF_Set_Modulation(RF_Modulation_t mod)
 	RF_Set_Command(RF_REG_DMOD,lastv);
 }
 
+//Used to configure the internal FIFO of the RF-Modul
+//Maximum size is 64Bytes
 void RF_Set_FIFOSize(RF_FIFOSize_t fs)
 {
 	uint8_t lastv = RF_Get_Command(RF_REG_FIFOC);
@@ -204,6 +219,10 @@ void RF_Set_FIFOSize(RF_FIFOSize_t fs)
 	RF_Set_Command(RF_REG_FIFOC,lastv);
 }
 
+//Used to configure the general mode the RF-Modul is working in
+//Either this is Packet mode, whereas the modul only transmits data in packets
+//or in continuous mode were a constant data stream is send
+//or in buffered mode were data is send in as a stream with a defined size
 void RF_Set_Mode(RF_Mode_t mode)
 {
 	uint8_t lastv = RF_Get_Command(RF_REG_DMOD);
@@ -217,6 +236,12 @@ void RF_Set_Mode(RF_Mode_t mode)
 	RF_Set_Command(RF_REG_DMOD,lastv);
 }
 
+//Used to configure the RF-Modul in packetmode
+//useVarLength can be set to 1 if the length of the packet should be variable
+//useCRC determines if the RF-Modul should automaticaly use and check CRC of the packet
+//useWhite can be set if data Whitening is prefered
+//preamble set the length of the preamble from 1 - 4 bytes
+//addfil is the address filter. It can be configured as ONLY NODEADDRESS or NODEADDRES AND BROADCAST
 void RF_Set_PacketConfig(uint8_t useVarLength,uint8_t useCRC,uint8_t useWhite,RF_Preamble_t preamble,RF_AdressFilter_t addfil)
 {
 	uint8_t lastv = RF_Get_Command(RF_REG_PKTC);
@@ -236,6 +261,7 @@ void RF_Set_PacketConfig(uint8_t useVarLength,uint8_t useCRC,uint8_t useWhite,RF
 	RF_Set_Command(RF_REG_PKTC,lastv);
 }
 
+//Used to configure the receive gain
 void RF_Set_Gain(RF_Gain_t gain)
 {
 	uint8_t lastv = RF_Get_Command(RF_REG_DMOD);
@@ -243,6 +269,7 @@ void RF_Set_Gain(RF_Gain_t gain)
 	RF_Set_Command(RF_REG_DMOD,lastv);
 }
 
+//Used to enable/disable the internal clock modul of the RF-Modul
 void RF_Set_ClockOutput(uint8_t enable)
 {
 	uint8_t lastv = RF_Get_Command(RF_REG_CLKOUT);
@@ -251,6 +278,7 @@ void RF_Set_ClockOutput(uint8_t enable)
 	RF_Set_Command(RF_REG_CLKOUT,lastv);
 }
 
+//Used to configure the transmition power of the modul
 void RF_Set_TXPower(RF_TX_Power_t power)
 {
 	uint8_t lastv = RF_Get_Command(RF_REG_TXCON);
@@ -258,11 +286,13 @@ void RF_Set_TXPower(RF_TX_Power_t power)
 	RF_Set_Command(RF_REG_TXCON,lastv);
 }
 
+//Used to set the local nodeaddress of the device
 void RF_Set_Address(uint8_t add)
 {
 	RF_Set_Command(RF_REG_NADDS,add);
 }
 
+//Used to configure the syncword - network identifier
 void RF_Set_Sync(uint8_t* sync,uint8_t len)
 {
 	uint8_t lastv = RF_Get_Command(RF_REG_SYNC);
@@ -274,11 +304,13 @@ void RF_Set_Sync(uint8_t* sync,uint8_t len)
 	}
 }
 
+//Extended function to define the syncword from the predifined list of syncwords
 void RF_Set_Sync_Num(uint8_t syncw_num)
 {
 	RF_Set_Sync(&RF_Syncwords[syncw_num][0], 4);
 }
 
+//Used to set the maximum payload length
 void RF_Set_PayloadLenght(uint8_t len)
 {
 	uint8_t lastv = RF_Get_Command(RF_REG_PLOAD);
@@ -286,6 +318,7 @@ void RF_Set_PayloadLenght(uint8_t len)
 	RF_Set_Command(RF_REG_PLOAD,lastv);//NOT TESTED!!!!
 }
 
+//Only used internally to set the FIFO access of the RF-Modul
 void RF_Set_FIFOAccess(RF_FIFOAccess_t access)
 {
 	uint8_t lastv = RF_Get_Command(RF_REG_FCRC);
@@ -293,6 +326,7 @@ void RF_Set_FIFOAccess(RF_FIFOAccess_t access)
 	RF_Set_Command(RF_REG_FCRC,lastv);
 }
 
+//Used to set the interrupts the RF-Modul should generate during operation
 void RF_Set_IRQSources(uint8_t irq0, uint8_t irq1, RF_TXIRQ1_t tx)
 {
 	uint8_t lastv = RF_Get_Command(RF_REG_FTXRXI);
@@ -309,6 +343,7 @@ void RF_Set_IRQSources(uint8_t irq0, uint8_t irq1, RF_TXIRQ1_t tx)
 	lastv = RF_Get_Command(RF_REG_FTPRI);
 }
 
+//Internally used to verify the configured frequency band
 uint8_t RF_VerifyPLLLock(void)
 {
     // Verify PLL-lock per instructions in Note 1 section 3.12
@@ -328,6 +363,7 @@ uint8_t RF_VerifyPLLLock(void)
     return ((ftpriVal & 0x02) != 0);
 }
 
+//Used to configure the desired frequency to use
 uint8_t RF_Set_Frequency(float centre)
 {
     // REVISIT: FSK only: its different for OOK :-(
@@ -380,7 +416,9 @@ uint8_t RF_Set_Frequency(float centre)
     return RF_VerifyPLLLock();
 }
 
-
+//Set the Value in the defined register
+//reg - the register on the RF-Modul
+//val - the value the register should be set to
 uint8_t RF_Set_Command(uint8_t reg,uint8_t val)
 {
 	RF_CS_COM_LOW();
@@ -391,6 +429,7 @@ uint8_t RF_Set_Command(uint8_t reg,uint8_t val)
 	return RF_SPI_REG.DATA;
 }
 
+//Get the value of the defined register
 uint8_t RF_Get_Command(uint8_t reg)
 {
 	RF_CS_COM_LOW();
@@ -402,6 +441,7 @@ uint8_t RF_Get_Command(uint8_t reg)
 	return val;
 }
 
+//Sends a broadcast message with the defined message buf
 void RF_Send_Broadcast(uint8_t* buf, uint8_t len)
 {
 	RF_Set_State(RF_State_StandBy);
@@ -419,6 +459,7 @@ void RF_Send_Broadcast(uint8_t* buf, uint8_t len)
 	RF_Set_State(RF_State_Transmit);
 }
 
+//Sends a packet created with the RF_CreatePacket function
 uint8_t RF_Send_Packet(RF_Packet_t packet)
 {
 	RF_Set_State(RF_State_StandBy);
@@ -439,6 +480,7 @@ uint8_t RF_Send_Packet(RF_Packet_t packet)
 	return 0;
 }
 
+//Sends a ACK-Packet to the sender
 uint8_t RF_Send_Acknowledgment(void)
 {
 	RF_Set_State(RF_State_StandBy);
@@ -452,6 +494,7 @@ uint8_t RF_Send_Acknowledgment(void)
 	return 0;
 }
 
+//Creates a Packet with the supplied data, length of the data, the receiver address and the flag byte
 RF_Packet_t RF_CreatePacket(uint8_t* data,uint8_t length,uint8_t receiver,uint8_t flags)
 {
 	RF_CurrentPacket.Length = length;
@@ -466,6 +509,7 @@ RF_Packet_t RF_CreatePacket(uint8_t* data,uint8_t length,uint8_t receiver,uint8_
 	return RF_CurrentPacket;
 }
 
+//Internally used to put the data bytes through the SPI interface
 static void RF_Send_DataHW(uint8_t data)
 {
 	RF_CS_DATA_LOW();
@@ -474,6 +518,7 @@ static void RF_Send_DataHW(uint8_t data)
 	_xdelay_us(2); //needed??
 }
 
+//Internally used to get the data from the SPI interface
 static uint8_t RF_Get_DataHW(void)
 {
 	RF_CS_DATA_LOW();
@@ -483,6 +528,9 @@ static uint8_t RF_Get_DataHW(void)
 	return data;
 }
 
+//In this function all the interrupts from the RF-Modul are handled
+//if the modul is in receivemode the modul will read the received packet and raise the NewPacket flag
+//if the modul is in transmitmode it will leave this mode and go it standbymode to save energy
 void RF_HandleInterrupt(void)
 {
 #pragma region RF_STATE_RECEIVE
@@ -593,6 +641,8 @@ void RF_HandleInterrupt(void)
 #pragma endregion RF_STATE_TRANSMIT
 }
 
+//this is the update function of the RF-Modul
+//it handles hardware faults aswell as client handling in the registration list
 void RF_Update(void)
 {
 	//Tick every 10ms
@@ -667,12 +717,14 @@ void RF_Update(void)
 
 }
 
+//Gets the last read packet from the buffer
 RF_Packet_t RF_Get_Packet(void)
 {
 	RF_CurrentStatus.NewPacket=0;
 	return RF_LastReceivedPacket;
 }
 
+//DEPRICATED
 void RF_Get_Data(uint8_t* buf, uint8_t len)
 {
 	RF_Set_FIFOAccess(RF_FIFOAccess_Read);
@@ -683,6 +735,7 @@ void RF_Get_Data(uint8_t* buf, uint8_t len)
 	RF_Set_FIFOAccess(RF_FIFOAccess_Write);
 }
 
+//Used to get the signal strength of the last received packet
 uint8_t RF_Get_SignalStrength(void)
 {
 	return RF_Get_Command(RF_REG_RSTS);
@@ -690,6 +743,10 @@ uint8_t RF_Get_SignalStrength(void)
 
 
 //Basisstation only
+
+//This function registers a device in the timeslottable
+//ID -> the nodeaddress of the device
+//returns the id of the timeslot
 uint8_t RF_RegisterDevice(uint8_t ID)
 {
 	for (uint8_t i = 1; i < RF_MaxDevices; i++)
@@ -704,18 +761,25 @@ uint8_t RF_RegisterDevice(uint8_t ID)
 	return 0;
 }
 
+//This function removes a device from the timeslottable
+//index -> the index in the timeslottable that you want to remove
 void RF_UnregisterDevice(uint8_t ID)
 {
 	RF_CurrentStatus.TimeSlots[ID].ID=0;
 	RF_CurrentStatus.TimeSlots[ID].Timeout=0;
 }
 
+//This function returns the sleeping time for a specific device that is registert int the timeslottable
+//index -> the index of the device in the timeslottable you want to get the time to
 uint16_t RF_GetDeviceSleepTime(uint8_t ID)
 {
 	uint16_t s = ID* (300 / RF_MaxDevices);
 	return (30000 - RF_CurrentStatus.CurrentSlotTime + s);
 }
 
+//This function finds a specific device from its nodeaddress and returns the index of the device in the timeslottable
+//ID -> nodeaddress of the device you want to find
+//returns -> the index of the device in the timeslottable
 uint8_t RF_FindDevice(uint8_t ID)
 {
 	for (uint8_t i = 1; i < RF_MaxDevices; i++)
@@ -725,6 +789,9 @@ uint8_t RF_FindDevice(uint8_t ID)
 	return 0;
 }
 
+//This function checks if the specified index is free in the timeslotlist
+//index -> the index you want to check if its free
+//returns -> 1 if the index is empty, 0 if its full
 uint8_t RF_CheckDeviceSlot(uint8_t ID)
 {
 	if(RF_CurrentStatus.TimeSlots[ID].ID == 0)return 1;

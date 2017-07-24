@@ -8,9 +8,10 @@
 
 #include "com.h"
 #include "string.h"
+#include "Http/server.h"
+#include "Storage/FileSys.h"
 #include <avr/interrupt.h>
 int lenght = 0x00;
-#include "Http/server.h"
 unsigned char nextChar;
 int init_schritt=-3;
 extern volatile uint8_t uart_str_complete;
@@ -19,6 +20,7 @@ volatile uint8_t uart_str_count = 0;
 volatile uint8_t uart_string[UART_MAXSTRLEN + 1]="";
 extern uint8_t server_initialisierung= false;
 uint8_t kommando_senden;
+FS_StationRecord_t record;
 
 
 int Counter = 0x00;
@@ -65,11 +67,53 @@ void com_send_string(char data[])
 	com_ausgabe(0x0D);
 }
 
+<<<<<<< HEAD
 void com_send_antwortclient(char messwert[], uint16_t wert)
 {
 	uint8_t length = 0x00;
 	uint8_t Counter = 0x00;
 	length = strlen(messwert);
+=======
+void com_send_antwortclient(char messwert[]){
+uint8_t length = 0x00;
+uint8_t Counter = 0x00;
+length = strlen(messwert);
+char wert_anfrage;
+uint8_t messung;
+FS_GetRecords(FS_CurrentStatus.CurrentUnix,&record);
+
+while(Counter < length)
+{
+	//com_ausgabe(messwert[Counter]);
+
+	if(messwert[Counter]=='%')
+
+	{
+
+	wert_anfrage=messwert[Counter++];
+	switch (wert_anfrage){
+
+	case 'l': {messung= record.LightStrength; break;} 
+    case 't': {messung=record.Temperature; break;}
+	case 'd': {messung= record.Pressure; break;}
+	case 'r': {messung=record.RainState; break;}
+	}
+
+	com_ausgabe(messung);
+	Counter=Counter+2;// wird nicht klappen, da messung mehrere stellen haben kann
+	}
+
+	else
+	{
+	com_ausgabe(messwert[Counter]);
+    Counter++;
+	}
+
+	
+}
+
+
+>>>>>>> origin/master
 
 	while(Counter < length)
 	{
