@@ -29,7 +29,7 @@ uint8_t recBuffer[UART_MAXSTRLEN];
 uint8_t waitForString=1;
 void com_init(void)
 {
-	sysclk_enable_module(SYSCLK_PORT_F, SYSCLK_USART0);
+	//sysclk_enable_module(SYSCLK_PORT_F, SYSCLK_USART0);
 	//PORTE.DIR = 0xFF;
 	//PORTE.OUT = 0xFF;
 	USARTF0.BAUDCTRLB = 0;
@@ -67,62 +67,8 @@ void com_send_string(char data[])
 	com_ausgabe(0x0D);
 }
 
-<<<<<<< HEAD
-void com_send_antwortclient(char messwert[], uint16_t wert)
-{
-	uint8_t length = 0x00;
-	uint8_t Counter = 0x00;
-	length = strlen(messwert);
-=======
-void com_send_antwortclient(char messwert[]){
-uint8_t length = 0x00;
-uint8_t Counter = 0x00;
-length = strlen(messwert);
-char wert_anfrage;
-uint8_t messung;
-FS_GetRecords(FS_CurrentStatus.CurrentUnix,&record);
-
-while(Counter < length)
-{
-	//com_ausgabe(messwert[Counter]);
-
-	if(messwert[Counter]=='%')
-
-	{
-
-	wert_anfrage=messwert[Counter++];
-	switch (wert_anfrage){
-
-	case 'l': {messung= record.LightStrength; break;} 
-    case 't': {messung=record.Temperature; break;}
-	case 'd': {messung= record.Pressure; break;}
-	case 'r': {messung=record.RainState; break;}
-	}
-
-	com_ausgabe(messung);
-	Counter=Counter+2;// wird nicht klappen, da messung mehrere stellen haben kann
-	}
-
-	else
-	{
-	com_ausgabe(messwert[Counter]);
-    Counter++;
-	}
-
-	
-}
 
 
->>>>>>> origin/master
-
-	while(Counter < length)
-	{
-		com_ausgabe(messwert[Counter]);
-		Counter++;
-	}
-	com_ausgabe(0x0A);
-	com_ausgabe(0x0D);
-}
 // Damit SABA zu hause testen kann
 void interrupt_init(void)
 {

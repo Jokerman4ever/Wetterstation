@@ -14,7 +14,7 @@
 #include <stdbool.h>
 #include <Clock/Xdelay.h>
 uint8_t client_anfrage_auswertung();
-
+void com_send_antwortclient();
 
 
 #endif /* SERVER_H_ */
