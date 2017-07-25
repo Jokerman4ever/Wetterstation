@@ -11,9 +11,8 @@
 #include "Http/server.h"
 #include "Storage/FileSys.h"
 #include <avr/interrupt.h>
-int lenght = 0x00;
 unsigned char nextChar;
-int init_schritt=-3;
+//int init_schritt=-3;
 extern volatile uint8_t uart_str_complete;
 extern uint8_t daten_enmpfangen;   // 1 .. String komplett empfangen
 volatile uint8_t uart_str_count = 0;
@@ -30,8 +29,8 @@ uint8_t waitForString=1;
 void com_init(void)
 {
 	//sysclk_enable_module(SYSCLK_PORT_F, SYSCLK_USART0);
-	//PORTE.DIR = 0xFF;
-	//PORTE.OUT = 0xFF;
+	//PORTF.DIR = 0xFF;
+	//PORTF.OUT = 0xFF;
 	USARTF0.BAUDCTRLB = 0;
 	USARTF0.BAUDCTRLA = 12;//9600baud
 	USARTF0.CTRLA = USART_RXCINTLVL_HI_gc;
@@ -51,17 +50,25 @@ uint8_t com_hasData(void)
 	return((USARTF0_STATUS & USART_RXCIF_bm));
 }
 
+com_strlen(uint8_t* data)
+{
+	for (uint8_t i = 0; i < 32; i++)
+	{
+		if(data[i] == 0)return i;
+	}
+}
 
-void com_send_string(char data[])
+
+void com_send_string(uint8_t* data)
 {
 	uint8_t length = 0x00;
-	uint8_t Counter = 0x00;
-	length = strlen(data);
+	uint8_t counter = 0x00;
+	length = com_strlen(data);
 	
-	while(Counter < length)
+	while(counter < length)
 	{
-		com_ausgabe(data[Counter]);
-		Counter++;
+		com_ausgabe(data[counter]);
+		counter++;
 	}
 	com_ausgabe(0x0A);
 	com_ausgabe(0x0D);
@@ -76,7 +83,7 @@ void interrupt_init(void)
 	sei();
 }
 
-void com_ausgabe(uint16_t data)
+void com_ausgabe(uint8_t data)
 {
 	while(!(USARTF0.STATUS & USART_DREIF_bm)); // Überprüfung ob fertig mit schreiben
 	USARTF0.STATUS |= USART_TXCIF_bm;
@@ -102,7 +109,7 @@ uint8_t com_getString(uint8_t* buffer)
 	uint8_t leni=0;
 	uint8_t nC=0;
 	uint8_t error=0;
-	while( !(USARTF0_STATUS & USART_RXCIF_bm)) _xdelay_us(50);
+	//while( !(USARTF0_STATUS & USART_RXCIF_bm)) _xdelay_us(50);
 	while(!error)
 	{
 		nC = com_getChar(&error);
@@ -149,15 +156,14 @@ ISR(USARTF0_RXC_vect)
 		}
 	}
 }
-
 // Hier sind die einzelnen Schritte für die Serverkonfiguration 
-void server_configuration(uint8_t step)
+void server_configuration(int8_t* step)
 {
 	for (uint8_t i = 0; i <UART_MAXSTRLEN; i++)
 	{
 		recBuffer[i]=0;
 	}
-	switch(init_schritt)
+	switch(*step)
 	{   
 		case -3:
 		 {
@@ -185,23 +191,21 @@ void server_configuration(uint8_t step)
 		//case 13: com_send_string("AT+CIFSR"); break;
 		case 6: com_send_string("AT+CIPSTATUS"); break;
 	}
-	if(init_schritt == -3)
+	if(*step == -3)
 	{
-		init_schritt++;
-		//server_configuration(init_schritt);
 		return;
 	}
 	uint8_t reclen= com_getString(recBuffer);
 	//
 	//while(waitForString)_delay_ms(1);
-	server_configuration_auswertung(reclen);
+	server_configuration_auswertung(reclen,&step);
 	
 }
 
-void server_configuration_auswertung(uint8_t len)
+void server_configuration_auswertung(uint8_t len,int8_t* step)
 {
-	if(len <= 2){_xdelay_ms(5000);return;}		
-	switch(init_schritt)
+	if(len <= 2){_xdelay_ms(5000); *step--; return;}		
+	switch(*step)
 	{
 		case -1:
 		{
@@ -212,7 +216,7 @@ void server_configuration_auswertung(uint8_t len)
 					i+=2;
 					if(recBuffer[i] != '0')
 					{
-						init_schritt++;
+						//step++;
 						break;
 					}
 				}
@@ -232,7 +236,7 @@ void server_configuration_auswertung(uint8_t len)
 							c++;
 							if(recBuffer[c] == '1')
 							{
-								init_schritt++;
+								//*step++;
 								return;
 							}
 						}
@@ -246,7 +250,7 @@ void server_configuration_auswertung(uint8_t len)
 		{
 			if(com_check_string(len,"OK", 2))
 			{
-				init_schritt++;
+				//*step++;
 				_xdelay_ms(2000);
 			}
 			else if(com_check_string(len,"ERROR", 5))
@@ -259,7 +263,7 @@ void server_configuration_auswertung(uint8_t len)
 		{
 			if(com_check_string(len, "ERROR",5))
 			{
-				init_schritt=-2;
+				//*step=-2;
 			}
 			else
 			{
@@ -275,7 +279,7 @@ void server_configuration_auswertung(uint8_t len)
 		{
 			if(com_check_string(len,"SERVER OK", 9))
 			{
-				init_schritt++;
+				//*step++;
 				_xdelay_ms(5000);
 			}
 			else if(com_check_string(len,"ERROR", 5))
@@ -293,12 +297,13 @@ void server_configuration_auswertung(uint8_t len)
 			}
 			else if(com_check_string(len,"ERROR", 5))
 			{
-				init_schritt=-2;
+				//*step=-2;
 				_xdelay_ms(5000);
 				return;
 			}
 			break;
 		}
+		*step--;
 	}
 }
 

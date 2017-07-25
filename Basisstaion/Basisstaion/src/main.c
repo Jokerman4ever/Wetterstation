@@ -26,40 +26,40 @@ ISR(TCC1_OVF_vect)
 	RF_Update();
 	FS_Update();
 }
-
+int8_t com_initstep = -3;
 int main (void)
 {
 	uint8_t buffer[3];
-	sysclk_init();
-	clock_change_2MHZ();
-	Flash_SPI_Init();
+	//sysclk_init();
+	//clock_change_2MHZ();
+	//Flash_SPI_Init();
 	EEPROM_FlushBuffer();
 	EEPROM_DisableMapping();
-	CheckFirstrun();
-	FS_Init();
+	//CheckFirstrun();
+	//FS_Init();
 	//PORTF.DIR = (1<<4);//JUST FOR TEST!!!!
 	//PORTF.OUTCLR = (1<<4);//JUST FOR TEST!!!!
-	RF_Packet_t p = RF_CreatePacket(buffer,1,0x09,0);//JUST FOR TEST!!!!
-	RF_Init(0x01, 0);
-	RF_Sleep();
-	uint8_t val = RF_Get_Command(0x01);
+	//RF_Packet_t p = RF_CreatePacket(buffer,1,0x09,0);//JUST FOR TEST!!!!
+	//RF_Init(0x01, 0);
+	//RF_Sleep();
+//	uint8_t val = RF_Get_Command(0x01);
 	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
-	RF_Set_State(RF_State_Receive);
+	//RF_Set_State(RF_State_StandBy);
 	sei();
 	
 	//com_init();
 	//SERVER
 	com_init();
-	for (; init_schritt < 15;)
+	for (int8_t com_initstep = -3; com_initstep < 7;com_initstep++)
 	{
-		server_configuration(init_schritt);
+		server_configuration(&com_initstep);
 	}
 	
 
 	while(1)
 	{
 
-		if(uart_str_complete==1)
+		/*if(uart_str_complete==1)
 		{
 
 			uart_str_complete=0;
@@ -67,7 +67,7 @@ int main (void)
 			{
 				com_send_antwortclient();
 			}
-		}
+		}*/
 		//AUSKOMMENTIERT
 		//if(RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Idle && RF_CurrentStatus.State != RF_State_Receive)RF_Set_State(RF_State_Receive);
 		//_xdelay_us(500);

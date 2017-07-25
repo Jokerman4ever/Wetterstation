@@ -35,16 +35,16 @@ void send_string(char *data);
 #define UART_MAXSTRLEN 64
 uint8_t com_check_string(uint8_t len, const char* antwort,uint8_t laenge_antwort);
 void com_init(void);
-void com_send_string(char *);
+void com_send_string(uint8_t* data);
 
 void interrupt_init(void);
-void server_configuration(uint8_t step);
-void server_configuration_auswertung(uint8_t len);
+void server_configuration(int8_t* step);
+void server_configuration_auswertung(uint8_t len,int8_t* step);
 uint8_t com_getNextMsg(uint8_t* str,uint8_t off,uint8_t len);
 uint8_t com_getString(uint8_t* buffer);
 uint8_t com_getChar(uint8_t* error);
 uint8_t com_hasData(void);
-void com_ausgabe(uint16_t data);
+void com_ausgabe(uint8_t data);
 uint8_t com_StrCmp(uint8_t* str1,uint8_t off1,uint8_t len1,const char* str2);
 uint8_t server_initialisierung;
 
