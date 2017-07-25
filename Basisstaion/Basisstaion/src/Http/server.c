@@ -8,7 +8,7 @@
 #include "Storage/FileSys.h"
 #include "GSM/com.h"
 #include "string.h"
-//FS_StationRecord_t record;
+FS_StationRecord_t record;
 
 
 char client_rahmen1[]="<html>"
@@ -40,7 +40,7 @@ void com_send_antwortclient(){
 	char wert_anfrage;
 	uint8_t messung;
 		
-	//FS_GetRecords(FS_CurrentStatus.CurrentUnix,&record);
+	FS_GetRecords(FS_CurrentStatus.CurrentUnix,&record);
 	//char string=
 	while(Counter < length)
 	{
@@ -56,18 +56,17 @@ void com_send_antwortclient(){
 			switch (wert_anfrage)
 			{
 			
-				case 'l': {messung=20;	
-		com_ausgabe('50');com_send_string("lich");break;}//record.LightStrength; break;}
-				case 't': {messung=2; com_send_string("temp"); break;}//record.Temperature; break;}
-	    		case 'd': {messung=30;com_send_string("druck"); break;} //record.Pressure; break;}
-				case 'r': {messung=3;com_send_string("rain");break;} //record.RainState; break;}
-				case 'w': {messung=3; com_send_string("wind"); break;} //record.Pressure; break;}
-				case 'f': {messung=3;com_send_string("feuchte"); break;} //record.RainState; break;}
+				case 'l': {messung= record.LightStrength; break;}
+				case 't': {messung= record.Temperature; break;}
+	    		case 'd': {messung= record.Pressure; break;}
+				case 'r': {messung= record.RainState; break;}
+				case 'w': {messung =record.Pressure; break;}
+				case 'f': {messung= record.RainState; break;}
 			
 			}
 		
-        _delay_ms(2100);
-		//	com_ausgabe(0x0A);
+       // _delay_ms(2100);
+		      com_ausgabe(messung);
 			//com_ausgabe(0x0D);
 			Counter=Counter+2;// wird nicht klappen, da messung mehrere stellen haben kann
 		}
