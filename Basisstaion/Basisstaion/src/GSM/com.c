@@ -21,7 +21,7 @@ volatile uint8_t uart_string[UART_MAXSTRLEN + 1]="";
 extern uint8_t server_initialisierung= false;
 uint8_t kommando_senden;
 FS_StationRecord_t record;
-
+uint8_t ip_adresse[UART_MAXSTRLEN+1]="";
 
 int Counter = 0x00;
 uint8_t warte_ok=0;
@@ -76,7 +76,7 @@ void interrupt_init(void)
 	sei();
 }
 
-void com_ausgabe(uint8_t data)
+void com_ausgabe(uint16_t data)
 {
 	while(!(USARTF0.STATUS & USART_DREIF_bm)); // Überprüfung ob fertig mit schreiben
 	USARTF0.STATUS |= USART_TXCIF_bm;
@@ -168,23 +168,22 @@ void server_configuration(uint8_t step)
 			break;
 		}
 		case -2: com_send_string("AT"); break;
-		case -1:com_send_string("AT+IPR=38400"); break;
-		case 0:com_send_string("AT+CSQ"); break;
-		case 1: init_schritt++;
-		case 2:com_send_string("AT+CREG?");  break;
+		//case -1:com_send_string("AT+IPR=38400"); break;
+		case -1:com_send_string("AT+CSQ"); break;
+		case 0:com_send_string("AT+CREG?");  break;
 		//case 2: send_string("AT+CGACT?") ; break;
-		case 3: com_send_string("AT+CMEE=1");  break;
-		case 4: com_send_string("AT+CGATT=1"); break;
-		case 5: com_send_string("AT+CSTT=\"internet.t-d1.de\"");  break;
-		case 6: com_send_string("AT+CIICR"); break;
-		case 7: com_send_string("AT+CIFSR");break;
-		case 8: com_send_string("AT+CIPSTART=\"TCP\",\"74.124.194.252\",\"80\""); break;
-		case 9: com_send_string("AT+CIPCLOSE=0");break;
-		case 10: com_send_string("AT+CFUN=1"); break;
-		case 11: com_send_string("AT+CPIN?"); break;
-		case 12: com_send_string("AT+CIPSERVER=1,80"); break;
-		case 13: com_send_string("AT+CIFSR"); break;
-		case 14: com_send_string("AT+CIPSTATUS"); break;
+		//case 3: com_send_string("AT+CMEE=1");  break;
+		case 1: com_send_string("AT+CGATT=1"); break;
+		case 2: com_send_string("AT+CSTT=\"internet.t-d1.de\"");  break;
+		case 3: com_send_string("AT+CIICR"); break;
+		case 4: com_send_string("AT+CIFSR");break;
+		//case 8: com_send_string("AT+CIPSTART=\"TCP\",\"74.124.194.252\",\"80\""); break;
+		//case 9: com_send_string("AT+CIPCLOSE=0");break;
+		//case 10: com_send_string("AT+CFUN=1"); break;
+		//case 11: com_send_string("AT+CPIN?"); break;
+		case 5: com_send_string("AT+CIPSERVER=1,80"); break;
+		//case 13: com_send_string("AT+CIFSR"); break;
+		case 6: com_send_string("AT+CIPSTATUS"); break;
 	}
 	if(init_schritt == -3)
 	{
@@ -201,156 +200,106 @@ void server_configuration(uint8_t step)
 
 void server_configuration_auswertung(uint8_t len)
 {
-	if(len <= 2){_xdelay_ms(5000);return;}
-	if(init_schritt == 0)
+	if(len <= 2){_xdelay_ms(5000);return;}		
+	switch(init_schritt)
 	{
-		
-		for (uint8_t i = 0; i < UART_MAXSTRLEN; i++)
+		case -1:
 		{
-			if(recBuffer[i] == ':')
+			for (uint8_t i = 0; i < UART_MAXSTRLEN; i++)
 			{
-				i+=2;
-				if(recBuffer[i] != '0')
+				if(recBuffer[i] == ':')
 				{
-					init_schritt++;
-					break;
+					i+=2;
+					if(recBuffer[i] != '0')
+					{
+						init_schritt++;
+						break;
+					}
 				}
 			}
+			return;
 		}
-		return;
-	}
-	
-	if(init_schritt == 2)
-	{
-		for (uint8_t i = 0; i < UART_MAXSTRLEN; i++)
+		case 0:
 		{
-			if(recBuffer[i] == ':')
+			for (uint8_t i = 0; i < UART_MAXSTRLEN; i++)
 			{
-				for(uint8_t c = i; c < UART_MAXSTRLEN; c++)
+				if(recBuffer[i] == ':')
 				{
-					if(recBuffer[c] == ',')
+					for(uint8_t c = i; c < UART_MAXSTRLEN; c++)
 					{
-						c++;
-						if(recBuffer[c] == '1')
+						if(recBuffer[c] == ',')
 						{
-							init_schritt++;
-							return;
+							c++;
+							if(recBuffer[c] == '1')
+							{
+								init_schritt++;
+								return;
+							}
 						}
 					}
 				}
 			}
-		}
-		_xdelay_ms(2000);
-		return;
-	}
-	
-	if(init_schritt < 11)
-	{
-		if(com_check_string(len,"OK", 2))
-		{
-			init_schritt++;
 			_xdelay_ms(2000);
-		}
-		else if(com_check_string(len,"ERROR", 5))
-		{
-			//init_schritt=-3;
-			_xdelay_ms(2000);
-		}
-	}
-	return;
-	/*
-	switch(init_schritt)
-	{
-		case 11:
-
-		{
-				if(COM_check_string(len,"SIM is ready", 12))
-				{
-
-					init_schritt++;
-					_xdelay_ms(5000);
-					server_configuration();
-				}
-				else if(COM_check_string(len,"ERROR", 5))
-				{
-					init_schritt=-3;
-					_xdelay_ms(5000);
-					server_configuration();
-			    }
-		break;
-		}
-		
-
-		case 12 :
-		{
-
-			
-	
-	if(COM_check_string(len,"SERVER OK", 9))
-	{
-
-		init_schritt++;
-		_xdelay_ms(5000);
-		server_configuration();
-	}
-	else if(COM_check_string(len,"ERROR", 5))
-	{
-		init_schritt=-3;
-		_xdelay_ms(5000);
-		server_configuration();
-	}
 			break;
 		}
-
-	
-
-		case 13 :
+		case -2: case 1: case 2: case 3:
 		{
-	
-	if(COM_check_string(len,"OK", 2))
-	{
-
-		init_schritt++;
-		_xdelay_ms(5000);
-		server_configuration();
-	}
-	else if(COM_check_string(len,"ERROR", 5))
-	{
-		init_schritt=-3;
-		_xdelay_ms(5000);
-		server_configuration();
-	}
-			
-		break;
+			if(com_check_string(len,"OK", 2))
+			{
+				init_schritt++;
+				_xdelay_ms(2000);
+			}
+			else if(com_check_string(len,"ERROR", 5))
+			{
+				_xdelay_ms(2000);
+			}
+			break;
 		}
-
-	
-
-
-		case 14:{
-
-	
-	if(COM_check_string(len,"STATE: SERVER LISTENING", 23))
-	{
-
-		init_schritt++;
-		_xdelay_ms(5000);
-		server_configuration();
+		case 4:
+		{
+			if(com_check_string(len, "ERROR",5))
+			{
+				init_schritt=-2;
+			}
+			else
+			{
+				/*for (uint8_t i = 0; i < len; i++)
+				{
+					
+				}
+				len= ip_adresse;*/
+			}
+			break;
+		}
+		case 5:
+		{
+			if(com_check_string(len,"SERVER OK", 9))
+			{
+				init_schritt++;
+				_xdelay_ms(5000);
+			}
+			else if(com_check_string(len,"ERROR", 5))
+			{
+				_xdelay_ms(5000);
+				return;
+			}
+			break;
+		}
+		case 6:
+		{
+			if(com_check_string(len,"STATE: SERVER LISTENING", 23))
+			{
+				_xdelay_ms(5000);
+			}
+			else if(com_check_string(len,"ERROR", 5))
+			{
+				init_schritt=-2;
+				_xdelay_ms(5000);
+				return;
+			}
+			break;
+		}
 	}
-	else if(COM_check_string(len,"ERROR", 5))
-	{
-		init_schritt=-3;
-		_xdelay_ms(5000);
-		server_configuration();
-	}
-		
-		break;
-	}
-	
-	}
-	//printf("%s",&mystring);
-	*/
-
 }
 
 uint8_t com_getNextMsg(uint8_t* str,uint8_t off,uint8_t len)

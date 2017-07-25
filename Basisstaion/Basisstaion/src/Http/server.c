@@ -38,7 +38,7 @@ void com_send_antwortclient(){
 	length = strlen(client_rahmen1);
 	//com_ausgabe(length);
 	char wert_anfrage;
-	uint8_t messung;
+	uint16_t messung=0;
 		
 	FS_GetRecords(FS_CurrentStatus.CurrentUnix,&record);
 	//char string=
