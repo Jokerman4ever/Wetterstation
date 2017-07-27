@@ -10,11 +10,14 @@
 #include "Http/server.h"
 void HandleClients(void);
 void CheckFirstrun(void);
-extern int8_t init_schritt;
-extern  char uart_string[UART_MAXSTRLEN + 1];
-volatile uint8_t uart_str_complete = 0;
-uint8_t daten_enmpfangen=false;
+
+//extern int8_t init_schritt;
+//extern  char uart_string[UART_MAXSTRLEN + 1];
+//volatile uint8_t uart_str_complete = 0;
+//uint8_t daten_enmpfangen=false;
 uint8_t Packet_buffer[10];
+
+//int8_t com_initstep = -3;
 
 ISR(PORTE_INT0_vect)
 {
@@ -26,34 +29,32 @@ ISR(TCC1_OVF_vect)
 	RF_Update();
 	FS_Update();
 }
-int8_t com_initstep = -3;
-int main (void)
+
+int main(void)
 {
 	uint8_t buffer[3];
-	//sysclk_init();
-	//clock_change_2MHZ();
-	//Flash_SPI_Init();
+	sysclk_init();
+	clock_change_2MHZ();
+	Flash_SPI_Init();
 	EEPROM_FlushBuffer();
 	EEPROM_DisableMapping();
-	//CheckFirstrun();
-	//FS_Init();
-	//PORTF.DIR = (1<<4);//JUST FOR TEST!!!!
-	//PORTF.OUTCLR = (1<<4);//JUST FOR TEST!!!!
+	CheckFirstrun();
+	FS_Init();
 	//RF_Packet_t p = RF_CreatePacket(buffer,1,0x09,0);//JUST FOR TEST!!!!
-	//RF_Init(0x01, 0);
-	//RF_Sleep();
-//	uint8_t val = RF_Get_Command(0x01);
+	RF_Init(0x01, 0);
+	uint8_t val = RF_Get_Command(0x01);
 	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
-	//RF_Set_State(RF_State_StandBy);
+	RF_Set_State(RF_State_StandBy);
 	sei();
 	
 	//com_init();
 	//SERVER
-	com_init();
+	//Ist jetzt in der unstable branch!
+	/*com_init();
 	for (int8_t com_initstep = -3; com_initstep < 7;com_initstep++)
 	{
 		server_configuration(&com_initstep);
-	}
+	}*/
 	
 
 	while(1)
@@ -69,9 +70,9 @@ int main (void)
 			}
 		}*/
 		//AUSKOMMENTIERT
-		//if(RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Idle && RF_CurrentStatus.State != RF_State_Receive)RF_Set_State(RF_State_Receive);
-		//_xdelay_us(500);
-		//HandleClients();	
+		if(RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Idle && RF_CurrentStatus.State != RF_State_Receive)RF_Set_State(RF_State_Receive);
+		_xdelay_us(500);
+		HandleClients();	
 		if(com_hasData())
 		{
 			uint8_t len = com_getString(Packet_buffer);
@@ -137,23 +138,22 @@ void HandleClients(void)
 		{
 			if(RF_FindDevice(p.Sender) > 0)
 			{
-				//PORTF.OUTSET = (1<<4);//JUST FOR TEST!!!!
-				//_delay_ms(500);//JUST FOR TEST!!!!
-				//PORTF.OUTCLR = (1<<4);//JUST FOR TEST!!!!
-				
 				if(p.Flags & RF_Packet_Flags_Weather)
 				{
+					//Nur zur darstellung auf dem PC mittels usart interface des GSM-Moduls
+					/*
 					com_ausgabe(p.Sender);
 					com_ausgabe(p.ID);
 					for (uint8_t i = 0; i < 10; i++)
 					{
 						com_ausgabe(p.Data[i]);
-					}
+					}*/
+					
 					FS_StationRecord_t* r = FS_CreateStationRecordArray(p.Data);
 					r->Unix = FS_CurrentStatus.CurrentUnix;
 					r->ID = p.Sender;
 					FS_WriteRecord(r);
-			}
+				}
 			}
 		}
 	}
