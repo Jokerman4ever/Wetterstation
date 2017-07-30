@@ -38,7 +38,7 @@ Clock_init();
 interrupt_init();
 
  //server_configuration();
-//send_string("AT+CSQ");
+send_string("AT");
 server_configuration();
 while(1){
 

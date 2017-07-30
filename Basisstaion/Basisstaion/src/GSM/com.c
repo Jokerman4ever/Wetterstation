@@ -12,7 +12,8 @@
 #include "Storage/FileSys.h"
 #include <avr/interrupt.h>
 unsigned char nextChar;
-//int init_schritt=-3;
+int init_schritt=-2;
+int8_t alter_schritt=0;
 extern volatile uint8_t uart_str_complete;
 extern uint8_t daten_enmpfangen;   // 1 .. String komplett empfangen
 volatile uint8_t uart_str_count = 0;
@@ -20,7 +21,7 @@ volatile uint8_t uart_string[UART_MAXSTRLEN + 1]="";
 extern uint8_t server_initialisierung= false;
 uint8_t kommando_senden;
 FS_StationRecord_t record;
-uint8_t ip_adresse[UART_MAXSTRLEN+1]="";
+uint8_t ip_adresse;
 
 int Counter = 0x00;
 uint8_t warte_ok=0;
@@ -28,7 +29,7 @@ uint8_t recBuffer[UART_MAXSTRLEN];
 uint8_t waitForString=1;
 void com_init(void)
 {
-	//sysclk_enable_module(SYSCLK_PORT_F, SYSCLK_USART0);
+//	sysclk_enable_module(SYSCLK_PORT_F, SYSCLK_USART0);
 	//PORTF.DIR = 0xFF;
 	//PORTF.OUT = 0xFF;
 	USARTF0.BAUDCTRLB = 0;
@@ -97,7 +98,7 @@ uint8_t com_getChar(uint8_t* error)
 	uint8_t nc = 0;
 	*error = 0;
 	//)_delay_us(5);
-	while( !(USARTF0.STATUS & USART_RXCIF_bm) && t-- > 1) _xdelay_us(5);
+	//while( !(USARTF0.STATUS & USART_RXCIF_bm) && t-- > 1)// _xdelay_us(5);
 	if(t <= 1)
 	{*error = 1; return 0;}
 	nc = USARTF0.DATA;
@@ -151,26 +152,26 @@ ISR(USARTF0_RXC_vect)
 			//printf("Hello, world!\n");
 			//server_configuration()
 			//server_configuration(uart_string);
-
+			server_configuration_auswertung(uart_string);
 		
 		}
 	}
 }
 // Hier sind die einzelnen Schritte für die Serverkonfiguration 
-void server_configuration(int8_t* step)
+void server_configuration()
 {
 	for (uint8_t i = 0; i <UART_MAXSTRLEN; i++)
 	{
 		recBuffer[i]=0;
 	}
-	switch(*step)
+	switch(init_schritt)
 	{   
 		case -3:
 		 {
 			PORTF.OUTCLR = (1<<4);
-			_xdelay_ms(200);//Modul reset
+		//	_xdelay_ms(200);//Modul reset
 			PORTF.OUTSET = (1<<4);
-			_xdelay_ms(3000);//Wait till Modul has finished startup
+			//_xdelay_ms(3000);//Wait till Modul has finished startup
 			break;
 		}
 		case -2: com_send_string("AT"); break;
@@ -191,53 +192,75 @@ void server_configuration(int8_t* step)
 		//case 13: com_send_string("AT+CIFSR"); break;
 		case 6: com_send_string("AT+CIPSTATUS"); break;
 	}
-	if(*step == -3)
+	if(init_schritt == -3)
 	{
 		return;
 	}
-	uint8_t reclen= com_getString(recBuffer);
-	//
+	//uint8_t reclen= com_getString(recBuffer);
+	
 	//while(waitForString)_delay_ms(1);
-	server_configuration_auswertung(reclen,&step);
+	//server_configuration_auswertung(reclen,&step);
 	
 }
 
-void server_configuration_auswertung(uint8_t len,int8_t* step)
+void server_configuration_auswertung(uint8_t antwort[])
 {
-	if(len <= 2){_xdelay_ms(5000); *step--; return;}		
-	switch(*step)
+
+alter_schritt=init_schritt;
+	//if(len <= 2){_xdelay_ms(5000); init_schritt--; return;}		
+	switch(init_schritt)
 	{
 		case -1:
 		{
+
+		//com_send_string(antwort);
 			for (uint8_t i = 0; i < UART_MAXSTRLEN; i++)
-			{
-				if(recBuffer[i] == ':')
-				{
+			{ 
+				if(antwort[i] == ':')
+				{ 
+				//com_send_string("hallo");
+				//com_ausgabe(antwort[i]);
 					i+=2;
-					if(recBuffer[i] != '0')
+					if(antwort[i] != '0')
 					{
-						//step++;
-						break;
+						init_schritt++;
+					//	 com_ausgabe(init_schritt);
+						// com_ausgabe(alter_schritt);
+						server_configuration();
+						return;
 					}
+
+					else {init_schritt--;
+					server_configuration();
+				}
 				}
 			}
-			return;
+			break;
 		}
 		case 0:
 		{
 			for (uint8_t i = 0; i < UART_MAXSTRLEN; i++)
 			{
-				if(recBuffer[i] == ':')
+				if(antwort[i] == ':')
 				{
 					for(uint8_t c = i; c < UART_MAXSTRLEN; c++)
 					{
-						if(recBuffer[c] == ',')
+						if(antwort[c] == ',')
 						{
 							c++;
-							if(recBuffer[c] == '1')
+							if(antwort[c] == '1')
 							{
-								//*step++;
+							    
+								init_schritt++;
+							//	com_ausgabe(init_schritt);
+							//	com_ausgabe(alter_schritt);
+								server_configuration();
 								return;
+							}
+
+							
+							else {init_schritt=-2;
+							//	server_configuration();
 							}
 						}
 					}
@@ -248,22 +271,23 @@ void server_configuration_auswertung(uint8_t len,int8_t* step)
 		}
 		case -2: case 1: case 2: case 3:
 		{
-			if(com_check_string(len,"OK", 2))
+			if(!strcmp("OK", antwort))
 			{
-				//*step++;
-				_xdelay_ms(2000);
+				init_schritt++;
+			//	_xdelay_ms(2000);
 			}
-			else if(com_check_string(len,"ERROR", 5))
+			else if(!strcmp("ERROR", antwort))
 			{
-				_xdelay_ms(2000);
+			init_schritt=-2;
+				//_xdelay_ms(2000);
 			}
 			break;
 		}
 		case 4:
 		{
-			if(com_check_string(len, "ERROR",5))
+			if(!strcmp("ERROR", antwort))
 			{
-				//*step=-2;
+				init_schritt=-2;
 			}
 			else
 			{
@@ -271,39 +295,54 @@ void server_configuration_auswertung(uint8_t len,int8_t* step)
 				{
 					
 				}
+				
 				len= ip_adresse;*/
+				init_schritt++;
+				ip_adresse=1;
+				//server_configuration();
 			}
 			break;
 		}
 		case 5:
 		{
-			if(com_check_string(len,"SERVER OK", 9))
+			if(!strcmp("OK", uart_string))
 			{
-				//*step++;
-				_xdelay_ms(5000);
+			init_schritt++;
+			//	_xdelay_ms(5000);
 			}
-			else if(com_check_string(len,"ERROR", 5))
+			else if(!strcmp("ERROR", uart_string))
 			{
-				_xdelay_ms(5000);
-				return;
+			init_schritt=-2;
+				//_xdelay_ms(5000);
+				//return;
 			}
 			break;
 		}
 		case 6:
 		{
-			if(com_check_string(len,"STATE: SERVER LISTENING", 23))
+			if(!strcmp("STATE: SERVER LISTENING", antwort))
 			{
-				_xdelay_ms(5000);
+			init_schritt++;
+				//_xdelay_ms(5000);
 			}
-			else if(com_check_string(len,"ERROR", 5))
+			else if(!strcmp("ERROR", antwort))
 			{
-				//*step=-2;
-				_xdelay_ms(5000);
+				init_schritt=-2;
+				//_xdelay_ms(5000);
 				return;
 			}
 			break;
 		}
-		*step--;
+	//	init_schritt--;
+	}
+	if(alter_schritt!=init_schritt|| init_schritt==-2)
+	{
+	server_configuration();
+	}
+	if(init_schritt==7)
+	{
+	com_send_string("SERVER ist konfiguriert");
+	return;
 	}
 }
 

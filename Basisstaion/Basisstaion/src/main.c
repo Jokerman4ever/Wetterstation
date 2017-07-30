@@ -11,21 +11,22 @@
 void HandleClients(void);
 void CheckFirstrun(void);
 extern int8_t init_schritt;
+extern uint8_t server_initialisierung;
 extern  char uart_string[UART_MAXSTRLEN + 1];
-volatile uint8_t uart_str_complete = 0;
+volatile uint8_t uart_str_complete = 1;
 uint8_t daten_enmpfangen=false;
 uint8_t Packet_buffer[10];
 
-ISR(PORTE_INT0_vect)
-{
-	RF_HandleInterrupt();
-}
+//ISR(PORTE_INT0_vect)
+//{
+	//RF_HandleInterrupt();
+//}
 
-ISR(TCC1_OVF_vect)
-{
-	RF_Update();
-	FS_Update();
-}
+//ISR(TCC1_OVF_vect)
+//{
+	//RF_Update();
+	//FS_Update();
+//}
 int8_t com_initstep = -3;
 int main (void)
 {
@@ -33,8 +34,8 @@ int main (void)
 	//sysclk_init();
 	//clock_change_2MHZ();
 	//Flash_SPI_Init();
-	EEPROM_FlushBuffer();
-	EEPROM_DisableMapping();
+	//EEPROM_FlushBuffer();
+	//EEPROM_DisableMapping();
 	//CheckFirstrun();
 	//FS_Init();
 	//PORTF.DIR = (1<<4);//JUST FOR TEST!!!!
@@ -50,24 +51,38 @@ int main (void)
 	//com_init();
 	//SERVER
 	com_init();
-	for (int8_t com_initstep = -3; com_initstep < 7;com_initstep++)
+	//com_send_string("AT");
+	/*for (int8_t com_initstep = -2; com_initstep < 7;com_initstep++)
 	{
 		server_configuration(&com_initstep);
-	}
+	}*/
+	server_configuration();
+	//while(server_initialisierung==false)
+	//{
+	//while(uart_str_complete==0);
+	//server_configuration();
+	//uart_str_complete==1;
+	//}
+
+
+	
 	
 
 	while(1)
 	{
 
-		/*if(uart_str_complete==1)
+		if(uart_str_complete==1)
 		{
 
-			uart_str_complete=0;
-			if(com_StrCmp(uart_string,0,2,"GET")==1)
-			{
-				com_send_antwortclient();
-			}
-		}*/
+			uart_str_complete=0;}
+			//if(com_StrCmp(uart_string,0,2,"GET")==1)
+			//{
+		//	server_configuration();
+			//	com_send_antwortclient();
+			//}
+		}
+
+		com_send_string("ICH bin fertig");
 		//AUSKOMMENTIERT
 		//if(RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Idle && RF_CurrentStatus.State != RF_State_Receive)RF_Set_State(RF_State_Receive);
 		//_xdelay_us(500);
@@ -91,9 +106,9 @@ int main (void)
 				}
 			}
 		}
-	}
-}
+	//}
 
+	}
 void CheckFirstrun(void)
 {
 	if(EEPROM_ReadByte(1)==255)
@@ -105,7 +120,7 @@ void CheckFirstrun(void)
 
 
 
-void HandleClients(void)
+/*void HandleClients(void)
 {
 	if(RF_CurrentStatus.NewPacket)
 	{
@@ -157,4 +172,4 @@ void HandleClients(void)
 			}
 		}
 	}
-}
+}*/

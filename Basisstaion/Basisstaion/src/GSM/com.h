@@ -38,8 +38,10 @@ void com_init(void);
 void com_send_string(uint8_t* data);
 
 void interrupt_init(void);
-void server_configuration(int8_t* step);
-void server_configuration_auswertung(uint8_t len,int8_t* step);
+//void server_configuration(int8_t* step)
+void server_configuration();
+//void server_configuration_auswertung(uint8_t len,int8_t* step);
+void server_configuration_auswertung(uint8_t uart_string[]);
 uint8_t com_getNextMsg(uint8_t* str,uint8_t off,uint8_t len);
 uint8_t com_getString(uint8_t* buffer);
 uint8_t com_getChar(uint8_t* error);
