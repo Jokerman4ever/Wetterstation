@@ -230,9 +230,11 @@ alter_schritt=init_schritt;
 						return;
 					}
 
-					else {init_schritt--;
-					server_configuration();
+					
 				}
+else {init_schritt--;
+					server_configuration();
+
 				}
 			}
 			break;
@@ -259,12 +261,12 @@ alter_schritt=init_schritt;
 							}
 
 							
-							else {init_schritt=-2;
+							
 							//	server_configuration();
 							}
 						}
 					}
-				}
+				else {init_schritt=-2;}
 			}
 			_xdelay_ms(2000);
 			break;
