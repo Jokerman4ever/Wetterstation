@@ -23,14 +23,11 @@ void Flash_SPI_Init(void)
 	//MOSI MISO SCK
 	//5     6    7
 	Flash_SPI_PORT.DIRSET = (1<<5);//MOSI
-
 	Flash_SPI_PORT.DIRSET = (1<<7);//SCK
-
 	Flash_SPI_PORT.PIN4CTRL |= PORT_OPC_PULLUP_gc; //CS?
 	Flash_SPI_REG.CTRL = SPI_ENABLE_bm | SPI_MASTER_bm | SPI_PRESCALER_DIV4_gc | SPI_MODE_0_gc;
 	if(XDELAY_ISFAST){Flash_SPI_REG.CTRL |= SPI_PRESCALER_DIV64_gc;}
 	//sysclk_disable_module(SYSCLK_PORT_C, SYSCLK_SPI);
-
 	Flash_CS_PORT.DIRSET = (1<<Flash_CS_Pin);
 	Flash_CS_HIGH();
 	Flash_SPI_PORT.OUTSET = (1<<7);
@@ -76,8 +73,8 @@ uint8_t Flash_isBusy(void)
 uint8_t Flash_read_Byte(FlashAddress add)
 {
 	 Flash_CS_LOW();
-	 Flash_SPI_putc(Flash_Read);
-	 //SPI_putc(add.High); //HighByte
+	 Flash_SPI_putc(Flash_Read4);
+	 SPI_putc(add.High); //HighByte
 	 Flash_SPI_putc(add.Mid); //MidByte
 	 Flash_SPI_putc(add.Low); //LowByte
 	 Flash_SPI_putc(add.XLow);
@@ -89,8 +86,8 @@ uint8_t Flash_read_Byte(FlashAddress add)
 void Flash_read_Bytes(FlashAddress add,uint8_t *buffer,uint8_t length)
 {
 	Flash_CS_LOW();
-	Flash_SPI_putc(Flash_Read);
-	//SPI_putc(add.High); //HighByte
+	Flash_SPI_putc(Flash_Read4);
+	SPI_putc(add.High); //HighByte
 	Flash_SPI_putc(add.Mid); //MidByte
 	Flash_SPI_putc(add.Low); //LowByte
 	Flash_SPI_putc(add.XLow); //XLowByte
@@ -107,8 +104,8 @@ void Flash_write_Byte(FlashAddress add,uint8_t data)
 	Flash_SPI_putc(Flash_WriteEnable);
 	Flash_CS_HIGH();
 	Flash_CS_LOW();
-	Flash_SPI_putc(Flash_Write);
-	//SPI_putc(add.High); //HighByte
+	Flash_SPI_putc(Flash_Write4);
+	SPI_putc(add.High); //HighByte
 	Flash_SPI_putc(add.Mid); //MidByte
 	Flash_SPI_putc(add.Low); //LowByte
 	Flash_SPI_putc(add.XLow); //XLowByte
@@ -122,8 +119,8 @@ void Flash_write_Bytes(FlashAddress add,uint8_t *buffer,uint8_t offset,uint8_t l
 	Flash_SPI_putc(Flash_WriteEnable);
 	Flash_CS_HIGH();
 	Flash_CS_LOW();
-	Flash_SPI_putc(Flash_Write);
-	//SPI_putc(add.High); //HighByte
+	Flash_SPI_putc(Flash_Write4);
+	SPI_putc(add.High); //HighByte
 	Flash_SPI_putc(add.Mid); //MidByte
 	Flash_SPI_putc(add.Low); //LowByte
 	Flash_SPI_putc(add.XLow); //XLowByte
@@ -142,8 +139,8 @@ void Flash_sector_Erase(FlashAddress add)
 	Flash_SPI_putc(Flash_WriteEnable);
 	Flash_CS_HIGH();
 	Flash_CS_LOW();
-	Flash_SPI_putc(Flash_SectorErase);
-	//SPI_putc(add.High); //HighByte
+	Flash_SPI_putc(Flash_SectorErase4);
+	SPI_putc(add.High); //HighByte
 	Flash_SPI_putc(add.Mid); //MidByte
 	Flash_SPI_putc(add.Low); //LowByte
 	Flash_SPI_putc(add.XLow); //XLowByte
