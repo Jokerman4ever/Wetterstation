@@ -2,7 +2,7 @@
  * FileSys.c
  *
  * Created: 15.06.2017 12:01:19
- *  Author: Stud
+ *  Author: Felix Mälk
  */ 
 
 #include "FileSys.h"
@@ -22,7 +22,6 @@ static void FS_WriteRecordHW(FS_StationRecord_t* fs);
 static void FS_ReadRecordHW(uint32_t record,FS_StationRecord_t* fs);
 static FlashAddress FS_CreateNextAddress(void);
 
-
 FS_Status_t FS_CurrentStatus;
 FS_StationRecord_t FS_TempRecord;
 FS_File_t FS_TempFile;
@@ -39,8 +38,6 @@ FS_File_t FS_TempFile;
 //+32 - (32 + FS_MaxFileCount*8) -> FileInfos
 //////////////////////////////////////////////////////////////////////////
 
-//NOCHMAL GUCKEN MIT DEN GANZEN EEPROM ADRESSEN.... KÖNNTE SEIN DAS DIE NOCH NICHT RICHTIG GEMAPPT WURDEN!!!
-
 #define FS_EEPROM_StartAddress 16
 #define FS_EEPROM_Range 160
 
@@ -54,11 +51,12 @@ FS_File_t FS_TempFile;
 
 #define FS_StartAddress_Records 131072UL
 
-//Stop is 2^24 -> 128MBit - 68 damits aufgeht...
-#define FS_StopAddress 16777148UL
+//Stop is 2^25 -> 256MBit - 68 damits aufgeht...
+#define FS_StopAddress 33554364UL
 //(StopAddress - StartAddress) / 16
 #define FS_MaxRecordCount ((FS_StopAddress - FS_StartAddress_Records) / 16)
 
+//Initialisiert das Dateisystem und den Flash-Speicher der im zugrunde liegt.
 void FS_Init(void)
 {
 	FS_CurrentStatus.CurrentUnix = FS_GetUnix();
@@ -73,6 +71,7 @@ void FS_Init(void)
 	FS_UpdateFileSys();
 }
 
+//Wird einmalig ausgeführt und richtet das Dateisystem auf dem Flash-Speicher ein
 void FS_FirstRun(void)
 {
 	//Clear our buffer
@@ -100,6 +99,7 @@ void FS_FirstRun(void)
 	}
 }
 
+//Diese Funktion muss alle 10ms aufgerufen werden. Sie verwaltet die UNIX-Time mit der die Dateneinheiten richtig gespeichert werden.
 void FS_Update(void)
 {
 	//Triggers every 10ms
@@ -111,6 +111,8 @@ void FS_Update(void)
 }
 
 #pragma region ERROR SUPPORT
+//Der Error support stellt funktionen für die Speicherung von systemweiten Fehlern bereit.
+
 
 //Fügt dem Fehlerspeicher einen Fehler hinzu.
 void FS_AddError(uint32_t unix,ERRORID_t id,uint8_t flag)
@@ -158,8 +160,11 @@ uint16_t FS_GetLastErrorID(void)
 #pragma endregion ERROR SUPPORT
 
 #pragma region FILE SUPPORT
+//Der Filesupport stellt die unterstützung von Dateien bereit es können insgesamt 16 Dateien mit jeweils eine größe von 4KByte gespeichert werden
+//Das Dateisystem verwaltet dabei alles voll automatisch. Es kann somit einfach eine Datei geschrieben/erweitert oder von jedem Punkt
+//in der Datei gelesen werden.
 
-
+//Erstellt einen neuen Speicherplatz für eine neue Datei
 static uint32_t FS_CreateFileStart(void)
 {
 	if(FS_CurrentStatus.FileCount == 0) return FS_StartAddress_Files;
@@ -182,18 +187,21 @@ static uint32_t FS_CreateFileStart(void)
 	return maxStart;
 }
 
+//Gibt die Dateigröße einer Datei im Flash-Speicher zurück
 static uint32_t FS_GetFileLength(uint8_t ID)
 {
 	if(FS_CheckAddress(ID)) return EEPROM_ReadDWord(((uint16_t)(ID*8 + FS_EEPROM_StartAddress + 32 + 4)));
 	else return 0;
 }
 
+//Gibt die Addresse des ersten Bytes der Datei zurück
 static uint32_t FS_GetFileStart(uint8_t ID)
 {
 	if(FS_CheckAddress(ID)) return EEPROM_ReadDWord((uint16_t)(ID*8 + FS_EEPROM_StartAddress + 32));
 	else return 0;
 }
 
+//Überprüft ob die angegebene Speicherplatz-ID belegt oder frei ist
 static uint8_t FS_CheckAddress(uint8_t ID)
 {
 	if(ID >FS_MaxFileCount)return(0);
@@ -206,6 +214,7 @@ static uint8_t FS_CheckAddress(uint8_t ID)
 	else{ return(0); }
 }
 
+//Speichert die Metadaten einer Datei
 static void FS_WriteFileInfo(uint8_t ID)
 {
 	uint16_t address = ID*8 + FS_EEPROM_StartAddress+32;
@@ -215,6 +224,7 @@ static void FS_WriteFileInfo(uint8_t ID)
 	EEPROM_WriteByte((uint16_t)(address+9),FS_TempFile.Flag);
 }
 
+//Läd die Metadaten einer Datei
 static uint8_t FS_LoadFileInfo(uint8_t ID)
 {
 	if(!FS_CheckAddress(ID))return(0);
@@ -226,6 +236,8 @@ static uint8_t FS_LoadFileInfo(uint8_t ID)
 	return(FS_TempFile.ID == ID);
 }
 
+//Updatet das Dateisystem in hinsicht auf freien speicherplatz und Anzahl an gespeicherten Dateien
+//Wird bei jedem start des Systems ausgeführt
 static void FS_UpdateFileSys(void)
 {
 	FS_CurrentStatus.FileSpaceAvailable = (FS_StopAddress_Files - FS_StartAddress_Files);
@@ -240,6 +252,7 @@ static void FS_UpdateFileSys(void)
 	}
 }
 
+//Unused
 static void FS_Reorganize(uint8_t ID)
 {
 	uint8_t lastID = ID;
@@ -283,6 +296,7 @@ static void FS_Reorganize(uint8_t ID)
 	FS_SetAddress(FS_CurrentStatus.FileCount,0);
 }
 
+//Setzt einen Speicherplatz als frei/belegt
 static void FS_SetAddress(uint8_t ID, uint8_t state)
 {
 	uint8_t bit = ID%8; //Bit to check
@@ -294,6 +308,7 @@ static void FS_SetAddress(uint8_t ID, uint8_t state)
 	EEPROM_WriteByte((uint16_t)(b+FS_EEPROM_StartAddress + 16),Addblock);
 }
 
+//Reserviert Speicherplatz im Flash-Speicher für einen neue Datei
 uint8_t FS_CreateNewEntry(uint32_t length)
 {
 	if(length>FS_CurrentStatus.FileSpaceAvailable) return(255);//If 0 create empty file!
@@ -315,6 +330,7 @@ uint8_t FS_CreateNewEntry(uint32_t length)
 	return(255); //No Filespace
 }
 
+//Löscht eine Datei und deren Metadaten aus dem Flash-Speicher
 void FS_RemoveEntry(uint8_t ID)
 {
 	if(!FS_CheckAddress(ID))return;
@@ -331,6 +347,7 @@ void FS_RemoveEntry(uint8_t ID)
 	FS_UpdateFileSys();
 }
 
+//Schreibt teile der Datei in den Flash-Speicher. Voll automatisch an die richtige Addresse.
 void FS_WriteFile(uint8_t ID, uint8_t *buffer,uint8_t offset,uint8_t length)
 {
 	if(FS_TempFile.ID!=ID) FS_LoadFileInfo(ID);//Reload FileInfo into buffer
@@ -341,12 +358,14 @@ void FS_WriteFile(uint8_t ID, uint8_t *buffer,uint8_t offset,uint8_t length)
 	FS_CurrentStatus.FileSpaceAvailable -=length;
 }
 
+//Setzt die lese position in der aktuellen Datei
 void FS_SetReadPos(uint32_t position)
 {
 	if(position>FS_TempFile.Length)return;
 	FS_TempFile.ReadPos=position;
 }
 
+//Ließt eine Datei aus dem Speicher
 uint8_t FS_ReadFile(uint8_t ID,uint8_t *buffer,uint8_t length)
 {
 	if(FS_TempFile.ID !=ID)FS_LoadFileInfo(ID);
@@ -364,9 +383,10 @@ uint8_t FS_ReadFile(uint8_t ID,uint8_t *buffer,uint8_t length)
 #pragma endregion FILE SUPPORT
 
 #pragma region RECORD SUPPORT
+//Der Record support stellt funktionen für die Speicherung von Messdateneinheiten bereit. Er verwaltet das Speichermanagement und beinhaltet
+//suchfunktionen die es ermöglichein einfach und schnell Dateneinheiten aus dem Flash-Speicher zu lesen.
 
-//bei fullcircle muss der Sector vor der beschreibung gelöscht werden!!!
-//macht das probleme??? wenn daten nicht genau aufgehen ja!
+//Schreibt eine Dateneinheit mit den gemessenen Daten einer Messstationen in den Flash-Speicher
 void FS_WriteRecord(FS_StationRecord_t* fs)
 {
 	FS_WriteRecordHW(fs);
@@ -376,6 +396,7 @@ void FS_WriteRecord(FS_StationRecord_t* fs)
 	EEPROM_WriteDWord(FS_EEPROM_StartAddress+4,FS_CurrentStatus.RecordCount);
 }
 
+//Speichert eine Dateneinheit an den nächsten freien Speicherort
 static void FS_WriteRecordHW(FS_StationRecord_t* fs)
 {
 	uint8_t buffer[16];
@@ -392,6 +413,7 @@ static void FS_WriteRecordHW(FS_StationRecord_t* fs)
 	Flash_write_Bytes(FS_CurrentStatus.NextAddress,buffer,0,16);
 }
 
+//Interne Funktion die eine Dateneinheit mit angegebenen Record-Index aus dem Flash-Speicher ließt
 static void FS_ReadRecordHW(uint32_t record,FS_StationRecord_t* fs)
 {
 	uint32_t addr = FS_StartAddress_Records+record*16;
@@ -411,9 +433,9 @@ static void FS_ReadRecordHW(uint32_t record,FS_StationRecord_t* fs)
 	fs->Position = record;
 }
 
+//Interne funktion die die verwaltung der Speicheraddressen im Flash-Speicher übernimmt
 static FlashAddress FS_CreateNextAddress(void)
 {
-	//FS_FileIndex_t lastindex = FS_LoadFileIndex(FS_CurrentStatus.LastFileIndex);
 	uint32_t add = ((uint32_t)FS_CurrentStatus.NextAddress.High<<24) | ((uint32_t)FS_CurrentStatus.NextAddress.Mid<<16) | ((uint32_t)FS_CurrentStatus.NextAddress.Low<<8) | (uint32_t)FS_CurrentStatus.NextAddress.XLow;
 	add+= 16;
 	if(!FS_CurrentStatus.RecordLogFull)FS_CurrentStatus.RecordCount++;
@@ -422,6 +444,7 @@ static FlashAddress FS_CreateNextAddress(void)
 	return f;
 }
 
+//Sucht eine Dateneinheit mit angegebener UNIX aus dem Flash-Speicher
 uint8_t FS_FindRecord(uint32_t unix,uint32_t* recordOut)
 {
 	uint32_t first=0;
@@ -455,6 +478,7 @@ uint8_t FS_FindRecord(uint32_t unix,uint32_t* recordOut)
 	return found;
 }
 
+//Gibt für einen bestimmten Record-Index die UNIX-Time zurück 
 uint32_t FS_GetRecordUnix(uint32_t record)
 {
 	uint8_t buf[4];
@@ -469,11 +493,14 @@ uint32_t FS_GetRecordUnix(uint32_t record)
 	else return 0;
 }
 
+//Setzt die automatische suche zurück um wieder mit der Funktion FS_GetRecords eine neue Suchanfrage zu starten
 void FS_ResetRecordSearch(void)
 {
 	FS_CurrentStatus.LastSearchResult=-1;
 }
 
+//Voll automatische suchfunktion die Dateneinheiten nacheinander von hinten nach vorne zurück gibt
+//also von n -> 0
 uint8_t FS_GetRecords(uint32_t unix,FS_StationRecord_t* fs)
 {
 	if(FS_CurrentStatus.LastSearchResult==-1)
@@ -495,20 +522,21 @@ uint8_t FS_GetRecords(uint32_t unix,FS_StationRecord_t* fs)
 		else FS_CurrentStatus.LastSearchResult--;
 		return 1;
 	}
-	//von welcher unix ab rückwerts, an welcher pos sind wir grade, fs is der ausgabe record
 }
 
+//Unused
 uint32_t FS_GetUnix(void)
 {
-	//MACHN DENNIS
 	return 0;
 }
 
+//Setzt die aktuelle UNIX im Dateisystem sodass neue eintrage richtig gespeichert werden können
 void FS_SetUnix(uint32_t unix)
 {
 	FS_CurrentStatus.CurrentUnix = unix;
 }
 
+//Erstellt eine neue Dateneinheit aus den einen Messwerten der Messstation
 FS_StationRecord_t* FS_CreateStationRecord(uint16_t temp,uint16_t pres,uint16_t humid, uint8_t light,uint8_t rain,uint8_t windlvl,uint8_t winddir)
 {
 	FS_TempRecord.Temperature = temp;
@@ -521,6 +549,7 @@ FS_StationRecord_t* FS_CreateStationRecord(uint16_t temp,uint16_t pres,uint16_t 
 	return &FS_TempRecord;
 }
 
+//Erstellt eine neue Dateneinheit aus einem Array mit den Messwerten der Messstation
 FS_StationRecord_t* FS_CreateStationRecordArray(uint8_t* buffer)
 {
 	FS_TempRecord.Temperature = (buffer[1]<<8) | buffer[0];

@@ -2,7 +2,7 @@
  * FileSys.h
  *
  * Created: 15.06.2017 12:36:44
- *  Author: Stud
+ *  Author: Felix Mälk
  */ 
 
 
@@ -65,11 +65,8 @@ void FS_SetUnix(uint32_t unix);
 void FS_Init(void);
 void FS_FirstRun(void);
 void FS_WriteRecord(FS_StationRecord_t* fs);
-//void FS_WriteRecordHW(FS_StationRecord_t fs);
-//void FS_ReadRecordHW(uint32_t record,FS_StationRecord_t* fs);
 void FS_Update(void);
 uint8_t FS_FindRecord(uint32_t unix,uint32_t* recordOut);
-//FlashAddress FS_CreateNextAddress(void);
 uint32_t FS_GetRecordUnix(uint32_t record);
 uint8_t FS_GetRecords(uint32_t unix,FS_StationRecord_t* fs); //wichtig
 uint32_t FS_GetUnix(void);
