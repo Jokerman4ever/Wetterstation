@@ -8,6 +8,7 @@
 #include "Storage/eeprom_driver.h"
 #include "GSM/com.h"
 #include "Http/server.h"
+#include "string.h"
 void HandleClients(void);
 void CheckFirstrun(void);
 extern int8_t init_schritt;
@@ -69,20 +70,31 @@ int main (void)
 	
 
 	while(1)
-	{
-
+	{    
+	
+	 //Falls ein String für die Verabeitung zur Verfügung steht
 		if(uart_str_complete==1)
 		{
-
-			uart_str_complete=0;}
-			//if(com_StrCmp(uart_string,0,2,"GET")==1)
-			//{
-		//	server_configuration();
-			//	com_send_antwortclient();
-			//}
+			//Setze die Variable uart_str_complete zurück, für neuen Empfang
+			uart_str_complete=0;
+			
+			
+			//Falls die Initialisierung des GSM-Moduls noch nicht stattgefunden hat,
+			//gehe in die Funktion, die die Antworten des GSM-Moduls auswertet
+			if(server_initialisierung==false)
+			{
+				server_configuration_auswertung(uart_string);
+			}
+			// Falls eine "GET" Anfrage kommt, gehe in die Funktion, die den HTML-Code
+			//mit den Messwerten der Sensoren ausliefert.
+			if (!strcmp("GET", uart_string))
+			{
+				com_send_antwortclient();
+				
+			}
+			
 		}
 
-		com_send_string("ICH bin fertig");
 		//AUSKOMMENTIERT
 		//if(RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Idle && RF_CurrentStatus.State != RF_State_Receive)RF_Set_State(RF_State_Receive);
 		//_xdelay_us(500);
@@ -106,7 +118,7 @@ int main (void)
 				}
 			}
 		}
-	//}
+	}
 
 	}
 void CheckFirstrun(void)

@@ -1,28 +1,10 @@
 /*
- * usart.h
+ * com.h
  *
- * Created: 25.05.2016 08:49:25
- *  Author: Stud
+ * Created: 26.06.2017 08:49:25
+ *  Author: Saba-Sultana Saquib
  */ 
 
-
-/*#ifndef USART_H_
-#define USART_H_
-
-
-void com_init();
-void com_baud();
-void char_ausgabe(char s);
-void send_string(char *data);
-
-#endif /* USART_H_ */
-
-/*
- * COM.h
- *
- * Created: 03.06.2015 10:55:38
- *  Author: Stud
- */ 
 
 
 #ifndef COM_H_
