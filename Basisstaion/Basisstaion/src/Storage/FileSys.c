@@ -46,7 +46,7 @@ FS_File_t FS_TempFile;
 #define FS_MaxErrorCount 680
 
 #define FS_StartAddress_Files 8192
-#define FS_StopAddress_Files 131000UL
+#define FS_StopAddress_Files 131071UL
 #define FS_MaxFileCount 16
 
 #define FS_StartAddress_Records 131072UL
@@ -383,8 +383,8 @@ uint8_t FS_ReadFile(uint8_t ID,uint8_t *buffer,uint8_t length)
 #pragma endregion FILE SUPPORT
 
 #pragma region RECORD SUPPORT
-//Der Record support stellt funktionen für die Speicherung von Messdateneinheiten bereit. Er verwaltet das Speichermanagement und beinhaltet
-//suchfunktionen die es ermöglichein einfach und schnell Dateneinheiten aus dem Flash-Speicher zu lesen.
+//Der Record-Support stellt Funktionen für die Speicherung von Messdateneinheiten bereit. Er verwaltet das Speichermanagement und beinhaltet
+//suchfunktionen die es ermöglichen einfach und schnell Dateneinheiten aus dem Flash-Speicher zu lesen.
 
 //Schreibt eine Dateneinheit mit den gemessenen Daten einer Messstationen in den Flash-Speicher
 void FS_WriteRecord(FS_StationRecord_t* fs)

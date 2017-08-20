@@ -42,7 +42,7 @@ typedef struct FS_File
 typedef struct FS_StationRecord
 {
 	uint32_t Unix;
-	uint32_t Position;
+	uint32_t Position; // wird nicht im flash abgelegt!
 	uint8_t ID;
 	uint16_t Temperature;
 	uint16_t Pressure;
