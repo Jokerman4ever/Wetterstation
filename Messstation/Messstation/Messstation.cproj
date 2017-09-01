@@ -77,7 +77,7 @@
       </framework-data>
     </AsfFrameworkConfig>
     <avrtool>com.atmel.avrdbg.tool.jtagicemkii</avrtool>
-    <avrtoolserialnumber>070000003567</avrtoolserialnumber>
+    <avrtoolserialnumber>07000000359A</avrtoolserialnumber>
     <avrdeviceexpectedsignature>0x1E9542</avrdeviceexpectedsignature>
     <com_atmel_avrdbg_tool_simulator>
       <ToolOptions>
@@ -98,7 +98,7 @@
         <InterfaceName>PDI</InterfaceName>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.jtagicemkii</ToolType>
-      <ToolNumber>070000003567</ToolNumber>
+      <ToolNumber>07000000359A</ToolNumber>
       <ToolName>JTAGICE mkII</ToolName>
     </com_atmel_avrdbg_tool_jtagicemkii>
     <com_atmel_avrdbg_tool_jtagice3plus>

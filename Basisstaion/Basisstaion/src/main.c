@@ -35,16 +35,17 @@ int main(void)
 	uint8_t buffer[3];
 	sysclk_init();
 	clock_change_2MHZ();
-	Flash_SPI_Init();
-	EEPROM_FlushBuffer();
-	EEPROM_DisableMapping();
+	//Flash_SPI_Init();
+	//EEPROM_FlushBuffer();
+	//EEPROM_DisableMapping();
 	CheckFirstrun();
-	FS_Init();
-	//RF_Packet_t p = RF_CreatePacket(buffer,1,0x09,0);//JUST FOR TEST!!!!
+	//FS_Init();
+	RF_Packet_t p = RF_CreatePacket(buffer,1,16,0);//JUST FOR TEST!!!!
 	RF_Init(0x01, 0);
 	val = RF_Get_Command(0x01);
 	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
-	RF_Set_State(RF_State_Receive);
+	RF_Set_State(RF_State_StandBy);
+
 	sei();
 	
 	//com_init();
@@ -70,7 +71,10 @@ int main(void)
 			}
 		}*/
 		//AUSKOMMENTIERT
-		if(RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Idle && RF_CurrentStatus.State != RF_State_Receive)RF_Set_State(RF_State_Receive);
+		RF_Send_Packet(p);
+		_xdelay_ms(1000);
+		
+		/*if(RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Idle && RF_CurrentStatus.State != RF_State_Receive)RF_Set_State(RF_State_Receive);
 		_xdelay_us(500);
 		HandleClients();	
 		if(com_hasData())
@@ -91,7 +95,7 @@ int main(void)
 					com_send_string("OK");
 				}
 			}
-		}
+		}*/
 	}
 }
 
