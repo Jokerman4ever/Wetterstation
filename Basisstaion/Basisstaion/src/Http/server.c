@@ -184,26 +184,25 @@ void com_send_messwert(uint16_t messwert)
 //                                %w1 -> wind direction
 //                                %f1 -> humidity                               
 /***********************************************************************************************************/
-void com_send_antwortclient(char senden_array){
+void com_send_antwortclient(char senden_array[]){
 	//Variablen für die Bestimmung des HTML-Code, ein Zaehler für
 	//das Zaehlen der abgearbeiteten Zeichen	
 	uint8_t length = 0x00;
 	uint8_t Counter = 0x00;
 	char wert_anfrage;
-	int16_t messung=60;
-	char s= (char)messung;
+	int16_t messung;
 	//Ermittlung der Lange des HTML-Code
-	length = strlen(html_code);
+	length = strlen( senden_array);
 	//Solange der HTML-Code nicht komplett abgearbeitet wurde, wird die while-Schleife ausgeführt
 	while(Counter < length)
 	{  
 		//Falls im Html-code an der Stelle des Counter ein "%" Zeichen entdeckt wird,
 		//wird "Counter" um eins erhöht und es wird geschaut, welches Zeichen danach kommt.
 		//Dieses Zeichen wird in die Variable "wer_anfrage" geschrieben.
-		if (html_code[Counter]=='%')
+		if ( senden_array[Counter]=='%')
 		{
 			Counter++;
-			wert_anfrage=html_code[Counter];
+			wert_anfrage= senden_array[Counter];
 			//Es wird geschaut was in "wert_anfrage" steht und dann wird der zugehörige Messwert
 			//ermittelt.
 			switch (wert_anfrage)
@@ -231,7 +230,7 @@ void com_send_antwortclient(char senden_array){
 		else
 		{    //Wird kein Messwert angefordert, sende das Zeichen, an der Stelle von Counter des 
 			//html_codes über UART und erhöhe den Wert von Counter um 1.
-			com_ausgabe(html_code[Counter]);
+			com_ausgabe( senden_array[Counter]);
 			Counter++;
 		}
 
