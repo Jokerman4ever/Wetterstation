@@ -12,7 +12,10 @@
 void HandleClients(void);
 void CheckFirstrun(void);
 extern int8_t init_schritt;
-extern uint8_t server_initialisierung;
+extern int8_t init_schritt;
+extern int8_t alter_schritt;
+extern uint8_t uart_str_count;
+extern char html_code[];
 extern  char uart_string[UART_MAXSTRLEN + 1];
 volatile uint8_t uart_str_complete = 1;
 uint8_t daten_enmpfangen=false;
@@ -48,53 +51,35 @@ int main (void)
 	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
 	//RF_Set_State(RF_State_StandBy);
 	sei();
-	
-	//com_init();
-	//SERVER
 	com_init();
-	//com_send_string("AT");
-	/*for (int8_t com_initstep = -2; com_initstep < 7;com_initstep++)
-	{
-		server_configuration(&com_initstep);
-	}*/
 	server_configuration();
-	//while(server_initialisierung==false)
-	//{
-	//while(uart_str_complete==0);
-	//server_configuration();
-	//uart_str_complete==1;
-	//}
-
-
 	
-	
-
 	while(1)
 	{    
 	
-	 //Falls ein String für die Verabeitung zur Verfügung steht
-		if(uart_str_complete==1)
+	
+	for(int i=0; i<UART_MAXSTRLEN; i++)
+	{
+		int offset;
+		if(uart_string[i]=='G')
 		{
-			//Setze die Variable uart_str_complete zurück, für neuen Empfang
-			uart_str_complete=0;
 			
-			
-			//Falls die Initialisierung des GSM-Moduls noch nicht stattgefunden hat,
-			//gehe in die Funktion, die die Antworten des GSM-Moduls auswertet
-			if(server_initialisierung==false)
-			{
-				server_configuration_auswertung(uart_string);
-			}
-			// Falls eine "GET" Anfrage kommt, gehe in die Funktion, die den HTML-Code
-			//mit den Messwerten der Sensoren ausliefert.
-			if (!strcmp("GET", uart_string))
-			{
-				com_send_antwortclient();
-				
-			}
-			
+			offset=i;
 		}
+	}
+	if(com_StrCmp(uart_string,0,3,"GET")==1)
+	{
+		
+		com_send_antwortclient(html_code);
+	/*	for(int s= 0; s< com_strlen(uart_string);s++)
+		{
+			uart_string[s]=' ';
+			uart_str_count=0;
+		}*/
+	}
 
+
+	
 		//AUSKOMMENTIERT
 		//if(RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Idle && RF_CurrentStatus.State != RF_State_Receive)RF_Set_State(RF_State_Receive);
 		//_xdelay_us(500);
@@ -119,7 +104,7 @@ int main (void)
 			}
 		}
 	}
-
+	
 	}
 void CheckFirstrun(void)
 {

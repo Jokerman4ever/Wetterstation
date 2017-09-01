@@ -11,11 +11,19 @@
 #include "GSM/com.h"
 #include "string.h"
 
-
+extern volatile uint8_t ip_adresse[20];
 //Variable, um Messdaten aufzurufen
 FS_StationRecord_t record;
 
 //Das Array in dem der HTML Code gespeichert ist.
+char hhtp_header[]="GET /nic/update?hostname=wetter-fh.ddns.net&myip=%ip HTTP/1.1\r\n"
+"Connection: keep-alive\r\n"
+"Authorization: Basic V2V0dGVyc3RhdGlvbjE3OndldHRlcnN0YXRpb24=\r\n"
+"Upgrade-Insecure-Requests: 1\r\n"
+"User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36\r\n"
+"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/ *;q=0.8\r\n"
+"Accept-Encoding: gzip, deflate\r\n"
+"Accept-Language: de-DE,de;q=0.8,en-US;q=0.6,en;q=0.4\r\n";
 char html_code[]="<html>"
 "<head>"
 "<title>Wetter station</title>"
@@ -176,13 +184,14 @@ void com_send_messwert(uint16_t messwert)
 //                                %w1 -> wind direction
 //                                %f1 -> humidity                               
 /***********************************************************************************************************/
-void com_send_antwortclient(){
+void com_send_antwortclient(char senden_array){
 	//Variablen für die Bestimmung des HTML-Code, ein Zaehler für
 	//das Zaehlen der abgearbeiteten Zeichen	
 	uint8_t length = 0x00;
 	uint8_t Counter = 0x00;
 	char wert_anfrage;
-	uint16_t messung=0;
+	int16_t messung=60;
+	char s= (char)messung;
 	//Ermittlung der Lange des HTML-Code
 	length = strlen(html_code);
 	//Solange der HTML-Code nicht komplett abgearbeitet wurde, wird die while-Schleife ausgeführt
@@ -211,6 +220,7 @@ void com_send_antwortclient(){
 				case 'w': {messung =record.WindLevel;    break;}
 			    //Luftfeuchtigkeit
 				case 'f': {messung= record.Humidity;   break;}
+				case 'i':{com_send_string(ip_adresse);}
 			}
 			//Sende den Wert der Messung Ziffernweise mit Vorzeichen an das GSM-Modul
 			com_send_messwert(messung);
