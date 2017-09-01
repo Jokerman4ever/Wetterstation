@@ -180,10 +180,10 @@ void server_configuration()
 		case 13:com_send_string("AT+CIPSERVER=1,80"); break;
 		case 14:  com_send_string("AT+CIPSTATUS"); break;
 	}
-	if(init_schritt == 0)
+	/*if(init_schritt == 0)
 	{
 		return;
-	}
+	}*/
 	_delay_ms(8500);
 	uart_string[uart_str_count]='\0';
 	if(konfiguration_erfolgreich==false)
