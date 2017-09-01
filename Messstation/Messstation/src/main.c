@@ -235,7 +235,7 @@ static void ConnectToBasestation(uint32_t time)
 		RF_Set_Address(16+id);//Set Device local address!
 		RF_CurrentStatus.LocalDeviceAdd = 16+id;
 		
-		RF_Set_Sync_Num(syncw_num);
+		RF_Set_Sync_Num(0);
 	}
 	
 	RF_Packet_t p = RF_CreatePacket(&trys,0,RF_RECEIVE_ID,RF_Packet_Flags_Time);

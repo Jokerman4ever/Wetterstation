@@ -74,7 +74,7 @@ uint8_t Flash_read_Byte(FlashAddress add)
 {
 	 Flash_CS_LOW();
 	 Flash_SPI_putc(Flash_Read4);
-	 SPI_putc(add.High); //HighByte
+	 Flash_SPI_putc(add.High); //HighByte
 	 Flash_SPI_putc(add.Mid); //MidByte
 	 Flash_SPI_putc(add.Low); //LowByte
 	 Flash_SPI_putc(add.XLow);
@@ -87,7 +87,7 @@ void Flash_read_Bytes(FlashAddress add,uint8_t *buffer,uint8_t length)
 {
 	Flash_CS_LOW();
 	Flash_SPI_putc(Flash_Read4);
-	SPI_putc(add.High); //HighByte
+	Flash_SPI_putc(add.High); //HighByte
 	Flash_SPI_putc(add.Mid); //MidByte
 	Flash_SPI_putc(add.Low); //LowByte
 	Flash_SPI_putc(add.XLow); //XLowByte
@@ -105,7 +105,7 @@ void Flash_write_Byte(FlashAddress add,uint8_t data)
 	Flash_CS_HIGH();
 	Flash_CS_LOW();
 	Flash_SPI_putc(Flash_Write4);
-	SPI_putc(add.High); //HighByte
+	Flash_SPI_putc(add.High); //HighByte
 	Flash_SPI_putc(add.Mid); //MidByte
 	Flash_SPI_putc(add.Low); //LowByte
 	Flash_SPI_putc(add.XLow); //XLowByte
@@ -120,7 +120,7 @@ void Flash_write_Bytes(FlashAddress add,uint8_t *buffer,uint8_t offset,uint8_t l
 	Flash_CS_HIGH();
 	Flash_CS_LOW();
 	Flash_SPI_putc(Flash_Write4);
-	SPI_putc(add.High); //HighByte
+	Flash_SPI_putc(add.High); //HighByte
 	Flash_SPI_putc(add.Mid); //MidByte
 	Flash_SPI_putc(add.Low); //LowByte
 	Flash_SPI_putc(add.XLow); //XLowByte
@@ -140,7 +140,7 @@ void Flash_sector_Erase(FlashAddress add)
 	Flash_CS_HIGH();
 	Flash_CS_LOW();
 	Flash_SPI_putc(Flash_SectorErase4);
-	SPI_putc(add.High); //HighByte
+	Flash_SPI_putc(add.High); //HighByte
 	Flash_SPI_putc(add.Mid); //MidByte
 	Flash_SPI_putc(add.Low); //LowByte
 	Flash_SPI_putc(add.XLow); //XLowByte

@@ -47,6 +47,7 @@ uint8_t com_hasData(void);
 void com_ausgabe(uint8_t data);
 uint8_t com_StrCmp(uint8_t* str1,uint8_t off1,uint8_t len1,const char* str2);
 uint8_t server_initialisierung;
+volatile uint8_t uart_str_complete;
 
 
 

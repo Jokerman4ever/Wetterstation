@@ -29,7 +29,7 @@ ISR(TCC1_OVF_vect)
 	RF_Update();
 	FS_Update();
 }
-
+uint8_t val;
 int main(void)
 {
 	uint8_t buffer[3];
@@ -42,9 +42,9 @@ int main(void)
 	FS_Init();
 	//RF_Packet_t p = RF_CreatePacket(buffer,1,0x09,0);//JUST FOR TEST!!!!
 	RF_Init(0x01, 0);
-	uint8_t val = RF_Get_Command(0x01);
+	val = RF_Get_Command(0x01);
 	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
-	RF_Set_State(RF_State_StandBy);
+	RF_Set_State(RF_State_Receive);
 	sei();
 	
 	//com_init();
