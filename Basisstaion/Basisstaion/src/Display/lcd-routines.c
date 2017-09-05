@@ -107,7 +107,9 @@ void lcd_enable(void)
 void lcd_init(void)
 {
    LCD_DDR |= (1<<LCD_D7) | (1<<LCD_D6) | (1<<LCD_D5) | (1<<LCD_D4) | (1<<LCD_RS) | (1<<LCD_EN);   // Port auf Ausgang schalten
- 
+   PORTB.DIRSET = (1<<LCD_RESET);
+   PORTB.OUTSET = (1<<LCD_RESET); //Reset muss high sein!!!
+	
    // muss 3mal hintereinander gesendet werden zur Initialisierung
    
    lcd_WNibble(0x03);
@@ -138,6 +140,8 @@ void lcd_init(void)
    lcd_clear();
    _xdelay_ms(5);
    lcd_home();
+   
+   lcd_Write(0x0F,0);
 }
  
 // Sendet den Befehl zur Löschung des Displays

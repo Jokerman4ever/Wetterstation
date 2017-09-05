@@ -41,14 +41,15 @@ void lcd_Xstring(uint8_t *data,uint8_t isPGM);
  
 // Pinbelegung für das LCD, an verwendete Pins anpassen
 
-#define LCD_PORT      PORTD.OUT
-#define LCD_DDR       PORTD.DIR
-#define LCD_D7        5 //5
-#define LCD_D6        4 //4
-#define LCD_D5        3 //3
-#define LCD_D4        2 //2
-#define LCD_EN        1 //PD1 1
-#define LCD_RS        0 //PD0 0
+#define LCD_PORT      PORTB.OUT
+#define LCD_DDR       PORTB.DIR
+#define LCD_D7        4 
+#define LCD_D6        5 
+#define LCD_D5        6 
+#define LCD_D4        7 
+#define LCD_EN        1 
+#define LCD_RS        0 
+#define LCD_RESET	  3
 // DB4 bis DB7 des LCD sind mit PD0 bis PD3 des AVR verbunden 
 
 // Set CG RAM Address --------- 0b01xxxxxx  (Character Generator RAM)

@@ -1,6 +1,7 @@
 #include <asf.h>
 #include "time.h"
 #include "Display/lcd-routines.h"
+#include "Display/Display-Menu.h"
 #include "Clock/Xdelay.h"
 #include "Clock/clock.h"
 #include "RF.h"
@@ -36,6 +37,22 @@ int main(void)
 	sysclk_init();
 	//XDELAY_ISFAST = 0;
 	clock_change_2MHZ();
+	
+	PORTB.DIRSET = (1<<2);//DACs auf Ausgang
+	PORTB.OUTSET = (1<<2);
+	sysclk_enable_module(SYSCLK_PORT_B, SYSCLK_DAC); //DAC Clock Enable
+	DACB.CH0DATA = 0; // Output 0 Volts (apart from gain and offset error)
+	DACB.CTRLB = DAC_CHSEL_DUAL_gc; // Dual channel operations  DAC_CHSEL_DUAL_gc;
+	DACB.CTRLC = DAC_REFSEL_AVCC_gc | DAC_LEFTADJ_bm; // AVcc is the DAC reference voltage
+	DACB.CTRLA = DAC_CH0EN_bm | DAC_ENABLE_bm; // Enable DAC and channel 0 DAC_CH0EN_bm | 
+	//sysclk_disable_module(SYSCLK_PORT_B, SYSCLK_DAC);
+	PORTB.OUT &= ~(1<<2);
+	DACB.CH0DATA = ((1<<15)+(1<<14)+(1<<13)+(1<<12)); // Output 0 Volts (apart from gain and offset error)
+
+	
+	lcd_init();
+	DSP_ChangePage(PageWelcome);
+	
 	Flash_SPI_Init();
 	EEPROM_FlushBuffer();
 	//EEPROM_DisableMapping();
