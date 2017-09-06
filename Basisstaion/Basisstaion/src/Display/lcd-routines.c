@@ -7,6 +7,7 @@
 #include "lcd-routines.h"
 #include "Clock/Xdelay.h"
 #include <avr/pgmspace.h>
+#include <ASF/common/services/clock/sysclk.h>
  
  uint8_t  GC_Char0[8] = {1,1,1,2,18,10,4,0};
  uint8_t  GC_Char1[8] = {0,17,10,4,10,17,0,0};
@@ -101,14 +102,32 @@ void lcd_enable(void)
    LCD_PORT &= ~(1<<LCD_EN);
 }
  
+/**
+ * Einstellen der Kontrastspannung des Displays in 13mV Schritten 
+ */
+void lcd_set_contrast(uint8_t contrast)
+{
+ DACB.CH0DATA = (contrast << 8);
+}
+ 
 // Initialisierung: 
 // Muss ganz am Anfang des Programms aufgerufen werden.
- 
 void lcd_init(void)
 {
    LCD_DDR |= (1<<LCD_D7) | (1<<LCD_D6) | (1<<LCD_D5) | (1<<LCD_D4) | (1<<LCD_RS) | (1<<LCD_EN);   // Port auf Ausgang schalten
    PORTB.DIRSET = (1<<LCD_RESET);
    PORTB.OUTSET = (1<<LCD_RESET); //Reset muss high sein!!!
+	
+	//Kontrast|DAC config
+	PORTB.DIRSET = (1<<2);//DACs auf Ausgang
+	sysclk_enable_module(SYSCLK_PORT_B, SYSCLK_DAC); //DAC Clock Enable
+	DACB.CH0DATA = 0; // Output 0 Volts (apart from gain and offset error)
+	DACB.CTRLB = DAC_CHSEL_DUAL_gc; // Dual channel operations  DAC_CHSEL_DUAL_gc;
+	DACB.CTRLC = DAC_REFSEL_AVCC_gc | DAC_LEFTADJ_bm; // AVcc is the DAC reference voltage
+	DACB.CTRLA = DAC_CH0EN_bm | DAC_ENABLE_bm; // Enable DAC and channel 0 DAC_CH0EN_bm |
+	PORTB.OUT &= ~(1<<2);
+	
+	lcd_set_contrast(240); // Initale Kontrast einstellung
 	
    // muss 3mal hintereinander gesendet werden zur Initialisierung
    

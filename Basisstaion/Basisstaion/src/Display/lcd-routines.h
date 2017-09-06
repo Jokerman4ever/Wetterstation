@@ -24,6 +24,7 @@ LCD		Bezeichnung			ATMega8
 //void lcd_data(unsigned char temp1);
 void lcd_string(char *data);
 //void lcd_command(unsigned char temp1);
+void lcd_set_contrast(uint8_t contrast);
 void lcd_enable(void);
 void lcd_init(void);
 void lcd_home(void);
