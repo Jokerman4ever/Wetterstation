@@ -15,7 +15,9 @@ extern int8_t init_schritt;
 extern int8_t init_schritt;
 extern int8_t alter_schritt;
 extern uint8_t uart_str_count;
-extern char html_code[];
+extern uint8_t html_code1[];
+extern uint8_t htmlcode2[];
+extern uint8_t htmlcode3[];
 extern  char uart_string[UART_MAXSTRLEN + 1];
 volatile uint8_t uart_str_complete = 1;
 uint8_t daten_enmpfangen=false;
@@ -70,13 +72,18 @@ int main (void)
 	if(com_StrCmp(uart_string,0,3,"GET")==1)
 	{
 		
-		com_send_antwortclient(html_code);
-	/*	for(int s= 0; s< com_strlen(uart_string);s++)
+		com_send_antwortclient(html_code1);
+		com_send_antwortclient(htmlcode2);
+		com_send_antwortclient(htmlcode3);
+		
+		for(int s= 0; s< com_strlen(uart_string);s++)
 		{
 			uart_string[s]=' ';
 			uart_str_count=0;
-		}*/
+		}
 	}
+
+
 
 
 	
@@ -105,7 +112,7 @@ int main (void)
 		}
 	}
 	
-	}
+}
 void CheckFirstrun(void)
 {
 	if(EEPROM_ReadByte(1)==255)

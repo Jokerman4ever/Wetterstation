@@ -16,12 +16,18 @@ int8_t alter_schritt=2;
 char ip_zeichen;
 volatile uint8_t uart_str_count = 0;
 volatile uint8_t uart_string[UART_MAXSTRLEN + 1]="";
-int8_t ip_laenge;
-_Bool konfiguration_erfolgreich= false;
 volatile uint8_t ip_adresse[20]="";
-int8_t ip_counter=0;
-int Counter = 0x00;
-extern char hhtp_header[];
+
+_Bool konfiguration_erfolgreich= false;
+
+
+extern uint8_t hhtp_header1[];
+extern uint8_t http_header2[];
+extern uint8_t http_header3[];
+extern uint8_t http_header4[];
+uint8_t offsets=0;
+uint8_t laenge_antwort=0;
+
 void com_init(void)
 {
 	sysclk_enable_module(SYSCLK_PORT_F, SYSCLK_USART0); //Clock für USART0 setzen
@@ -44,7 +50,7 @@ uint8_t com_hasData(void)
 uint8_t com_strlen(uint8_t* data) //
 {   //Solange im Datenstring keine "0" steht
 	//erhhöhe i, ansonsten gebe den Wert von i zurück
-	for (int8_t i = 0; i < 32; i++)
+	for (int8_t i = 0; i < 256; i++)
 	{
 		if(data[i] == 0)return i;
 	}
@@ -65,7 +71,7 @@ void com_send_string(uint8_t* data) //Funktion mit Übergabe der zu sendenten Dat
 		counter++;
 	}
 	//Sobald die kompletten Daten abgearbeitet sind, sende ein "\r"
-	com_ausgabe(0x0D);//carriage return
+	//com_ausgabe(0x0D);//carriage return
 }
 
 
@@ -115,41 +121,13 @@ uint8_t com_getString(uint8_t* buffer)
 
 // ISR Routine für den Empfang
 ISR(USARTF0_RXC_vect)
-{  //printf("hallo");
-	//com_empfangen();
-	//Schreibe, das in den Rx-Pin anliegende Zeichen, in die Variable "next char" 
+{  
 	nextChar = USARTF0.DATA;
-	//Solange das String, was Zeichenweise empfangen wird, nicht komplett ist,
-	//Schreibe des jeweilige Zeichen in dem String "uart_string" an die Stelle
-	//uart_str_count
-
-		//
-		
-	    //printf("%c",nextChar);
-		//
-	//if( uart_str_complete == 0 )
-	//{
-	//if( nextChar != '\n' && nextChar != '\r' && uart_str_count < UART_MAXSTRLEN )
-		{
-		uart_string[uart_str_count] = nextChar;
-        uart_str_count++;
-			//
-		//printf("%c",nextChar);	
-			
-		//}
-		//Falls alle Zeichen Empfangen worden sind, beende den String durch das Zeichen "\0".
-		//Setze den Zaehler "uart_str_count wieder zurück und gebe durch
-		//den String durch "uart_string_complete=1" für die weitere Verarbeitung frei.
-	//else
-		//{   
-			//uart_string[uart_str_count] = '\0';
-			//printf("%s\r\n",uart_string);
-			
-			//uart_str_count = 0;
-			//uart_str_complete = 1;
-		//}
-	}
+	uart_string[uart_str_count] = nextChar;
+    uart_str_count++;
+	
 }
+
 /******************************************************************************************/
 //In dieser Funktion, werden die einzelnen Befehle für die Konfiguration des GSM-Moduls
 //gesendet.
@@ -159,61 +137,48 @@ void server_configuration()
 
 	switch(init_schritt)
 	{   
-		//In diesem Case wird das GSM-Modul zunächst reseted
-	
-		//Senden der Befehle
-		//Echo ausschalten mit ATE 0
+		case 1: com_send_string("AT+CFUN=1,1\r"); break; //Resets the Modul
+		case 0: com_send_string("ATE 0\r"); break; //Auschalten des Echos ATE 1-> einschalten
+		case 2: com_send_string("AT\r"); break;
+		case 3: com_send_string("AT+IPR=9600\r"); break;
+		case 4:com_send_string("AT+CSQ\r"); break;
+		case 5:com_send_string("AT+CREG?\r");  break;
+		case 6: com_send_string("AT+CGATT=1\r"); break; 
+		case 7:com_send_string("AT+CSTT=\"internet.t-d1.de\"\r");  break;
+		case 8:com_send_string("AT+CIICR\r"); break;
+		case 9:com_send_string("AT+CIFSR\r");break;
+		case 10:
+		{
+			com_send_string("AT+CIPSTART=\"TCP\",\"8.23.224.120\",\"80\"\r");//_delay_ms(60000);
+			break;
+		}
 		
-		case 0: com_send_string("AT+CFUN=1,1"); break; //Resets the Modul
-		case 1: com_send_string("ATE 0"); break; //Auschalten des Echos ATE 1-> einschalten
-		case 2: com_send_string("AT"); break;
-		case 3: com_send_string("AT+IPR=9600"); break;
-		case 4:com_send_string("AT+CSQ"); break;
-		case 5:com_send_string("AT+CREG?");  break;
-		case 6: com_send_string("AT+CGATT=1"); break; 
-		case 7:com_send_string("AT+CSTT=\"internet.t-d1.de\"");  break;
-		case 8:com_send_string("AT+CIICR"); break;
-		case 9:com_send_string("AT+CIFSR");break;
-		case 10:com_send_string("AT+CIPSTART=\"TCP\",\"8.23.224.120\",\"80\"");
-		case 11: com_send_string("AT+CIPSEND");
-		case 12: com_send_antwortclient(hhtp_header);com_ausgabe(0x1A); _delay_ms(50000);
-		case 13:com_send_string("AT+CIPSERVER=1,80"); break;
-		case 14:  com_send_string("AT+CIPSTATUS"); break;
+		case 11:
+		{
+			com_send_string("AT+CIPSEND\r"); 
+			com_send_antwortclient(hhtp_header1);
+			com_send_antwortclient(http_header2);
+			com_send_antwortclient(http_header3);
+			com_send_antwortclient(http_header4);
+			com_ausgabe(0x1A);
+			_delay_ms(30000);
+			com_send_string("AT+CIPSERVER=1,80\r");
+			break;
+			}
+		case 12:  com_send_string("AT+CIPSTATUS\r"); break;
 	}
-	/*if(init_schritt == 0)
-	{
-		return;
-	}*/
-	_delay_ms(8500);
+
+	_delay_ms(10000);
 	uart_string[uart_str_count]='\0';
 	if(konfiguration_erfolgreich==false)
 	{
 		server_configuration_auswertung(uart_string);
 	}
-	//com_empfangen();
-	//init_schritt++;
+
 
 	
 }
 
-/*void com_empfangen(){
-	
-
-
-
-
-if (init_schritt<11)
-{
-printf("%s hallo",uart_string);
-	init_schritt++;
-	uart_str_count=0;
-	for(int i=0; i<com_strlen(uart_string);i++)
-	{
-	uart_string[i]=' ';}
-	server_configuration();}
-
-	
-}*/
 /********************************************************************************************************************/
 //In dieser Funktion werden die Anworten nach einem Konfigurationsschritt des GSM-Moduls ausgewertet. War
 //der Schritt erfolgreich, wird der Zaehler "int_schritt" erhöht und der nächste Befehlt wird in der Funktion
@@ -221,15 +186,15 @@ printf("%s hallo",uart_string);
 /********************************************************************************************************************/
 void server_configuration_auswertung(uint8_t antwort[])
 {
-	//printf("%s",uart_string);
+	
 	alter_schritt=init_schritt;
-	//if(len <= 2){_xdelay_ms(5000); init_schritt--; return;}		
-	switch(init_schritt)
+			
+switch(init_schritt)
 	{ 
 		//Antwort auf dem Befehlt "AT+CREG?
 		//Ist die Signalstärke ungleich 0,0, war der Schritt erfolgreich und der 
 		//Zaehler "init_schritt" wird um eins erhöht
-		case 5:
+		case 4:
 		{
 
 			for (int8_t i = 0; i < UART_MAXSTRLEN; i++)
@@ -257,7 +222,7 @@ void server_configuration_auswertung(uint8_t antwort[])
 			
 			break;
 		}
-		case 4:
+		case 5:
 		//Antwort auf den Befehlt AT+CREG?
 		//Ist in der Antwort die Zahl 0,1 vorhanden
 		//war der Schritt erfolgreich
@@ -292,18 +257,20 @@ void server_configuration_auswertung(uint8_t antwort[])
 		}
 		//Bei den folgenden Befehlen wird als Antwort ein "OK" erwartet und daraufhin
 		//überrüft: "ATE 0"; "AT"; "AT+CGATT=1"; "AT+CSTT="internet.t-d1.de""; "AT+CIICR"; "AT+CIPSERVER=1,80"
-		case 0: case 1: case 2: case 3: case 6: case 7: case 8: case 13: 
+		case 0: case 1: case 2: case 3: case 6: case 7: case 8: case 10: case 11: 
 		{  //
-		int offsets;
-			//Falls die Antwort "OK" ist, erhöhe den "init_schritt" um eins 
-		for (int8_t i = 0; i < UART_MAXSTRLEN; i++)
+		//;
+	//	printf("ich schaue nach einem OK");
+			//Falls die Antwort "OK" ist, erhöhe den "init_schritt" um eins
+			laenge_antwort=com_strlen(antwort); 
+		for (uint8_t i = 0; i < laenge_antwort; i++)
 		{
 			if(antwort[i] == 'O')
 			{
 				
 				
 				offsets=i;
-				i=UART_MAXSTRLEN;
+				i=laenge_antwort;
 							
 			}
 		}
@@ -326,12 +293,12 @@ void server_configuration_auswertung(uint8_t antwort[])
 		//Bei diesem Befehl wird die IP-Adresse des GSM-Moduls empfangen
 		case 9:
 		{   //Falls die Antwort "ERROR" beginne die Konfiguration von Beginn an
-			
+		
 			//Hier wird die IP-Adresse in ein char-Array gespeichert
-		int offsets;
-		char ip;
+	
+		
 		//Falls die Antwort "OK" ist, erhöhe den "init_schritt" um eins
-		for (int8_t i = 0; i < UART_MAXSTRLEN; i++)
+		/*for (int8_t i = 0; i < UART_MAXSTRLEN; i++)
 		{
 			if(antwort[i] == 'E')
 			{
@@ -345,57 +312,25 @@ void server_configuration_auswertung(uint8_t antwort[])
 			{
 				init_schritt=0;
 			}
-			
+			*/
 			
 			//printf("%s ich bin die antwort  ",uart_string);
-				 ip_laenge= com_strlen(antwort);
-				//printf(" Laenge:%d Laenge", ip_laenge);
-				_delay_ms(8000);
-				
-					for (int8_t i = 0; i < ip_laenge; i++)
-					{
-						if(antwort[i] == '3')
-						{
-							
-							//printf("%c",antwort[i]);
-							ip_counter=i;
-							//ip_adresse[ip_counter]=antwort[i];
-							i=UART_MAXSTRLEN;
-							
-						}
-					}
-			for (ip_counter; ip_counter < ip_laenge; ip_counter++)
-				
-				{  
-				//	printf(" ich bin ip_counter %d",ip_counter);
-					//printf(" ich bin ip_laenge %d",ip_laenge);
-					ip_zeichen=uart_string[ip_counter];
-					if(ip_zeichen!= '\r')
-					{
-					uart_string[ip_counter]=ip_zeichen;
-				//	printf("%d counter",ip_counter);
-					//printf("%c",ip_adresse[ip_counter]);
-					
-					}
-					
-					//else
-					//{
-						//ip_counter=ip_laenge;
-					//}
-				}
-				printf("%s",uart_string);
+		ip_adresse_zwischenspeichern(antwort);
+		
 			    init_schritt++;
 			
 			
 			break;
 		}
-        case 10:
+    /*    case 10:
 		 {
-			int offsets;
+			 printf("ich bin im case 10");
+			 printf("%s",antwort);
+			uint8_t offsets;
 			//Falls die Antwort "OK" ist, erhöhe den "init_schritt" um eins
-			for (int8_t i = 0; i < UART_MAXSTRLEN; i++)
+			for (uint8_t i = 0; i < UART_MAXSTRLEN; i++)
 			{
-				if(antwort[i] == 'C' ||antwort[i]=='Á')
+				if(antwort[i] == 'C' ||antwort[i]=='A')
 				{
 					
 					
@@ -406,7 +341,7 @@ void server_configuration_auswertung(uint8_t antwort[])
 			}
 			if(com_StrCmp(antwort,offsets,10,"CONNECT OK")==true ||com_StrCmp(antwort,offsets,15,"ALREADY CONNECT")==true)
 			{
-				
+				printf("ich bin bei CONNECT OK");
 				init_schritt++;
 				
 			}
@@ -420,11 +355,12 @@ void server_configuration_auswertung(uint8_t antwort[])
 			
 			break;
 		} 
-		 
-		case 14:
+		 */
+		case 12:
 		{	//Falls die Konfigration erfolgreich war, wird die
 			//Konfiguration abgeschlossen
-			int offsets;
+			
+			printf("ich bin im letzten CASE");
 			//Falls die Antwort "OK" ist, erhöhe den "init_schritt" um eins
 			for (uint8_t i = 0; i < UART_MAXSTRLEN; i++)
 			{
@@ -457,9 +393,9 @@ void server_configuration_auswertung(uint8_t antwort[])
 		//printf("%s",uart_string);
 		
 		uart_str_count=0;
-		for(int i=0; i<com_strlen(uart_string);i++)
+		/*for(int i=0; i<com_strlen(uart_string);i++)
 		{
-		uart_string[i]=' ';}
+		uart_string[i]=' ';}*/
 	    server_configuration();
 	}
     else 
@@ -509,3 +445,43 @@ uint8_t com_StrCmp(uint8_t* str1,uint8_t off1,uint8_t len1,const char* str2)
 
 }
 */
+void ip_adresse_zwischenspeichern(uint8_t antwort_ip[]){
+	char ip;
+	uint8_t ip_laenge;
+	
+	uint8_t ip_counter=0;
+	uint8_t stell_ip=0;
+	ip_laenge=com_strlen(antwort_ip);
+	for(uint8_t i=0; i<ip_laenge; i++)
+	{
+		
+	
+	if(antwort_ip[i]=='3'){
+		
+		ip_counter=i;
+		i=ip_laenge;
+	}
+	}
+	
+	for(uint8_t s=ip_counter; s<ip_laenge; s++ )
+	
+	{
+		if(antwort_ip[s]!='\r'){		
+		ip_adresse[stell_ip]=antwort_ip[s];
+		stell_ip++;
+		}
+		
+		else
+		
+		{
+			antwort_ip[s]='\0';
+			s=ip_laenge;
+			
+			
+		}
+		
+		
+				
+	}
+	
+}

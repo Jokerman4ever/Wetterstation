@@ -16,27 +16,27 @@ extern volatile uint8_t ip_adresse[20];
 FS_StationRecord_t record;
 
 //Das Array in dem der HTML Code gespeichert ist.
-char hhtp_header[]="GET /nic/update?hostname=wetter-fh.ddns.net&myip=%ip HTTP/1.1\r\n"
+uint8_t hhtp_header1[200]="GET /nic/update?hostname=wetter-fh.ddns.net&myip=%ip HTTP/1.1\r\n"
 "Connection: keep-alive\r\n"
 "Authorization: Basic V2V0dGVyc3RhdGlvbjE3OndldHRlcnN0YXRpb24=\r\n"
-"Upgrade-Insecure-Requests: 1\r\n"
-"User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36\r\n"
-"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/ *;q=0.8\r\n"
-"Accept-Encoding: gzip, deflate\r\n"
+"Upgrade-Insecure-Requests: 1\r\n";
+uint8_t http_header2[256]="User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/60.0.3112.90 Safari/537.36\r\n";
+uint8_t http_header3[256]="Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/ *;q=0.8\r\n";
+uint8_t http_header4[256]="Accept-Encoding: gzip, deflate\r\n"
 "Accept-Language: de-DE,de;q=0.8,en-US;q=0.6,en;q=0.4\r\n";
-char html_code[]="<html>"
+uint8_t html_code1[]="<html>"
 "<head>"
 "<title>Wetter station</title>"
 "</head>"
 "<body>"
-"<h1 style=\"color:red;\">System Design Project 2017: Wetter station</h1>"
-"Regenaktivitaet:&nbsp;<b>%r1</b><br>"
+"<h1 style=\"color:red;\">System Design Project 2017: Wetter station</h1>";
+uint8_t htmlcode2[]="Regenaktivitaet:&nbsp;<b>%r1</b><br>"
 "Windgeschwindigkeit:&nbsp;<b>%w1</b><br>"
 "Lichtintensitaet:&nbsp;<b>%l1</b><br>"
 "Temperatur:&nbsp;<b>%t1</b><br>"
 "Feuchtigkeit:&nbsp;<b>%f1</b><br>"
-"Druck:&nbsp;<b>%d1</b><br>"
-"<br>"
+"Druck:&nbsp;<b>%d1</b><br>";
+uint8_t htmlcode3[]="<br>"
 "<b>Anmerkung:</b><br>einfacher Prototyp zu Testzwecken, kein endgueltiges Design!"
 "</body>"
 "</html>";
@@ -90,7 +90,7 @@ Beispiel: Messwert=351
 		  5.) Ermittlung Rest: rest=351%100=51 -> Messwert=51
 		  6.) Wiederhole Schritt 1-5, bis Messwert/divisor=0 ist
 		  7.) Speichere den Rest false >0  ins Array hier 1+48
-		  7.) Sende String an das GSM Modul*/
+		  7.) Sende String an das GSM Modul                                                    */
 /***********************************************************************************************/
 void com_send_messwert(uint16_t messwert)
 {   
@@ -184,7 +184,7 @@ void com_send_messwert(uint16_t messwert)
 //                                %w1 -> wind direction
 //                                %f1 -> humidity                               
 /***********************************************************************************************************/
-void com_send_antwortclient(char senden_array[]){
+void com_send_antwortclient(uint8_t senden_array[]){
 	//Variablen für die Bestimmung des HTML-Code, ein Zaehler für
 	//das Zaehlen der abgearbeiteten Zeichen	
 	uint8_t length = 0x00;
@@ -192,17 +192,17 @@ void com_send_antwortclient(char senden_array[]){
 	char wert_anfrage;
 	int16_t messung;
 	//Ermittlung der Lange des HTML-Code
-	length = strlen( senden_array);
+	length = strlen(senden_array);
 	//Solange der HTML-Code nicht komplett abgearbeitet wurde, wird die while-Schleife ausgeführt
 	while(Counter < length)
 	{  
 		//Falls im Html-code an der Stelle des Counter ein "%" Zeichen entdeckt wird,
 		//wird "Counter" um eins erhöht und es wird geschaut, welches Zeichen danach kommt.
 		//Dieses Zeichen wird in die Variable "wer_anfrage" geschrieben.
-		if ( senden_array[Counter]=='%')
+		if (senden_array[Counter]=='%')
 		{
 			Counter++;
-			wert_anfrage= senden_array[Counter];
+			wert_anfrage=senden_array[Counter];
 			//Es wird geschaut was in "wert_anfrage" steht und dann wird der zugehörige Messwert
 			//ermittelt.
 			switch (wert_anfrage)
@@ -219,10 +219,10 @@ void com_send_antwortclient(char senden_array[]){
 				case 'w': {messung =record.WindLevel;    break;}
 			    //Luftfeuchtigkeit
 				case 'f': {messung= record.Humidity;   break;}
-				case 'i':{com_send_string(ip_adresse);}
+				case 'i':{  com_send_string(ip_adresse);break;}
 			}
 			//Sende den Wert der Messung Ziffernweise mit Vorzeichen an das GSM-Modul
-			com_send_messwert(messung);
+			if(wert_anfrage!='i'){com_send_messwert(messung);}
 			//Erhöhe den Counter um zwei, dmit die Zeichen x1 nach dem % Zeichen nicht ausgegeben werden
             Counter=Counter+2;
 		}
@@ -230,7 +230,8 @@ void com_send_antwortclient(char senden_array[]){
 		else
 		{    //Wird kein Messwert angefordert, sende das Zeichen, an der Stelle von Counter des 
 			//html_codes über UART und erhöhe den Wert von Counter um 1.
-			com_ausgabe( senden_array[Counter]);
+			com_ausgabe(senden_array[Counter]);
+		
 			Counter++;
 		}
 
