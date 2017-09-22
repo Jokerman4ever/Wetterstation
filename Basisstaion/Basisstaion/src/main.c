@@ -30,17 +30,20 @@ ISR(TCC1_OVF_vect)
 	RF_Update();
 	FS_Update();
 }
+uint8_t cont =0;//Nur für den contrast kann nachher wieder gelöscht werden!!!!
 uint8_t val;
 int main(void)
 {
 	uint8_t buffer[3];
 	sysclk_init();
 	//XDELAY_ISFAST = 0;
+	//clock_change_32MHZ();
 	clock_change_2MHZ();
-	
 	lcd_init();
 	//lcd_set_contrast(224);
-	DSP_ChangePage(PageWelcome);
+	//DSP_ChangePage(PageWelcome);
+	
+	
 	
 	Flash_SPI_Init();
 	EEPROM_FlushBuffer();
@@ -82,7 +85,10 @@ int main(void)
 		_xdelay_ms(1000);
 		*/
 		if(RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Idle && RF_CurrentStatus.State != RF_State_Receive)RF_Set_State(RF_State_Receive);
-		_xdelay_us(500);
+		_xdelay_ms(5);
+		lcd_clear();
+		lcd_Write("Hello",1);
+		lcd_set_contrast(cont++);
 		HandleClients();	
 		if(com_hasData())
 		{

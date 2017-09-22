@@ -34,16 +34,16 @@
  {
 	 if(type) LCD_PORT |= (1<<LCD_RS);
 	 else LCD_PORT &= ~(1<<LCD_RS);
-	 uint8_t data2 = data;
+	 /*uint8_t data2 = data;
 	 data = data >> 4;
-	 data = data & 0x0F;
+	 data = data & 0x0F;*/
 	 //Remap...
+	 lcd_WNibble(data>>4);
+	 lcd_enable();
+	 //data = data2 & 0x0F;
 	 lcd_WNibble(data);
 	 lcd_enable();
-	 data = data2 & 0x0F;
-	 lcd_WNibble(data);
-	 lcd_enable();
-	 _xdelay_us(50);
+	 _delay_us(100);
  }
  /*
 // sendet ein Datenbyte an das LCD
@@ -95,7 +95,7 @@ void lcd_enable(void)
    // Bei Problemen ggf. Pause gemäß Datenblatt des LCD Controllers einfügen
    // http://www.mikrocontroller.net/topic/81974#685882
    LCD_PORT |= (1<<LCD_EN);
-    _xdelay_us(25);                   // kurze Pause
+    _delay_us(100);                   // kurze Pause
    // Bei Problemen ggf. Pause gemäß Datenblatt des LCD Controllers verlängern
    // http://www.mikrocontroller.net/topic/80900
    
@@ -114,6 +114,7 @@ void lcd_set_contrast(uint8_t contrast)
 // Muss ganz am Anfang des Programms aufgerufen werden.
 void lcd_init(void)
 {
+	_delay_ms(500);
    LCD_DDR |= (1<<LCD_D7) | (1<<LCD_D6) | (1<<LCD_D5) | (1<<LCD_D4) | (1<<LCD_RS) | (1<<LCD_EN);   // Port auf Ausgang schalten
    PORTB.DIRSET = (1<<LCD_RESET);
    PORTB.OUTSET = (1<<LCD_RESET); //Reset muss high sein!!!
@@ -127,40 +128,79 @@ void lcd_init(void)
 	DACB.CTRLA = DAC_CH0EN_bm | DAC_ENABLE_bm; // Enable DAC and channel 0 DAC_CH0EN_bm |
 	PORTB.OUT &= ~(1<<2);
 	
-	lcd_set_contrast(240); // Initale Kontrast einstellung
-	
+	lcd_set_contrast(250); // Initale Kontrast einstellung
+		
    // muss 3mal hintereinander gesendet werden zur Initialisierung
-   
+  
    lcd_WNibble(0x03);
    lcd_enable();
- 
-   _xdelay_ms(5);
+   _delay_ms(5);
    lcd_enable();
- 
-   _xdelay_ms(5);
+   _delay_ms(1);
+   lcd_enable();
+   _delay_ms(1);
+   
+   lcd_WNibble(0x02);
    lcd_enable();
    
-   _xdelay_ms(5);
+    _delay_ms(10);
+   lcd_Write(0x2C,0);
+   _delay_ms(10);
+   lcd_Write(0x09,0);
+    _delay_ms(10);
+   lcd_Write(0x28,0);
+    _delay_ms(10);
+   lcd_Write(0x28,0);
+    _delay_ms(10);
+	lcd_Write(0x08,0);
+	_delay_ms(10);
+	lcd_clear();
+	_delay_ms(10);
+	lcd_Write(0x09,0);
+	_delay_ms(10);
+	lcd_Write(0x0F,0);
+	_delay_ms(10);
+ /
  
+ /*
    // 4 Bit Modus aktivieren 
    lcd_WNibble(0x02);
    lcd_enable();
    _xdelay_ms(5);
- 
-   // 4Bit / 2 Zeilen / 5x7
-   lcd_Write(0x28,0); //0010 1100 0x28
+   
+   // 4Bit / 2 Zeilen / 5x7 // RE = 1
+   lcd_Write(0x28,0); //0010 1100 0x2C
    _xdelay_ms(5);
-   // Display ein / Cursor aus / kein Blinken
-   lcd_Write(0x0C,0); //0x0C 
+   //----------------------- 5-dot Font / normal Cursor  / 4-Line
+   //no SHIFT UND cursor right
+   lcd_Write(0x06,0); //0000 1001 
    _xdelay_ms(5);
-    //inkrement / kein Scrollen
-   lcd_Write(0x06,0);
-   _xdelay_ms(5);
-   lcd_clear();
+   // 4Bit / 2 Zeilen / 5x7 // RE =0
+   /*lcd_Write(0x20,0); //0010 1000 0x28
    _xdelay_ms(5);
    lcd_home();
-   
    lcd_Write(0x0F,0);
+   _xdelay_ms(5);
+   lcd_clear();
+    lcd_Write(0x24,0); //0010 1100 0x2C
+	_xdelay_ms(5);
+	//inkrement / kein Scrollen
+	lcd_Write(0x06,0);
+	_xdelay_ms(5);
+	
+	lcd_Write(0x80,0);
+	_xdelay_ms(5);
+	lcd_Write(0x10,0);
+	_xdelay_ms(5);
+	
+	// 4Bit / 2 Zeilen / 5x7 // RE =0
+	lcd_Write(0x20,0); //0010 1000 0x28
+ */
+
+   */
+	lcd_clear();
+	lcd_set_cursor(1,1);
+	lcd_string("hello world");
 }
  
 // Sendet den Befehl zur Löschung des Displays
