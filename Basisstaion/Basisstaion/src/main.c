@@ -40,8 +40,7 @@ int main(void)
 	//clock_change_32MHZ();
 	clock_change_2MHZ();
 	lcd_init();
-	//lcd_set_contrast(224);
-	//DSP_ChangePage(PageWelcome);
+	DSP_ChangePage(PageWelcome);
 	
 	
 	
@@ -86,9 +85,6 @@ int main(void)
 		*/
 		if(RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Idle && RF_CurrentStatus.State != RF_State_Receive)RF_Set_State(RF_State_Receive);
 		_xdelay_ms(5);
-		lcd_clear();
-		lcd_Write("Hello",1);
-		lcd_set_contrast(cont++);
 		HandleClients();	
 		if(com_hasData())
 		{

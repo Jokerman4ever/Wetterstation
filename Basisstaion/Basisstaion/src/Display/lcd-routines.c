@@ -128,8 +128,7 @@ void lcd_init(void)
 	DACB.CTRLA = DAC_CH0EN_bm | DAC_ENABLE_bm; // Enable DAC and channel 0 DAC_CH0EN_bm |
 	PORTB.OUT &= ~(1<<2);
 	
-	lcd_set_contrast(250); // Initale Kontrast einstellung
-		
+	lcd_set_contrast(220); // Initale Kontrast einstellung
    // muss 3mal hintereinander gesendet werden zur Initialisierung
   
    lcd_WNibble(0x03);
@@ -142,69 +141,29 @@ void lcd_init(void)
    
    lcd_WNibble(0x02);
    lcd_enable();
-   
-    _delay_ms(10);
-   lcd_Write(0x2C,0);
    _delay_ms(10);
-   lcd_Write(0x09,0);
-    _delay_ms(10);
-   lcd_Write(0x28,0);
-    _delay_ms(10);
-   lcd_Write(0x28,0);
-    _delay_ms(10);
-	lcd_Write(0x08,0);
-	_delay_ms(10);
-	lcd_clear();
-	_delay_ms(10);
-	lcd_Write(0x09,0);
-	_delay_ms(10);
-	lcd_Write(0x0F,0);
-	_delay_ms(10);
- /
- 
- /*
-   // 4 Bit Modus aktivieren 
-   lcd_WNibble(0x02);
-   lcd_enable();
-   _xdelay_ms(5);
-   
-   // 4Bit / 2 Zeilen / 5x7 // RE = 1
-   lcd_Write(0x28,0); //0010 1100 0x2C
-   _xdelay_ms(5);
-   //----------------------- 5-dot Font / normal Cursor  / 4-Line
-   //no SHIFT UND cursor right
-   lcd_Write(0x06,0); //0000 1001 
-   _xdelay_ms(5);
-   // 4Bit / 2 Zeilen / 5x7 // RE =0
-   /*lcd_Write(0x20,0); //0010 1000 0x28
-   _xdelay_ms(5);
-   lcd_home();
-   lcd_Write(0x0F,0);
-   _xdelay_ms(5);
-   lcd_clear();
-    lcd_Write(0x24,0); //0010 1100 0x2C
-	_xdelay_ms(5);
-	//inkrement / kein Scrollen
-	lcd_Write(0x06,0);
-	_xdelay_ms(5);
-	
-	lcd_Write(0x80,0);
-	_xdelay_ms(5);
-	lcd_Write(0x10,0);
-	_xdelay_ms(5);
-	
-	// 4Bit / 2 Zeilen / 5x7 // RE =0
-	lcd_Write(0x20,0); //0010 1000 0x28
- */
+   lcd_Write(0x06,0);
+   _delay_ms(10);
+   lcd_Write(0x0C,0);
+   _delay_ms(10);
+   lcd_Write(0x14,0);
+   _delay_ms(10);
 
-   */
+   lcd_Write(0x2C,0); // Enable RE
+   _delay_ms(10);
+   lcd_Write(0x02,0);
+    _delay_ms(10);
+   lcd_Write(0x06,0);
+    _delay_ms(10);
+   lcd_Write(0x09,0);
+   _delay_ms(10);
+	
+   lcd_Write(0x28,0);
+    _delay_ms(10);
 	lcd_clear();
-	lcd_set_cursor(1,1);
-	lcd_string("hello world");
 }
  
 // Sendet den Befehl zur Löschung des Displays
- 
 void lcd_clear(void)
 {
    lcd_Write(CLEAR_DISPLAY,0);
@@ -225,10 +184,10 @@ void lcd_set_cursor(uint8_t x, uint8_t y)
 {
   uint8_t tmp;
   switch (y) {
-	case 1: tmp=0x00+0x00+x; break;    // 1. Zeile
-	case 2: tmp=0x00+0x20+x; break;    // 2. Zeile
-    case 3: tmp=0x00+0x40+x; break;    // 3. Zeile
-    case 4: tmp=0x00+0x60+x; break;    // 4. Zeile
+	case 1: tmp=0x00+0x7F+x; break;    // 1. Zeile
+	case 2: tmp=0x00+0x9F+x; break;    // 2. Zeile
+    case 3: tmp=0x00+0xBF+x; break;    // 3. Zeile
+    case 4: tmp=0x00+0xDF+x; break;    // 4. Zeile
     default: return;                   // für den Fall einer falschen Zeile
   }
   lcd_Write(tmp,0);
