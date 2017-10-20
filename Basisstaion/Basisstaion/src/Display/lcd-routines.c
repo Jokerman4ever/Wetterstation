@@ -128,7 +128,7 @@ void lcd_init(void)
 	DACB.CTRLA = DAC_CH0EN_bm | DAC_ENABLE_bm; // Enable DAC and channel 0 DAC_CH0EN_bm |
 	PORTB.OUT &= ~(1<<2);
 	
-	lcd_set_contrast(220); // Initale Kontrast einstellung
+	lcd_set_contrast(208); // Initale Kontrast einstellung
    // muss 3mal hintereinander gesendet werden zur Initialisierung
   
    lcd_WNibble(0x03);
@@ -184,10 +184,10 @@ void lcd_set_cursor(uint8_t x, uint8_t y)
 {
   uint8_t tmp;
   switch (y) {
-	case 1: tmp=0x00+0x7F+x; break;    // 1. Zeile
-	case 2: tmp=0x00+0x9F+x; break;    // 2. Zeile
-    case 3: tmp=0x00+0xBF+x; break;    // 3. Zeile
-    case 4: tmp=0x00+0xDF+x; break;    // 4. Zeile
+	case 1: tmp=0x80+0x00+x; break;    // 1. Zeile
+	case 2: tmp=0x80+0x20+x; break;    // 2. Zeile
+    case 3: tmp=0x80+0x40+x; break;    // 3. Zeile
+    case 4: tmp=0x80+0x60+x; break;    // 4. Zeile
     default: return;                   // für den Fall einer falschen Zeile
   }
   lcd_Write(tmp,0);

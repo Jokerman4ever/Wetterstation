@@ -129,6 +129,8 @@ void RF_Init(uint8_t dev_add, uint8_t syncw_num)
 	RF_Set_Frequency(868.4);//Set frequency for Europa!
 	RF_Set_Modem();
 	
+	RF_CurrentStatus.Registerd_Devices = 0;
+	
 	//for (uint8_t i=0; RF_Get_Command(RF_REG_FTXRXI) & RF_FLAG_FIFOEMPTY; i++)RF_Get_DataHW();
 	//Default Settings:
 	//FIFO: 16Byte
@@ -755,6 +757,7 @@ uint8_t RF_RegisterDevice(uint8_t ID)
 		{
 			RF_CurrentStatus.TimeSlots[i].ID = ID;
 			RF_CurrentStatus.TimeSlots[i].Timeout = 0;
+			RF_CurrentStatus.Registerd_Devices++;
 			return i;
 		}
 	}
@@ -767,6 +770,7 @@ void RF_UnregisterDevice(uint8_t ID)
 {
 	RF_CurrentStatus.TimeSlots[ID].ID=0;
 	RF_CurrentStatus.TimeSlots[ID].Timeout=0;
+	RF_CurrentStatus.Registerd_Devices--;
 }
 
 //This function returns the sleeping time for a specific device that is registert int the timeslottable

@@ -6,6 +6,7 @@
  */ 
 #include "Display-Menu.h"
 #include "lcd-routines.h"
+#include "Clock/Xdelay.h"
 
 uint8_t LineTemp[20];
 
@@ -22,7 +23,7 @@ void PGM_ReadStr(const char* str,char* dest,uint8_t start)
 
 #define DStr_BSName PSTR				(" MY WEATHER STATION ")
 #define DStr_BSVersion PSTR				("   Version 1.0.0    ")
-#define DStr_BSMenu PSTR				("      **MENU**      ")
+#define DStr_BSMenu PSTR				("**MENU**")
 #define DStr_BSHome PSTR				("    Home            ")
 #define DStr_BSFehlerliste PSTR			("    Fehlerliste     ")
 #define DStr_BSEinstellungen PSTR		("    Einstellungen   ")
@@ -55,10 +56,63 @@ uint8_t Fehler_i;
 uint8_t Fehler_j;
 uint8_t Fehler_k;
 
+uint8_t down = 0x1E;
+uint8_t up = 0x1D;
+
 tm_t DSP_Time_Ms;	
 
 uint8_t DSP_MenuSelection;
 uint8_t DSP_CurrentPage;
+
+int8_t Temp_MS=0;
+uint8_t Temp_10_MS=0;
+uint16_t Druck_MS=0;
+uint8_t Feuchte_MS=0;
+uint8_t Wind_MS=0;
+uint8_t ID_MS=0xFF;
+uint8_t Weather_State[10];
+uint8_t big_station = 0;
+
+void DSP_Refresh_Timer_Init()
+{
+	sysclk_enable_module(SYSCLK_PORT_C, SYSCLK_TC0); //TC1 SysClock Enable
+	TCC0.CTRLA = TC_CLKSEL_DIV1024_gc; //Presackler
+	TCC0.CTRLB = TC_WGMODE_NORMAL_gc;
+	TCC0.PER = XDELAY_ISFAST ? 32000 : 2000; //Zähler Top-Wert
+	TCC0.CNT = 0x00; //Reset Zähler-Wert
+	TCC0.INTCTRLA = TC_OVFINTLVL_MED_gc;
+}
+
+void DSP_Update_Weatherdata(FS_StationRecord_t* data)
+{
+	Druck_MS = data->Pressure;
+	Temp_MS = data->Temperature / 10;
+	Temp_10_MS = data->Temperature % 10;
+	Feuchte_MS = data->Humidity / 10;
+	
+	
+	if(data->RainState > 128)
+	{
+		sprintf(Weather_State,"Regen  ");
+	}
+	else if(data->LightStrength > 128)
+	{
+		sprintf(Weather_State,"Sonnig ");
+	}
+	else
+	{
+		sprintf(Weather_State,"Wolkig ");
+	}
+	Wind_MS = data->WindLevel;
+	
+	if(data->WindLevel == 0 && data->LightStrength == 0 && data->RainState == 0)
+	{
+		big_station = 0;
+	} else {big_station = 1;}
+	
+	ID_MS = data->ID;
+	if(DSP_CurrentPage == PageWettermonitor){DSP_ChangePage(PageWettermonitor);}
+}
 
 // Muss im Sekundentakt aufgerufen werden (oder schneller)
 void DSP_Refresh(uint8_t BS_BatState,uint8_t BS_GSMState,uint8_t BS_NumNode)
@@ -66,11 +120,11 @@ void DSP_Refresh(uint8_t BS_BatState,uint8_t BS_GSMState,uint8_t BS_NumNode)
 	time_GetLocalTime(&DSP_Time_Ms);
 
 	// Datum und Zeit aktualisieren:	
-	sprintf(Day,"%d",DSP_Time_Ms.tm_mday);
-	sprintf(Month,"%d",DSP_Time_Ms.tm_mon);
-	sprintf(Year, "%d",DSP_Time_Ms.tm_year);
-	sprintf(Minute,"%d",DSP_Time_Ms.tm_min);
-	sprintf(Hour,"%d",DSP_Time_Ms.tm_hour);	
+	sprintf(Day,"%02d",DSP_Time_Ms.tm_mday);
+	sprintf(Month,"%02d",DSP_Time_Ms.tm_mon);
+	sprintf(Year, "%02d",(DSP_Time_Ms.tm_year-2000));
+	sprintf(Minute,"%02d",DSP_Time_Ms.tm_min);
+	sprintf(Hour,"%02d",DSP_Time_Ms.tm_hour);	
 	
 	// Batteriestatus aktualisieren:
 	switch(BS_BatState)
@@ -124,8 +178,11 @@ void DSP_Refresh(uint8_t BS_BatState,uint8_t BS_GSMState,uint8_t BS_NumNode)
 	
 	// Anzahl verbundener Knoten aktualisieren:
 	NumNode = BS_NumNode;
-	
-	//DSP_ChangePage();
+	if(DSP_Time_Ms.tm_sec == 0)
+	{
+		if(DSP_CurrentPage == PageHome){DSP_ChangePage(PageHome);}
+		if(DSP_CurrentPage == PageWettermonitor){DSP_ChangePage(PageWettermonitor);}
+	}
 }
 
 
@@ -145,6 +202,7 @@ void DSP_ChangePage(uint8_t ID)
 {
 	DSP_CurrentPage=ID;
 	lcd_clear(); //Löschen
+	lcd_home();
 	switch(ID)
 	{
 		// Welcome:
@@ -180,22 +238,24 @@ void DSP_ChangePage(uint8_t ID)
 			lcd_Xstring(LineTemp,0);
 			//Pfeil nach unten:
 			lcd_set_cursor(0,4);
-			lcd_string("v");
+			lcd_Write(down,1);
 			break;
 		}
 
 		case PageHome:
 		{
-			lcd_set_cursor(0,1);
-			sprintf(LineTemp,"[%s]-  GSM %s   %d ",BatState,GSMState,NumNode); 
-			lcd_Xstring(LineTemp,0);
-			lcd_set_cursor(0,2);
-			//
 			lcd_set_cursor(0,3);
 			CenterStringPGM(DStr_BSName,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
+			
+			lcd_set_cursor(0,1);
+			sprintf(LineTemp,"        GSM %s   %d ",GSMState,NumNode); 
+			lcd_Xstring(LineTemp,0);
+			//lcd_set_cursor(0,2);
+			
+			
 			lcd_set_cursor(0,4);
-			sprintf(LineTemp,"  %s.%s.%s   %s:%s  ",Day,Month,Year,Minute,Hour);//das wird so nicht gehen, %d steht für decimal also eine zahl.... du übergibst nen string!!!
+			sprintf(LineTemp,"  %s.%s.%s   %s:%s  ",Day,Month,Year,Hour,Minute);//das wird so nicht gehen, %d steht für decimal also eine zahl.... du übergibst nen string!!!
 			lcd_Xstring(LineTemp,0);
 			break;
 		}
@@ -217,7 +277,7 @@ void DSP_ChangePage(uint8_t ID)
 			lcd_Xstring(LineTemp,0);
 			//Pfeil nach unten:
 			lcd_set_cursor(0,4);
-			lcd_string("v");
+			lcd_Write(down,1);
 			break;
 		}
 		
@@ -381,7 +441,7 @@ void DSP_ChangePage(uint8_t ID)
 			lcd_Xstring(LineTemp,0);
 			//Pfeil nach oben:
 			lcd_set_cursor(0,2);
-			lcd_string("^");
+			lcd_Write(up, 1);
 			break;
 		}
 
@@ -701,25 +761,29 @@ void DSP_ChangePage(uint8_t ID)
 			lcd_Xstring(LineTemp,0);
 			//Pfeil nach oben:
 			lcd_set_cursor(0,2);
-			lcd_string("^");
+			lcd_Write(up, 1);
 			break;
 		}
 		
 		case PageWettermonitor:	
 		{
+
+			if(big_station)
+			{
+				lcd_set_cursor(0,4);
+				sprintf(LineTemp," %s %3dkm/h    ",Weather_State, Wind_MS); //Weather_State muss immer 7 Zeichen beinhalten ("Sonnig ","Regen  ","Bewölkt")
+				lcd_Xstring(LineTemp,0);
+			}
 			lcd_set_cursor(0,1);
-			sprintf(LineTemp,"[%s]-  GSM %s   %d ",BatState,GSMState,NumNode);
+			sprintf(LineTemp,"        GSM %s   %d ",GSMState,NumNode);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,2);
-			//sprintf(LineTemp,"**%s**",Name_Messstation);
-			//CenterString(LineTemp,LineTemp,0);
-			//lcd_Xstring(LineTemp,0);
+			sprintf(LineTemp,"   **MS ID: %3d**   ",ID_MS);
+			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,3);
-			//sprintf(LineTemp," %d°C  %dhPa  %d% ",Temp_MS[i],Druck_MS[i],Feuchte_MS[i]);
-			//lcd_Xstring(LineTemp,0);
-			lcd_set_cursor(0,4);
-			//sprintf(LineTemp," %s %dkm/h    ",Licht_MS[i],Wind_MS[i]); //Licht muss immer 7 Zeichen beinhalten ("Sonnig ","Regen  ","Bewölkt")
-			//lcd_Xstring(LineTemp,0);
+			sprintf(LineTemp, " %d,%dC %dhPa %d%%",Temp_MS,Temp_10_MS, Druck_MS,Feuchte_MS);
+			lcd_Xstring(LineTemp,0);
+
 			break;
 		}			
 		
@@ -739,7 +803,7 @@ void DSP_ScrollMenu(uint8_t dir)
 			}
 			else
 			{
-				//-
+				//
 			}
 			break;
 		}
@@ -822,9 +886,22 @@ void DSP_ScrollMenu(uint8_t dir)
 			break;
 		}
 		
+		
+		case PageMenuEinstellungen:
+		{
+			if(dir == 1)
+			{
+				DSP_ChangePage(PageMenuWettermonitor);
+			}
+			else
+			{
+				DSP_ChangePage(PageMenuFehlerliste);
+			}
+			break;
+		}
+		
 		/*
 		// TabEinstellungen:
-		PageMenuEinstellungen = 30,
 		PageEinstellungen_Zurueck = 31,
 		PageEinstellungen_Namen = 32,
 		PageEinstellungen_Speicher = 33,
@@ -843,7 +920,20 @@ void DSP_ScrollMenu(uint8_t dir)
 		PageSet_Intervall = 46,
 		PageSet_Sync = 47,
 		// TabWettermonitor:
-		PageMenuWettermonitor = 50,
+		*/
+		case PageMenuWettermonitor:
+		{
+			if(dir == 1)
+			{
+				//
+			}
+			else
+			{
+				DSP_ChangePage(PageMenuEinstellungen);
+			}
+			break;
+		}
+		/*
 		PageWettermonitor = 51,
 		*/
 		
@@ -1056,12 +1146,12 @@ void CenterStringPGM(const char* str,uint8_t* Temp,uint8_t arrows)
 	char tt[20];
 	PGM_ReadStr(str,tt,0);
 	uint8_t len = strlen(tt);
-	uint8_t maxspace = 20 - (arrows == 1 || arrows == 2 ? 2 : arrows == 3 ? 4 : 0);
-	if(arrows & 0x01){*Temp++='<';*Temp++='<';}
+	uint8_t maxspace = 20 - (((arrows == 1) || (arrows == 2)) ? 2 : ((arrows == 3) ? 4 : 0));
+	if(arrows & 0x02){*Temp++='>';*Temp++='>';}
 	for (uint8_t i = 0; i < (maxspace-len)/2; i++)*Temp++=32;//Leerzeichen einfügen
 	for (uint8_t i = 0; i < len; i++)*Temp++=tt[i];
 	for (uint8_t i = 0; i < (maxspace-len)/2; i++)*Temp++=32;//Leerzeichen einfügen
-	if(arrows & 0x02){*Temp++='>';*Temp++='>';}
+	if(arrows & 0x01){*Temp++='<';*Temp++='<';}
 }
 
 void SelectString(char* str,uint8_t* Temp)

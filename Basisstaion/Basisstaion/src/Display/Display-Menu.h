@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include "time.h"
 #include "string.h"
+#include "Storage/FileSys.h"
 
 enum PageID {
 				// Welcome:
@@ -32,15 +33,15 @@ enum PageID {
 				// TabEinstellungen:
 				PageMenuEinstellungen = 30,
 				PageEinstellungen_Zurueck = 31,
-				PageEinstellungen_Namen = 32,
-				PageEinstellungen_Speicher = 33,
-				PageEinstellungen_RF = 34,
-				PageEinstellungen_GSM = 35,
-				PageEinstellungen_Energie = 36,
-				PageEinstellungen_Einheit = 37,
-				PageEinstellungen_Intervall = 38,
-				PageEinstellungen_Sync = 39,
-				PageSet_Namen = 40,
+				PageEinstellungen_Namen = 32,	//raus
+				PageEinstellungen_Speicher = 33, //keine Ahnug?
+				PageEinstellungen_RF = 34,	//vermutlich raus?
+				PageEinstellungen_GSM = 35,	//Saba?
+				PageEinstellungen_Energie = 36,	//raus
+				PageEinstellungen_Einheit = 37,	//raus
+				PageEinstellungen_Intervall = 38, //raus
+				PageEinstellungen_Sync = 39,		//muss rein - Zahl von 0 bis 15
+				PageSet_Namen = 40,	
 				PageSet_Speicher = 41,
 				PageSet_RF = 42,
 				PageSet_GSM = 43,
@@ -76,6 +77,7 @@ void DSP_ScrollMenu(uint8_t dir);
 void DSP_SelectMenu(void);
 void DSP_Refresh(uint8_t BS_BatState, uint8_t BS_GSMState, uint8_t BS_NumNode);
 void DSP_CopyString(const char* str, char* strout);
-
+void DSP_Refresh_Timer_Init(void);
+void DSP_Update_Weatherdata(FS_StationRecord_t* data);
 
 #endif /*DISPLAYMENU_H_*/

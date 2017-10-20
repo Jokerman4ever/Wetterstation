@@ -1,6 +1,7 @@
 #include "time.h"
 #include "stdlib.h"
 #include "stdio.h"
+#include "Storage/FileSys.h"
 
 uint32_t g_ulTimeStamp;
 
@@ -37,6 +38,7 @@ void SystemTick() {
 void Set_Unix_Time(uint32_t timestamp)
 {
 	g_ulTimeStamp = timestamp;	
+	FS_SetUnix(timestamp);
 }
 
 void time_GetLocalTime(tm_t *localTime) {

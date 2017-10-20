@@ -9,6 +9,8 @@
 #include "Storage/eeprom_driver.h"
 #include "GSM/com.h"
 #include "Http/server.h"
+#include "time.h"
+
 void HandleClients(void);
 void CheckFirstrun(void);
 
@@ -30,6 +32,30 @@ ISR(TCC1_OVF_vect)
 	RF_Update();
 	FS_Update();
 }
+
+ISR(TCC0_OVF_vect)
+{
+	DSP_Refresh(0,0,RF_CurrentStatus.Registerd_Devices);
+	SystemTick();
+}
+
+ISR(PORTA_INT0_vect)
+{
+	if(PORTA.IN & 0x02)
+	{
+		DSP_ScrollMenu(0);
+	}
+	else
+	{
+		DSP_ScrollMenu(1);
+	}
+}
+
+ISR(PORTA_INT1_vect)
+{
+	DSP_SelectMenu();
+}
+
 uint8_t cont =0;//Nur für den contrast kann nachher wieder gelöscht werden!!!!
 uint8_t val;
 int main(void)
@@ -41,7 +67,14 @@ int main(void)
 	clock_change_2MHZ();
 	lcd_init();
 	DSP_ChangePage(PageWelcome);
+	DSP_Refresh_Timer_Init();
+	_delay_ms(750);
 	
+	PORTA.INTCTRL = PORT_INT0LVL_HI_gc | PORT_INT1LVL_HI_gc;
+	PORTA.INT0MASK = (1<<2); //Drehen
+	PORTA.INT1MASK = (1<<3); //Tasten
+	PORTA.PIN2CTRL = PORT_ISC_FALLING_gc;
+	PORTA.PIN3CTRL = PORT_ISC_FALLING_gc;
 	
 	
 	Flash_SPI_Init();
@@ -55,7 +88,11 @@ int main(void)
 	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
 	RF_Set_State(RF_State_StandBy);
 
+	DSP_ChangePage(PageHome);
+
 	sei();
+	
+	Set_Unix_Time(1508494593);
 	
 	//com_init();
 	//SERVER
@@ -165,7 +202,8 @@ void HandleClients(void)
 					FS_StationRecord_t* r = FS_CreateStationRecordArray(p.Data);
 					r->Unix = FS_CurrentStatus.CurrentUnix;
 					r->ID = p.Sender;
-					FS_WriteRecord(r);
+					DSP_Update_Weatherdata(r);
+					FS_WriteRecord(r);			
 				}
 			}
 		}
