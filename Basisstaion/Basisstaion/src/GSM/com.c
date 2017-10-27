@@ -1,10 +1,9 @@
 /*
-* usart.c
+* com.c
 *
-* Created: 25.05.2016 08:49:12
-*  Author: Stud
-*/// #include "usart_driver.h"
-
+* Created: 26.06.2017 08:49:12
+*  Author: Saba-Sultana Saquib
+*/
 
 #include "com.h"
 #include "string.h"
@@ -12,38 +11,35 @@
 #include "Storage/FileSys.h"
 #include <avr/interrupt.h>
 unsigned char nextChar;
-int init_schritt=-2;
-int8_t alter_schritt=0;
-extern volatile uint8_t uart_str_complete;
-extern uint8_t daten_enmpfangen;   // 1 .. String komplett empfangen
+int init_schritt=1;
+int8_t alter_schritt=2;
+char ip_zeichen;
 volatile uint8_t uart_str_count = 0;
 volatile uint8_t uart_string[UART_MAXSTRLEN + 1]="";
-extern uint8_t server_initialisierung= false;
-uint8_t kommando_senden;
-FS_StationRecord_t record;
-uint8_t ip_adresse;
+volatile uint8_t ip_adresse[20]="";
 
-int Counter = 0x00;
-uint8_t warte_ok=0;
-uint8_t recBuffer[UART_MAXSTRLEN];
-uint8_t waitForString=1;
+_Bool konfiguration_erfolgreich= false;
+
+
+extern uint8_t hhtp_header1[];
+extern uint8_t http_header2[];
+extern uint8_t http_header3[];
+extern uint8_t http_header4[];
+uint8_t offsets=0;
+uint8_t laenge_antwort=0;
+
 void com_init(void)
 {
-//	sysclk_enable_module(SYSCLK_PORT_F, SYSCLK_USART0);
-	//PORTF.DIR = 0xFF;
-	//PORTF.OUT = 0xFF;
-	USARTF0.BAUDCTRLB = 0;
-	USARTF0.BAUDCTRLA = 12;//9600baud
-	USARTF0.CTRLA = USART_RXCINTLVL_HI_gc;
-	USARTF0.CTRLB = USART_TXEN_bm | USART_RXEN_bm;
-	USARTF0.CTRLC = USART_CHSIZE_8BIT_gc;
-	waitForString=1;
-	PORTF.DIRSET = (1<<3)|(1<<4);//TX(3) und RST(4) auf ausgang
-	//WIrd hier nicht mehr benötigt (RESet GSM
-	/*PORTF.OUTCLR = (1<<4);
-	_delay_ms(200);//Modul reset
-	PORTF.OUTSET = (1<<4);
-	_delay_ms(3000);//Wait till Modul has finished startup*/
+	sysclk_enable_module(SYSCLK_PORT_F, SYSCLK_USART0); //Clock für USART0 setzen
+	USARTF0.BAUDCTRLB = 0;//Einstellung Baudrate
+	USARTF0.BAUDCTRLA = 12; //Einnstellung Baudrate
+	USARTF0.CTRLA = USART_RXCINTLVL_HI_gc; //Interruptfreigabe auf Pin Rx
+	USARTF0.CTRLB = USART_TXEN_bm | USART_RXEN_bm; //Freigabe von TX und RX für das Empfangen und senden
+	USARTF0.CTRLC = USART_CHSIZE_8BIT_gc;//Größer der Zeichen
+	//USARTF0.CTRLC=USART_CMODE_ASYNCHRONOUS_gc | USART_PMODE_DISABLED_gc | USART_CHSIZE_8BIT_gc;
+	//waitForString=1;
+	PORTF.DIRSET = (1<<3)|(1<<4); //Initialisiere die Pins von Rx und Tx
+	PORTF.OUTSET = (1<<4); //setze den TX Pin als Ausgang
 }
 
 uint8_t com_hasData(void)
@@ -51,28 +47,31 @@ uint8_t com_hasData(void)
 	return((USARTF0_STATUS & USART_RXCIF_bm));
 }
 
-com_strlen(uint8_t* data)
-{
-	for (uint8_t i = 0; i < 32; i++)
+uint8_t com_strlen(uint8_t* data) //
+{   //Solange im Datenstring keine "0" steht
+	//erhhöhe i, ansonsten gebe den Wert von i zurück
+	for (int8_t i = 0; i < 256; i++)
 	{
 		if(data[i] == 0)return i;
 	}
 }
 
 
-void com_send_string(uint8_t* data)
+void com_send_string(uint8_t* data) //Funktion mit Übergabe der zu sendenten Daten
 {
-	uint8_t length = 0x00;
-	uint8_t counter = 0x00;
-	length = com_strlen(data);
+	uint8_t length = 0; //lokale Variable für die Laenge des Strings
+	uint8_t counter = 0;//lokale Variable für eine Zaehler
+	length = com_strlen(data); //Ermittle die Laenge der Daten
 	
-	while(counter < length)
+	//Solange counter kleiner ist als die Laenge, sende das Zeichen der übergebeben Daten an der Stelle
+	//des Counter
+	while(counter < length)    
 	{
-		com_ausgabe(data[counter]);
+		com_ausgabe(data[counter]); 
 		counter++;
 	}
-	com_ausgabe(0x0A);
-	com_ausgabe(0x0D);
+	//Sobald die kompletten Daten abgearbeitet sind, sende ein "\r"
+	//com_ausgabe(0x0D);//carriage return
 }
 
 
@@ -86,10 +85,10 @@ void interrupt_init(void)
 
 void com_ausgabe(uint8_t data)
 {
-	while(!(USARTF0.STATUS & USART_DREIF_bm)); // Überprüfung ob fertig mit schreiben
+	while(!(USARTF0.STATUS & USART_DREIF_bm)); 
 	USARTF0.STATUS |= USART_TXCIF_bm;
 	USARTF0.DATA = data;
-	while(!(USARTF0.STATUS & USART_TXCIF_bm)); // Überprüfung ob fertig mit schreiben
+	while(!(USARTF0.STATUS & USART_TXCIF_bm));
 }
 
 uint8_t com_getChar(uint8_t* error)
@@ -120,242 +119,304 @@ uint8_t com_getString(uint8_t* buffer)
 	return leni;
 }
 
-// Wird später beim Interrupt benötigt
+// ISR Routine für den Empfang
 ISR(USARTF0_RXC_vect)
-{
-	waitForString=0;
+{  
 	nextChar = USARTF0.DATA;
-
-	//printf("hallo");
-	//segmenta_aus;
-	if( uart_str_complete == 0 )
-	{
-		// wenn uart_string gerade in Verwendung, neues Zeichen verwerfen
-		//send_string("bin da");
-		// Daten werden erst in uart_string geschrieben, wenn nicht String-Ende/max Zeichenlänge erreicht ist/string gerade verarbeitet wird
-		if( nextChar != '\n' && nextChar != '\r' && uart_str_count < UART_MAXSTRLEN )
-		{
-			uart_string[uart_str_count] = nextChar;
-			//	printf("%s\n\r", nextChar);
-			uart_str_count++;
-			//	printf("hallo");
-			//printf("%s\n\r", &uart_string[uart_str_count]);
-		}
-		else
-		{
-			uart_string[uart_str_count] = '\0';
-			//send_string(uart_string);
-			uart_str_count = 0;
-			uart_str_complete = 1;
-			//daten_enmpfangen=false;
-			//printf("%s\n\r", &uart_string);
-			//printf("Hello, world!\n");
-			//server_configuration()
-			//server_configuration(uart_string);
-			server_configuration_auswertung(uart_string);
-		
-		}
-	}
+	uart_string[uart_str_count] = nextChar;
+    uart_str_count++;
+	
 }
-// Hier sind die einzelnen Schritte für die Serverkonfiguration 
+
+/******************************************************************************************/
+//In dieser Funktion, werden die einzelnen Befehle für die Konfiguration des GSM-Moduls
+//gesendet.
+/******************************************************************************************/
 void server_configuration()
 {
-	for (uint8_t i = 0; i <UART_MAXSTRLEN; i++)
-	{
-		recBuffer[i]=0;
-	}
+
 	switch(init_schritt)
 	{   
-		case -3:
-		 {
-			PORTF.OUTCLR = (1<<4);
-		//	_xdelay_ms(200);//Modul reset
-			PORTF.OUTSET = (1<<4);
-			//_xdelay_ms(3000);//Wait till Modul has finished startup
+		case 1: com_send_string("AT+CFUN=1,1\r"); break; //Resets the Modul
+		case 0: com_send_string("ATE 0\r"); break; //Auschalten des Echos ATE 1-> einschalten
+		case 2: com_send_string("AT\r"); break;
+		case 3: com_send_string("AT+IPR=9600\r"); break;
+		case 4:com_send_string("AT+CSQ\r"); break;
+		case 5:com_send_string("AT+CREG?\r");  break;
+		case 6: com_send_string("AT+CGATT=1\r"); break; 
+		case 7:com_send_string("AT+CSTT=\"internet.t-d1.de\"\r");  break;
+		case 8:com_send_string("AT+CIICR\r"); break;
+		case 9:com_send_string("AT+CIFSR\r");break;
+		case 10:
+		{
+			com_send_string("AT+CIPSTART=\"TCP\",\"8.23.224.120\",\"80\"\r");//_delay_ms(60000);
 			break;
 		}
-		case -2: com_send_string("AT"); break;
-		//case -1:com_send_string("AT+IPR=38400"); break;
-		case -1:com_send_string("AT+CSQ"); break;
-		case 0:com_send_string("AT+CREG?");  break;
-		//case 2: send_string("AT+CGACT?") ; break;
-		//case 3: com_send_string("AT+CMEE=1");  break;
-		case 1: com_send_string("AT+CGATT=1"); break;
-		case 2: com_send_string("AT+CSTT=\"internet.t-d1.de\"");  break;
-		case 3: com_send_string("AT+CIICR"); break;
-		case 4: com_send_string("AT+CIFSR");break;
-		//case 8: com_send_string("AT+CIPSTART=\"TCP\",\"74.124.194.252\",\"80\""); break;
-		//case 9: com_send_string("AT+CIPCLOSE=0");break;
-		//case 10: com_send_string("AT+CFUN=1"); break;
-		//case 11: com_send_string("AT+CPIN?"); break;
-		case 5: com_send_string("AT+CIPSERVER=1,80"); break;
-		//case 13: com_send_string("AT+CIFSR"); break;
-		case 6: com_send_string("AT+CIPSTATUS"); break;
+		
+		case 11:
+		{
+			com_send_string("AT+CIPSEND\r"); 
+			com_send_antwortclient(hhtp_header1);
+			com_send_antwortclient(http_header2);
+			com_send_antwortclient(http_header3);
+			com_send_antwortclient(http_header4);
+			com_ausgabe(0x1A);
+			_delay_ms(30000);
+			com_send_string("AT+CIPSERVER=1,80\r");
+			break;
+			}
+		case 12:  com_send_string("AT+CIPSTATUS\r"); break;
 	}
-	if(init_schritt == -3)
+
+	_delay_ms(10000);
+	uart_string[uart_str_count]='\0';
+	if(konfiguration_erfolgreich==false)
 	{
-		return;
+		server_configuration_auswertung(uart_string);
 	}
-	//uint8_t reclen= com_getString(recBuffer);
-	
-	//while(waitForString)_delay_ms(1);
-	//server_configuration_auswertung(reclen,&step);
+
+
 	
 }
 
+/********************************************************************************************************************/
+//In dieser Funktion werden die Anworten nach einem Konfigurationsschritt des GSM-Moduls ausgewertet. War
+//der Schritt erfolgreich, wird der Zaehler "int_schritt" erhöht und der nächste Befehlt wird in der Funktion
+//server_configuration() gesendet
+/********************************************************************************************************************/
 void server_configuration_auswertung(uint8_t antwort[])
 {
-
-alter_schritt=init_schritt;
-	//if(len <= 2){_xdelay_ms(5000); init_schritt--; return;}		
-	switch(init_schritt)
-	{
-		case -1:
+	
+	alter_schritt=init_schritt;
+			
+switch(init_schritt)
+	{ 
+		//Antwort auf dem Befehlt "AT+CREG?
+		//Ist die Signalstärke ungleich 0,0, war der Schritt erfolgreich und der 
+		//Zaehler "init_schritt" wird um eins erhöht
+		case 4:
 		{
 
-		//com_send_string(antwort);
-			for (uint8_t i = 0; i < UART_MAXSTRLEN; i++)
+			for (int8_t i = 0; i < UART_MAXSTRLEN; i++)
 			{ 
 				if(antwort[i] == ':')
 				{ 
-				//com_send_string("hallo");
-				//com_ausgabe(antwort[i]);
+
 					i+=2;
 					if(antwort[i] != '0')
-					{
+					{   
+						i=UART_MAXSTRLEN;
 						init_schritt++;
-					//	 com_ausgabe(init_schritt);
-						// com_ausgabe(alter_schritt);
-						server_configuration();
-						return;
+					   
 					}
 
 					
 				}
-else {init_schritt--;
-					server_configuration();
+				
+				
 
-				}
 			}
+			
+	
+			
+			
 			break;
 		}
-		case 0:
-		{
-			for (uint8_t i = 0; i < UART_MAXSTRLEN; i++)
+		case 5:
+		//Antwort auf den Befehlt AT+CREG?
+		//Ist in der Antwort die Zahl 0,1 vorhanden
+		//war der Schritt erfolgreich
+		{   
+			for (int8_t i = 0; i < UART_MAXSTRLEN; i++)
 			{
-				if(antwort[i] == ':')
+				if(antwort[i] == '0')
 				{
-					for(uint8_t c = i; c < UART_MAXSTRLEN; c++)
+					for(int8_t c = i; c < UART_MAXSTRLEN; c++)
 					{
 						if(antwort[c] == ',')
 						{
 							c++;
 							if(antwort[c] == '1')
-							{
-							    
+							{   c=UART_MAXSTRLEN;
+							    i=UART_MAXSTRLEN;
 								init_schritt++;
-							//	com_ausgabe(init_schritt);
-							//	com_ausgabe(alter_schritt);
-								server_configuration();
-								return;
-							}
-
-							
-							
-							//	server_configuration();
+								
+								
 							}
 						}
+						
 					}
-				else {init_schritt=-2;}
+				}
+				//Falls der Konfigurationsschritt nicht erfolgreich war,
+				//wird die Konfigurations von vorne begonnen.
+				
 			}
 			_xdelay_ms(2000);
+	
 			break;
 		}
-		case -2: case 1: case 2: case 3:
+		//Bei den folgenden Befehlen wird als Antwort ein "OK" erwartet und daraufhin
+		//überrüft: "ATE 0"; "AT"; "AT+CGATT=1"; "AT+CSTT="internet.t-d1.de""; "AT+CIICR"; "AT+CIPSERVER=1,80"
+		case 0: case 1: case 2: case 3: case 6: case 7: case 8: case 10: case 11: 
+		{  //
+		//;
+	//	printf("ich schaue nach einem OK");
+			//Falls die Antwort "OK" ist, erhöhe den "init_schritt" um eins
+			laenge_antwort=com_strlen(antwort); 
+		for (uint8_t i = 0; i < laenge_antwort; i++)
 		{
-			if(!strcmp("OK", antwort))
+			if(antwort[i] == 'O')
 			{
+				
+				
+				offsets=i;
+				i=laenge_antwort;
+							
+			}
+		}
+			if(com_StrCmp(antwort,offsets,2,"OK")==true)
+			{
+				
 				init_schritt++;
-			//	_xdelay_ms(2000);
+			
 			}
-			else if(!strcmp("ERROR", antwort))
+		
+			/*else
 			{
-			init_schritt=-2;
-				//_xdelay_ms(2000);
-			}
+				init_schritt=0;
+			}*/
+						
+			
 			break;
 		}
-		case 4:
+		//Befeht "AT+CIIFSR"
+		//Bei diesem Befehl wird die IP-Adresse des GSM-Moduls empfangen
+		case 9:
+		{   //Falls die Antwort "ERROR" beginne die Konfiguration von Beginn an
+		
+			//Hier wird die IP-Adresse in ein char-Array gespeichert
+	
+		
+		//Falls die Antwort "OK" ist, erhöhe den "init_schritt" um eins
+		/*for (int8_t i = 0; i < UART_MAXSTRLEN; i++)
 		{
-			if(!strcmp("ERROR", antwort))
+			if(antwort[i] == 'E')
 			{
-				init_schritt=-2;
+				
+				offsets=i;
+				i=UART_MAXSTRLEN;
+				
 			}
-			else
+		}
+			if(com_StrCmp(antwort,offsets,5,"ERROR"))
 			{
-				/*for (uint8_t i = 0; i < len; i++)
+				init_schritt=0;
+			}
+			*/
+			
+			//printf("%s ich bin die antwort  ",uart_string);
+		ip_adresse_zwischenspeichern(antwort);
+		
+			    init_schritt++;
+			
+			
+			break;
+		}
+    /*    case 10:
+		 {
+			 printf("ich bin im case 10");
+			 printf("%s",antwort);
+			uint8_t offsets;
+			//Falls die Antwort "OK" ist, erhöhe den "init_schritt" um eins
+			for (uint8_t i = 0; i < UART_MAXSTRLEN; i++)
+			{
+				if(antwort[i] == 'C' ||antwort[i]=='A')
 				{
 					
+					
+					offsets=i;
+					i=UART_MAXSTRLEN;
+					
 				}
-				
-				len= ip_adresse;*/
+			}
+			if(com_StrCmp(antwort,offsets,10,"CONNECT OK")==true ||com_StrCmp(antwort,offsets,15,"ALREADY CONNECT")==true)
+			{
+				printf("ich bin bei CONNECT OK");
 				init_schritt++;
-				ip_adresse=1;
-				//server_configuration();
+				
 			}
+			
+
+			else
+			{
+				init_schritt=0;
+			}
+			
+			
 			break;
-		}
-		case 5:
-		{
-			if(!strcmp("OK", uart_string))
+		} 
+		 */
+		case 12:
+		{	//Falls die Konfigration erfolgreich war, wird die
+			//Konfiguration abgeschlossen
+			
+			printf("ich bin im letzten CASE");
+			//Falls die Antwort "OK" ist, erhöhe den "init_schritt" um eins
+			for (uint8_t i = 0; i < UART_MAXSTRLEN; i++)
 			{
-			init_schritt++;
-			//	_xdelay_ms(5000);
+				if(antwort[i] == 'S' && antwort[i+1]=='T')
+				{
+					offsets=i;
+					i=UART_MAXSTRLEN;
+					i++;
+				}
 			}
-			else if(!strcmp("ERROR", uart_string))
+			//STATE: SERVER LISTENING
+			if(com_StrCmp(antwort, offsets,23,"STATE: SERVER LISTENING"==true ))
 			{
-			init_schritt=-2;
-				//_xdelay_ms(5000);
-				//return;
-			}
-			break;
-		}
-		case 6:
-		{
-			if(!strcmp("STATE: SERVER LISTENING", antwort))
-			{
-			init_schritt++;
-				//_xdelay_ms(5000);
-			}
-			else if(!strcmp("ERROR", antwort))
-			{
-				init_schritt=-2;
-				//_xdelay_ms(5000);
+				konfiguration_erfolgreich==true;
+				printf("Konfiguration abgeschlossen");
 				return;
 			}
-			break;
+			
+			else {init_schritt=2;}
+				break;
 		}
-	//	init_schritt--;
+
+}	//Falls der vorherige Konfigurationsschritt erfolgreich war,
+	//rufe die Funktion für das Senden der Befehle auf
+	//
+	//printf("%d",init_schritt);
+	//printf("%d",alter_schritt);
+	if((alter_schritt!=init_schritt)|| (init_schritt==2))
+	{   
+		//printf("%s",uart_string);
+		
+		uart_str_count=0;
+		/*for(int i=0; i<com_strlen(uart_string);i++)
+		{
+		uart_string[i]=' ';}*/
+	    server_configuration();
 	}
-	if(alter_schritt!=init_schritt|| init_schritt==-2)
+    else 
 	{
-	server_configuration();
-	}
-	if(init_schritt==7)
-	{
-	com_send_string("SERVER ist konfiguriert");
-	return;
+		uart_str_count=0;
+		init_schritt=2;
+		server_configuration();
 	}
 }
+	
 
-uint8_t com_getNextMsg(uint8_t* str,uint8_t off,uint8_t len)
+/*uint8_t com_getNextMsg(uint8_t* str,uint8_t off,uint8_t len)
 {
 	for (uint8_t i = off; i < len; i++)
 	{
 		if(str[i] == '\n')return i;
 	}
 	return 0;
-}
+}*/
+/******************************************************************************************/
+//In dieser Funktion werden  Strings miteinander verglichen
 
 uint8_t com_StrCmp(uint8_t* str1,uint8_t off1,uint8_t len1,const char* str2)
 {
@@ -368,7 +429,7 @@ uint8_t com_StrCmp(uint8_t* str1,uint8_t off1,uint8_t len1,const char* str2)
 	return 1;
 }
 
-uint8_t com_check_string(uint8_t len, const char* antwort, uint8_t laenge_antwort)
+/*uint8_t com_check_string(uint8_t len, const char* antwort, uint8_t laenge_antwort)
 {
     uint8_t index=0;
 	while(index < len)
@@ -383,4 +444,44 @@ uint8_t com_check_string(uint8_t len, const char* antwort, uint8_t laenge_antwor
 	return 0;
 
 }
-
+*/
+void ip_adresse_zwischenspeichern(uint8_t antwort_ip[]){
+	char ip;
+	uint8_t ip_laenge;
+	
+	uint8_t ip_counter=0;
+	uint8_t stell_ip=0;
+	ip_laenge=com_strlen(antwort_ip);
+	for(uint8_t i=0; i<ip_laenge; i++)
+	{
+		
+	
+	if(antwort_ip[i]=='3'){
+		
+		ip_counter=i;
+		i=ip_laenge;
+	}
+	}
+	
+	for(uint8_t s=ip_counter; s<ip_laenge; s++ )
+	
+	{
+		if(antwort_ip[s]!='\r'){		
+		ip_adresse[stell_ip]=antwort_ip[s];
+		stell_ip++;
+		}
+		
+		else
+		
+		{
+			antwort_ip[s]='\0';
+			s=ip_laenge;
+			
+			
+		}
+		
+		
+				
+	}
+	
+}
