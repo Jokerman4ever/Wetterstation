@@ -13,6 +13,15 @@
 #include "ErrorList.h"
 void HandleClients(void);
 void CheckFirstrun(void);
+//Für GSMS neu hinzugefügt
+extern int8_t init_schritt;
+extern int8_t alter_schritt;
+extern uint8_t uart_str_count;
+extern uint8_t html_code1[];
+extern uint8_t html_code2[];
+extern uint8_t html_code3[];
+extern  char uart_string[UART_MAXSTRLEN + 1];
+volatile uint8_t uart_str_complete = 1;
 
 //extern int8_t init_schritt;
 //extern  char uart_string[UART_MAXSTRLEN + 1];
@@ -94,7 +103,7 @@ int main(void)
 
 	Set_Unix_Time(1509599593);
 	
-	//com_init();
+	com_init();
 	//SERVER
 	//Ist jetzt in der unstable branch!
 	/*com_init();
@@ -103,9 +112,34 @@ int main(void)
 		server_configuration(&com_initstep);
 	}*/
 	
-
+		server_configuration();
 	while(1)
 	{
+		
+		for(int i=0; i<UART_MAXSTRLEN; i++)
+		{
+			int offset;
+			if(uart_string[i]=='G')
+			{
+				
+				offset=i;
+			}
+		}
+		if(com_StrCmp(uart_string,0,3,"GET")==1)
+		{
+			
+			com_send_antwortclient(html_code1);
+			com_send_antwortclient(html_code2);
+			com_send_antwortclient(html_code3);
+			
+			for(int s= 0; s< com_strlen(uart_string);s++)
+			{
+				uart_string[s]=' ';
+				uart_str_count=0;
+			}
+		}
+
+	
 
 		/*if(uart_str_complete==1)
 		{
