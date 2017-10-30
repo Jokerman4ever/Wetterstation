@@ -30,6 +30,6 @@ uint8_t server_initialisierung;
 uint8_t com_strlen(uint8_t* data); //
 void com_empfangen();
 void ip_adresse_zwischenspeichern(uint8_t antwort_ip[]);
-
+extern volatile uint8_t ip_adresse[20];
 
 #endif /* COM_H_ */

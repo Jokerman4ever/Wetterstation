@@ -62,6 +62,7 @@ enum BatLvl {
 	};
 
 enum GSMLvl {
+				GSMNone = 0,
 				GSMLow = 1,		// GSM Sendeleistung niedrig
 				GSMMid = 2,		// GSM Sendeleistung mittel
 				GSMHigh = 3,	// GSM Sendeleistung hoch

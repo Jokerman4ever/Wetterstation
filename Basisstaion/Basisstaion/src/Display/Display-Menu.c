@@ -10,6 +10,7 @@
 #include "Storage/FileSys.h"
 #include "ErrorList.h"
 #include "RF.h"
+#include "GSM/com.h"
 
 uint8_t LineTemp[20];
 
@@ -76,7 +77,7 @@ uint16_t Druck_MS=0;
 uint8_t Feuchte_MS=0;
 uint8_t Wind_MS=0;
 uint8_t ID_MS=0xFF;
-uint8_t Weather_State[10];
+uint8_t Weather_State[8];
 uint8_t big_station = 0;
 
 void DSP_Refresh_Timer_Init()
@@ -123,6 +124,12 @@ void DSP_Update_Weatherdata(FS_StationRecord_t* data)
 // Muss im Sekundentakt aufgerufen werden (oder schneller)
 void DSP_Refresh(uint8_t BS_BatState,uint8_t BS_GSMState,uint8_t BS_NumNode)
 {
+	if(BS_GSMState < 2)BS_GSMState = GSMNone;
+	else if(BS_GSMState >= 2 && BS_GSMState < 11)BS_GSMState = GSMLow;
+	else if(BS_GSMState >= 11 && BS_GSMState < 20)BS_GSMState = GSMMid;
+	else if(BS_GSMState >= 20)BS_GSMState = GSMHigh;
+	
+	
 	time_GetLocalTime(&DSP_Time_Ms);
 
 	// Datum und Zeit aktualisieren:	
@@ -175,7 +182,7 @@ void DSP_Refresh(uint8_t BS_BatState,uint8_t BS_GSMState,uint8_t BS_NumNode)
 			DSP_CopyString("|||",GSMState);
 			break;
 		}
-		default:
+		case GSMNone: default:
 		{
 			DSP_CopyString("...",GSMState);
 			break;
@@ -250,19 +257,24 @@ void DSP_ChangePage(uint8_t ID)
 
 		case PageHome:
 		{
-			lcd_set_cursor(0,3);
+			lcd_set_cursor(0,2);
 			CenterStringPGM(DStr_BSName,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
 			
 			lcd_set_cursor(0,1);
-			sprintf(LineTemp,"        GSM %s   %d ",GSMState,NumNode); 
+			sprintf(LineTemp,"GSM %s          %d ",GSMState,NumNode); 
 			lcd_Xstring(LineTemp,0);
 			//lcd_set_cursor(0,2);
 			
-			
 			lcd_set_cursor(0,4);
+			sprintf(LineTemp,"IP: %s",ip_adresse);
+			lcd_Xstring(LineTemp,0);
+			
+			lcd_set_cursor(0,3);
 			sprintf(LineTemp,"  %s.%s.%s   %s:%s  ",Day,Month,Year,Hour,Minute);//das wird so nicht gehen, %d steht für decimal also eine zahl.... du übergibst nen string!!!
 			lcd_Xstring(LineTemp,0);
+			
+			
 			break;
 		}
 
@@ -813,7 +825,7 @@ void DSP_ChangePage(uint8_t ID)
 				lcd_Xstring(LineTemp,0);
 			}
 			lcd_set_cursor(0,1);
-			sprintf(LineTemp,"        GSM %s   %d ",GSMState,NumNode);
+			sprintf(LineTemp,"GSM %s          %d ",GSMState,NumNode);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,2);
 			sprintf(LineTemp,"   **MS ID: %3d**   ",ID_MS);
