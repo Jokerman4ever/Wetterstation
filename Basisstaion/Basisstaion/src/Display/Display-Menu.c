@@ -169,17 +169,17 @@ void DSP_Refresh(uint8_t BS_BatState,uint8_t BS_GSMState,uint8_t BS_NumNode)
 	{
 		case GSMLow:
 		{
-			DSP_CopyString("|..",GSMState);
+			DSP_CopyString("I..",GSMState);
 			break;
 		}
 		case GSMMid:
 		{
-			DSP_CopyString("||.",GSMState);
+			DSP_CopyString("II.",GSMState);
 			break;
 		}
 		case GSMHigh:
 		{
-			DSP_CopyString("|||",GSMState);
+			DSP_CopyString("III",GSMState);
 			break;
 		}
 		case GSMNone: default:

@@ -44,7 +44,7 @@ ISR(TCC1_OVF_vect)
 
 ISR(TCC0_OVF_vect)
 {
-	DSP_Refresh(0,0,RF_CurrentStatus.Registerd_Devices);
+	DSP_Refresh(0,17,RF_CurrentStatus.Registerd_Devices); /////////////////////////////////////////////
 	SystemTick();
 }
 
@@ -111,6 +111,10 @@ int main(void)
 	{
 		server_configuration(&com_initstep);
 	}*/
+
+sprintf(ip_adresse,"111.111.111.111"); //////////////////////////////////////////////////////////////////
+	
+	
 int offset=0;
 		server_configuration();
 	while(1)
