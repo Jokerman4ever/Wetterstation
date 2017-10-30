@@ -128,9 +128,9 @@ ISR(USARTF0_RXC_vect)
 	uart_string[uart_str_count] = nextChar;
     uart_str_count++;
 	
-	lcd_set_cursor(0,0);
+//	lcd_set_cursor(0,0);
 
-	lcd_Xstring(uart_string[uart_str_count],0);
+	//lcd_Xstring(uart_string[uart_str_count],0);
 	
 }
 

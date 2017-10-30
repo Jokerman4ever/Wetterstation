@@ -129,7 +129,13 @@ int offset=0;
 					_delay_ms(500);
 					offset=i;
 					i=UART_MAXSTRLEN;
-				
+				com_send_string("AT+CIPSEND\r");				// Änderung
+				_delay_ms(500);
+				com_send_antwortclient(html_code1);
+				com_send_antwortclient(html_code2);
+				com_send_antwortclient(html_code3);
+				_delay_ms(500);			
+				com_ausgabe(0x1A);								// Änderung				
 			}
 		}
 		if(com_StrCmp(uart_string,offset,3,"GET")==1)
