@@ -33,7 +33,8 @@ FS_File_t FS_TempFile;
 //+8 -> FullCircle - Indicates Record overflow status
 //+9 -> NextErrorAddress
 //+13 -> ErrorLogFull - Indicates Error overflow status
-//+14 - 15 -> ----FREE------
+//+14 -> Syncword
+//+15 -> ----FREE------
 //+16 - 17 -> Filetable  
 //+32 - (32 + FS_MaxFileCount*8) -> FileInfos
 //////////////////////////////////////////////////////////////////////////

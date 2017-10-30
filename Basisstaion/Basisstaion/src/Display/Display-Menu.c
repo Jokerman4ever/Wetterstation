@@ -7,6 +7,9 @@
 #include "Display-Menu.h"
 #include "lcd-routines.h"
 #include "Clock/Xdelay.h"
+#include "Storage/FileSys.h"
+#include "ErrorList.h"
+#include "RF.h"
 
 uint8_t LineTemp[20];
 
@@ -29,17 +32,20 @@ void PGM_ReadStr(const char* str,char* dest,uint8_t start)
 #define DStr_BSEinstellungen PSTR		("    Einstellungen   ")
 #define DStr_BSWettermonitor PSTR		("    Wettermonitor   ")
 #define DStr_BSMenuFehlerliste PSTR		("  **FEHLERLISTE**   ")
-#define DStr_BSMenuEinstellungen PSTR	(" **Einstellungen**  ")
-#define DStr_BSZurueck PSTR				("    Zurück          ")
+#define DStr_BSMenuEinstellungen PSTR	("  **Einstellung**   ")
+#define DStr_BSZurueck PSTR				("    Zurueck         ")
 #define DStr_BSNamenVergeben PSTR		("    Namen vergeben  ")
 #define DStr_BSSpeicherverwaltung PSTR	("    Flashverwaltung ")
+#define DStr_BSMenuSpeicherverwaltung PSTR	("**Flashverwaltung** ")
 #define DStr_BSRFverwaltung PSTR		("    Funkverwaltung  ")
 #define DStr_BSGSMverwaltung PSTR		("    GSM-Verwaltung  ")
 #define DStr_BSEnergiemanagement PSTR	("    Energiemanage   ")
 #define DStr_BSEinheiten PSTR			("    Einheit waehlen ")
 #define DStr_BSIntervalle PSTR			("    Messintervalle  ")
 #define DStr_BSSyncWort PSTR			("    Syncwort        ")
+#define DStr_BSMenuSyncWort PSTR		("    **Syncwort**    ")
 #define DStr_BSFehler PSTR				("    **Fehler   **   ")
+#define DStr_BSSpeicherLoeschen PSTR	(" Speicher Loeschen? ")
 
 char BatState[4] = "...";
 char GSMState[4] = "...";
@@ -50,12 +56,12 @@ char Year[3] = "00";
 char Minute[3] = "00";
 char Hour[3] = "00";
 // Fehlerliste:
-uint8_t Fehler[20][50] = {};
+uint8_t DSP_Fehler[3][20] = {};
 uint8_t Anzahl_Fehler = 0;
 uint8_t Fehler_i;
 uint8_t Fehler_j;
 uint8_t Fehler_k;
-
+uint8_t ScrollPosition;
 uint8_t down = 0x1E;
 uint8_t up = 0x1D;
 
@@ -289,13 +295,14 @@ void DSP_ChangePage(uint8_t ID)
 			lcd_set_cursor(0,2);
 			CenterStringPGM(DStr_BSZurueck,LineTemp,2);
 			lcd_Xstring(LineTemp,0);
+			DSP_FillErrorArray(0);//Fill array
 			lcd_set_cursor(0,3);
-			sprintf(LineTemp,"    %s",Fehler[1]);
+			sprintf(LineTemp,"    %s",DSP_Fehler[0]);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,4);
-			sprintf(LineTemp,"    %s",Fehler[2]);
+			sprintf(LineTemp,"    %s",DSP_Fehler[1]);
 			lcd_Xstring(LineTemp,0);
-			if(Fehler[3] != 0){
+			if(DSP_Fehler[2] != 0){
 				//Pfeil nach unten:
 				lcd_set_cursor(0,4);
 				lcd_string("v");
@@ -312,13 +319,14 @@ void DSP_ChangePage(uint8_t ID)
 			CenterStringPGM(DStr_BSZurueck,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,3);
-			sprintf(LineTemp,"    %s",Fehler[1]);
+			DSP_FillErrorArray(0);//Fill array
+			sprintf(LineTemp,"    %s",DSP_Fehler[0]);
 			CenterString(LineTemp,LineTemp,2);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,4);
-			sprintf(LineTemp,"    %s",Fehler[2]);
+			sprintf(LineTemp,"    %s",DSP_Fehler[1]);
 			lcd_Xstring(LineTemp,0);
-			if(Fehler[3] != 0){
+			if(DSP_Fehler[2] != 0){
 				//Pfeil nach unten:
 				lcd_set_cursor(0,4);
 				lcd_string("v");
@@ -332,25 +340,25 @@ void DSP_ChangePage(uint8_t ID)
 			CenterStringPGM(DStr_BSMenuFehlerliste,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,2);
-			sprintf(LineTemp,"    %s",Fehler[Fehler_i]);
+			sprintf(LineTemp,"    %s",DSP_Fehler[Fehler_i]);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,3);
-			sprintf(LineTemp,"    %s",Fehler[Fehler_j]);
+			sprintf(LineTemp,"    %s",DSP_Fehler[Fehler_j]);
 			CenterString(LineTemp,LineTemp,2);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,4);
-			sprintf(LineTemp,"    %s",Fehler[Fehler_k]);
+			sprintf(LineTemp,"    %s",DSP_Fehler[Fehler_k]);
 			lcd_Xstring(LineTemp,0);
 			if (Fehler_i != 0)
 			{
-				if(Fehler[Fehler_i-1] != 0){
+				if(DSP_Fehler[Fehler_i-1] != 0){
 					//Pfeil nach oben:
 					lcd_set_cursor(0,1);
 					lcd_string("^");
 				}
 			}
 			if(Fehler_k != Anzahl_Fehler - 1){
-				if(Fehler[Fehler_k+1] != 0){
+				if(DSP_Fehler[Fehler_k+1] != 0){
 					//Pfeil nach unten:
 					lcd_set_cursor(0,4);
 					lcd_string("v");
@@ -365,18 +373,18 @@ void DSP_ChangePage(uint8_t ID)
 			CenterStringPGM(DStr_BSMenuFehlerliste,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,2);
-			sprintf(LineTemp,"    %s",Fehler[Fehler_i]);
+			sprintf(LineTemp,"    %s",DSP_Fehler[Fehler_i]);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,3);
-			sprintf(LineTemp,"    %s",Fehler[Fehler_j]);
+			sprintf(LineTemp,"    %s",DSP_Fehler[Fehler_j]);
 			CenterString(LineTemp,LineTemp,2);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,4);
-			sprintf(LineTemp,"    %s",Fehler[Fehler_k]);
+			sprintf(LineTemp,"    %s",DSP_Fehler[Fehler_k]);
 			lcd_Xstring(LineTemp,0);
 			if (Fehler_i != 0)
 			{
-				if(Fehler[Fehler_i-1] != 0){
+				if(DSP_Fehler[Fehler_i-1] != 0){
 					//Pfeil nach oben:
 					lcd_set_cursor(0,1);
 					lcd_string("^");
@@ -391,18 +399,18 @@ void DSP_ChangePage(uint8_t ID)
 			CenterStringPGM(DStr_BSMenuFehlerliste,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,2);
-			sprintf(LineTemp,"    %s",Fehler[Fehler_i]);
+			sprintf(LineTemp,"    %s",DSP_Fehler[Fehler_i]);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,3);
-			sprintf(LineTemp,"    %s",Fehler[Fehler_j]);
+			sprintf(LineTemp,"    %s",DSP_Fehler[Fehler_j]);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,4);
-			sprintf(LineTemp,"    %s",Fehler[Fehler_k]);
+			sprintf(LineTemp,"    %s",DSP_Fehler[Fehler_k]);
 			CenterString(LineTemp,LineTemp,2);
 			lcd_Xstring(LineTemp,0);
 			if (Fehler_i != 0)
 			{
-				if(Fehler[Fehler_i-1] != 0){
+				if(DSP_Fehler[Fehler_i-1] != 0){
 					//Pfeil nach oben:
 					lcd_set_cursor(0,1);
 					lcd_string("^");
@@ -446,26 +454,26 @@ void DSP_ChangePage(uint8_t ID)
 		}
 
 		case PageEinstellungen_Zurueck:
-		{
+		{//+++
 			lcd_set_cursor(0,1);
-			CenterStringPGM(DStr_BSEinstellungen,LineTemp,0);
+			CenterStringPGM(DStr_BSMenuEinstellungen,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,2);
 			CenterStringPGM(DStr_BSZurueck,LineTemp,2);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,3);
-			CenterStringPGM(DStr_BSNamenVergeben,LineTemp,0);
-			lcd_Xstring(LineTemp,0);
-			lcd_set_cursor(0,4);
 			CenterStringPGM(DStr_BSSpeicherverwaltung,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,4);
+			CenterStringPGM(DStr_BSIntervalle,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
 			//Pfeil nach unten:
-			lcd_set_cursor(0,2);
-			lcd_string("v");
+			lcd_set_cursor(0,4);
+			lcd_Write(down,1);
 			break;
 		}
 		
-		case PageEinstellungen_Namen:
+		/*case PageEinstellungen_Namen:
 		{
 			lcd_set_cursor(0,1);
 			CenterStringPGM(DStr_BSEinstellungen,LineTemp,0);
@@ -484,31 +492,28 @@ void DSP_ChangePage(uint8_t ID)
 			lcd_string("v");
 			break;
 		}
-
+*/
 		case PageEinstellungen_Speicher:
-		{
+		{//++
 			lcd_set_cursor(0,1);
-			CenterStringPGM(DStr_BSEinstellungen,LineTemp,0);
+			CenterStringPGM(DStr_BSMenuEinstellungen,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,2);
-			CenterStringPGM(DStr_BSNamenVergeben,LineTemp,0);
+			CenterStringPGM(DStr_BSZurueck,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,3);
 			CenterStringPGM(DStr_BSSpeicherverwaltung,LineTemp,2);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,4);
-			CenterStringPGM(DStr_BSRFverwaltung,LineTemp,0);
+			CenterStringPGM(DStr_BSIntervalle,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
-			//Pfeil nach oben:
-			lcd_set_cursor(0,1);
-			lcd_string("^");
 			//Pfeil nach unten:
-			lcd_set_cursor(0,2);
-			lcd_string("v");
+			lcd_set_cursor(0,4);
+			lcd_Write(down,1);
 			break;
 		}
 		
-		case PageEinstellungen_RF:
+		/*case PageEinstellungen_RF:
 		{
 			lcd_set_cursor(0,1);
 			CenterStringPGM(DStr_BSEinstellungen,LineTemp,0);
@@ -530,8 +535,8 @@ void DSP_ChangePage(uint8_t ID)
 			lcd_string("v");
 			break;
 		}
-
-		case PageEinstellungen_GSM:
+*/
+		/*case PageEinstellungen_GSM:
 		{
 			lcd_set_cursor(0,1);
 			CenterStringPGM(DStr_BSEinstellungen,LineTemp,0);
@@ -576,67 +581,68 @@ void DSP_ChangePage(uint8_t ID)
 			lcd_string("v");
 			break;
 		}
-
-		case PageEinstellungen_Einheit:
-		{
-			lcd_set_cursor(0,1);
-			CenterStringPGM(DStr_BSEinstellungen,LineTemp,0);
-			lcd_Xstring(LineTemp,0);
-			lcd_set_cursor(0,2);
-			CenterStringPGM(DStr_BSEnergiemanagement,LineTemp,0);
-			lcd_Xstring(LineTemp,0);
-			lcd_set_cursor(0,3);
-			CenterStringPGM(DStr_BSEinheiten,LineTemp,2);
-			lcd_Xstring(LineTemp,0);
-			lcd_set_cursor(0,4);
-			CenterStringPGM(DStr_BSIntervalle,LineTemp,0);
-			lcd_Xstring(LineTemp,0);
-			//Pfeil nach oben:
-			lcd_set_cursor(0,1);
-			lcd_string("^");
-			//Pfeil nach unten:
-			lcd_set_cursor(0,2);
-			lcd_string("v");
-			break;
-		}
+*/
 		
 		case PageEinstellungen_Intervall:
 		{
 			lcd_set_cursor(0,1);
-			CenterStringPGM(DStr_BSEinstellungen,LineTemp,0);
+			CenterStringPGM(DStr_BSMenuEinstellungen,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,2);
-			CenterStringPGM(DStr_BSEinheiten,LineTemp,0);
+			CenterStringPGM(DStr_BSSpeicherverwaltung,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,3);
 			CenterStringPGM(DStr_BSIntervalle,LineTemp,2);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,4);
+			CenterStringPGM(DStr_BSEinheiten,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			//Pfeil nach oben:
+			lcd_set_cursor(0,2);
+			lcd_Write(up,1);
+			//Pfeil nach unten:
+			lcd_set_cursor(0,4);
+			lcd_Write(down,1);
+			break;
+		}	
+		
+		case PageEinstellungen_Einheit:
+		{
+			lcd_set_cursor(0,1);
+			CenterStringPGM(DStr_BSMenuEinstellungen,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,2);
+			CenterStringPGM(DStr_BSIntervalle,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,3);
+			CenterStringPGM(DStr_BSEinheiten,LineTemp,2);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,4);
 			CenterStringPGM(DStr_BSSyncWort,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
 			//Pfeil nach oben:
-			lcd_set_cursor(0,1);
-			lcd_string("^");
+			lcd_set_cursor(0,2);
+			lcd_Write(up,1);
 			break;
-		}				
+		}			
 
 		case PageEinstellungen_Sync:
 		{
 			lcd_set_cursor(0,1);
-			CenterStringPGM(DStr_BSEinstellungen,LineTemp,0);
+			CenterStringPGM(DStr_BSMenuEinstellungen,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,2);
-			CenterStringPGM(DStr_BSEinheiten,LineTemp,0);
+			CenterStringPGM(DStr_BSIntervalle,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,3);
-			CenterStringPGM(DStr_BSIntervalle,LineTemp,0);
+			CenterStringPGM(DStr_BSEinheiten,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,4);
 			CenterStringPGM(DStr_BSSyncWort,LineTemp,2);
 			lcd_Xstring(LineTemp,0);
 			//Pfeil nach oben:
-			lcd_set_cursor(0,1);
-			lcd_string("^");
+			lcd_set_cursor(0,2);
+			lcd_Write(up,1);
 			break;
 		}
 		
@@ -656,10 +662,17 @@ void DSP_ChangePage(uint8_t ID)
 		case PageSet_Speicher:
 		{
 			lcd_set_cursor(0,1);
+			CenterStringPGM(DStr_BSMenuSpeicherverwaltung,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
 			//
 			lcd_set_cursor(0,2);
+			CenterStringPGM(DStr_BSZurueck,LineTemp,ScrollPosition == 0 ? 2 : 0);
+			lcd_Xstring(LineTemp,0);
 			//
 			lcd_set_cursor(0,3);
+			if(ScrollPosition == 0)sprintf(LineTemp,"    LOESCHEN: NEIN");
+			else sprintf(LineTemp,">>  LOESCHEN: %s",ScrollPosition == 1 ? "NEIN": "JA");
+			lcd_Xstring(LineTemp,0);
 			//
 			lcd_set_cursor(0,4);
 			//
@@ -734,15 +747,40 @@ void DSP_ChangePage(uint8_t ID)
 		case PageSet_Sync:
 		{
 			lcd_set_cursor(0,1);
+			CenterStringPGM(DStr_BSMenuSyncWort,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
 			//
 			lcd_set_cursor(0,2);
-			//
+			sprintf(LineTemp,"  Aktuell: %s",RF_Syncwords[RF_CurrentStatus.CurrentSyncword]);
+			lcd_Xstring(LineTemp,0);
+			
 			lcd_set_cursor(0,3);
-			//
+			sprintf(LineTemp,"  Neu    : %s",RF_Syncwords[ScrollPosition]);
+			lcd_Xstring(LineTemp,0);
 			lcd_set_cursor(0,4);
 			//
 			break;
-		}		
+		}
+		
+		case PageSet_Speicher_Loeschen:
+		{
+			lcd_set_cursor(0,1);
+			CenterStringPGM(DStr_BSMenuSpeicherverwaltung,LineTemp,0);
+			lcd_Xstring(LineTemp,0); 
+			lcd_set_cursor(0,2);
+			CenterStringPGM(DStr_BSSpeicherLoeschen,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,3);
+			if(ScrollPosition == 0)sprintf(LineTemp,">>  NEIN?");
+			else sprintf(LineTemp,"    NEIN?");
+			lcd_Xstring(LineTemp,0);
+			lcd_set_cursor(0,4);
+			if(ScrollPosition == 1)sprintf(LineTemp, ">>  JA?");
+			else sprintf(LineTemp, "    JA?");
+			lcd_Xstring(LineTemp,0);
+			break;
+		}	
+				
 	
 		// TabWettermonitor:		
 		case PageMenuWettermonitor:
@@ -900,17 +938,121 @@ void DSP_ScrollMenu(uint8_t dir)
 			break;
 		}
 		
+		case PageEinstellungen_Zurueck:
+		{
+			if(dir == 1)
+			{
+				DSP_ChangePage(PageEinstellungen_Speicher);
+			}
+			else
+			{
+				
+			}
+			break;
+		}
+		case PageEinstellungen_Speicher:
+		{
+			if(dir == 1)
+			{
+				DSP_ChangePage(PageEinstellungen_Intervall);
+			}
+			else
+			{
+				DSP_ChangePage(PageEinstellungen_Zurueck);
+			}
+			break;
+		}
+		case PageEinstellungen_Intervall:
+		{
+			if(dir == 1)
+			{
+				DSP_ChangePage(PageEinstellungen_Einheit);
+			}
+			else
+			{
+				DSP_ChangePage(PageEinstellungen_Speicher);
+			}
+			break;
+		}
+		case PageEinstellungen_Einheit:
+		{
+			if(dir == 1)
+			{				
+				DSP_ChangePage(PageEinstellungen_Sync);
+			}
+			else
+			{
+
+				DSP_ChangePage(PageEinstellungen_Intervall);
+			}
+			break;
+		}
+		case PageEinstellungen_Sync:
+		{
+			if(dir == 1)
+			{
+				
+			}
+			else
+			{
+				DSP_ChangePage(PageEinstellungen_Einheit);
+			}
+			break;
+		}
+		case PageSet_Sync:
+		{			
+			if(dir == 1)
+			{
+				if(ScrollPosition < 15)ScrollPosition++;
+				else ScrollPosition = 0;
+			}
+			else
+			{
+				if(ScrollPosition > 0)ScrollPosition--;
+				else ScrollPosition = 15;
+			}
+			DSP_ChangePage(PageSet_Sync);
+			break;
+		}
+		case PageSet_Speicher:
+		{
+			if(dir == 1)
+			{
+				if(ScrollPosition < 2)ScrollPosition++;
+			}
+			else
+			{
+				if(ScrollPosition > 0)ScrollPosition--;
+			}
+			DSP_ChangePage(PageSet_Speicher);
+			break;
+		}
+		case PageSet_Speicher_Loeschen:
+		{
+			if(dir == 1)
+			{
+				if(ScrollPosition < 1)ScrollPosition++;
+			}
+			else
+			{
+				if(ScrollPosition > 0)ScrollPosition--;
+			}
+			DSP_ChangePage(PageSet_Speicher_Loeschen);
+			break;
+		}
+		
+		
 		/*
 		// TabEinstellungen:
 		PageEinstellungen_Zurueck = 31,
-		PageEinstellungen_Namen = 32,
-		PageEinstellungen_Speicher = 33,
-		PageEinstellungen_RF = 34,
-		PageEinstellungen_GSM = 35,
-		PageEinstellungen_Energie = 36,
-		PageEinstellungen_Einheit = 37,
-		PageEinstellungen_Intervall = 38,
-		PageEinstellungen_Sync = 39,
+		PageEinstellungen_Namen = 32,---
+		PageEinstellungen_Speicher = 33, Flash löschen?
+		PageEinstellungen_RF = 34, ------
+		PageEinstellungen_GSM = 35,-----
+		PageEinstellungen_Energie = 36,----
+		PageEinstellungen_Einheit = 37,+++
+		PageEinstellungen_Intervall = 38,+++
+		PageEinstellungen_Sync = 39,++
 		PageSet_Namen = 40,
 		PageSet_Speicher = 41,
 		PageSet_RF = 42,
@@ -1023,6 +1165,7 @@ void DSP_SelectMenu(void)
 		
 		case PageEinstellungen_Speicher:
 		{
+			ScrollPosition = 0;
 			DSP_ChangePage(PageSet_Speicher);
 			break;
 		}
@@ -1059,6 +1202,7 @@ void DSP_SelectMenu(void)
 		
 		case PageEinstellungen_Sync:
 		{
+			ScrollPosition = RF_CurrentStatus.CurrentSyncword;
 			DSP_ChangePage(PageSet_Sync);
 			break;
 		}
@@ -1072,7 +1216,11 @@ void DSP_SelectMenu(void)
 		
 		case PageSet_Speicher:
 		{
-			DSP_ChangePage(PageEinstellungen_Speicher);
+			if(ScrollPosition==0)DSP_ChangePage(PageEinstellungen_Speicher);
+			else
+			{
+				if(ScrollPosition == 2){ScrollPosition = 0; DSP_ChangePage(PageSet_Speicher_Loeschen);}
+			}
 			break;
 		}
 		
@@ -1108,9 +1256,27 @@ void DSP_SelectMenu(void)
 		
 		case PageSet_Sync:
 		{
+			RF_CurrentStatus.CurrentSyncword = ScrollPosition;
+			RF_Set_Sync_Num(ScrollPosition);
+			EEPROM_WriteByte(14,ScrollPosition);
 			DSP_ChangePage(PageEinstellungen_Sync);
 			break;
-		}								
+		}			
+		
+		case PageSet_Speicher_Loeschen:
+		{
+			
+			if(ScrollPosition == 0)
+			{
+				DSP_ChangePage(PageEinstellungen_Speicher);
+			}
+			else
+			{
+				FS_FirstRun();
+				DSP_ChangePage(PageHome);
+			}
+			break;
+		}					
 // Stop Provisorium
 
 		// TabWettermonitor:
@@ -1144,12 +1310,14 @@ void CenterString(char* str,char* Temp,uint8_t arrows)
 void CenterStringPGM(const char* str,uint8_t* Temp,uint8_t arrows)
 {
 	char tt[20];
+	uint8_t offset = 0;
 	PGM_ReadStr(str,tt,0);
 	uint8_t len = strlen(tt);
 	uint8_t maxspace = 20 - (((arrows == 1) || (arrows == 2)) ? 2 : ((arrows == 3) ? 4 : 0));
 	if(arrows & 0x02){*Temp++='>';*Temp++='>';}
+	if(len > maxspace){offset = len - maxspace;}
 	for (uint8_t i = 0; i < (maxspace-len)/2; i++)*Temp++=32;//Leerzeichen einfügen
-	for (uint8_t i = 0; i < len; i++)*Temp++=tt[i];
+	for (uint8_t i = offset; i < len; i++)*Temp++=tt[i];
 	for (uint8_t i = 0; i < (maxspace-len)/2; i++)*Temp++=32;//Leerzeichen einfügen
 	if(arrows & 0x01){*Temp++='<';*Temp++='<';}
 }
@@ -1184,4 +1352,19 @@ void SelectStringPGM(const uint8_t* str,uint8_t* Temp)
 	for (uint8_t i = 0; i < len; i++)*Temp++=tt[i];
 	*Temp++='<';*Temp++='-';
 	for (uint8_t i = 0; i < maxspace; i++)*Temp++=32;
+}
+
+void DSP_FillErrorArray(uint16_t index)
+{
+	FS_ErrorRecord_t ERROR;
+	for (uint8_t i = 0; i < 3; i++)
+	{
+		FS_GetError(i,&ERROR);
+		switch(ERROR.ID)
+		{
+			case ERRORID_LOCAL_BATTERYLOW: sprintf(DSP_Fehler[i],"Batterie Leer"); break;
+			default: break;
+		}
+	}
+
 }

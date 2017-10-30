@@ -10,7 +10,7 @@
 #include "GSM/com.h"
 #include "Http/server.h"
 #include "time.h"
-
+#include "ErrorList.h"
 void HandleClients(void);
 void CheckFirstrun(void);
 
@@ -19,7 +19,7 @@ void CheckFirstrun(void);
 //volatile uint8_t uart_str_complete = 0;
 //uint8_t daten_enmpfangen=false;
 uint8_t Packet_buffer[10];
-
+uint8_t EEPROM_SyncWord;
 //int8_t com_initstep = -3;
 
 ISR(PORTE_INT0_vect)
@@ -83,7 +83,7 @@ int main(void)
 	CheckFirstrun();
 	FS_Init();
 	RF_Packet_t p = RF_CreatePacket(buffer,1,16,0);//JUST FOR TEST!!!!
-	RF_Init(0x01, 0);
+	RF_Init(0x01, EEPROM_SyncWord);
 	val = RF_Get_Command(0x01);
 	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
 	RF_Set_State(RF_State_StandBy);
@@ -91,8 +91,8 @@ int main(void)
 	DSP_ChangePage(PageHome);
 
 	sei();
-	
-	Set_Unix_Time(1508494593);
+
+	Set_Unix_Time(1509599593);
 	
 	//com_init();
 	//SERVER
@@ -151,7 +151,9 @@ void CheckFirstrun(void)
 	{
 		EEPROM_WriteByte(1,1);
 		FS_FirstRun();
+		EEPROM_WriteByte(14,0);
 	}
+	EEPROM_SyncWord = EEPROM_ReadByte(14);
 }
 
 

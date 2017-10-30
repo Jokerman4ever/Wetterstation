@@ -38,8 +38,8 @@ enum PageID {
 				PageEinstellungen_RF = 34,	//vermutlich raus?
 				PageEinstellungen_GSM = 35,	//Saba?
 				PageEinstellungen_Energie = 36,	//raus
-				PageEinstellungen_Einheit = 37,	//raus
-				PageEinstellungen_Intervall = 38, //raus
+				PageEinstellungen_Einheit = 37,	//Das machste auf jeden fall TiM!!!!
+				PageEinstellungen_Intervall = 38, //Tim das machste auch!
 				PageEinstellungen_Sync = 39,		//muss rein - Zahl von 0 bis 15
 				PageSet_Namen = 40,	
 				PageSet_Speicher = 41,
@@ -49,6 +49,7 @@ enum PageID {
 				PageSet_Einheit = 45,
 				PageSet_Intervall = 46,
 				PageSet_Sync = 47,
+				PageSet_Speicher_Loeschen = 48,
 				// TabWettermonitor:
 				PageMenuWettermonitor = 50,
 				PageWettermonitor = 51,
@@ -79,5 +80,5 @@ void DSP_Refresh(uint8_t BS_BatState, uint8_t BS_GSMState, uint8_t BS_NumNode);
 void DSP_CopyString(const char* str, char* strout);
 void DSP_Refresh_Timer_Init(void);
 void DSP_Update_Weatherdata(FS_StationRecord_t* data);
-
+void DSP_FillErrorArray(uint16_t id);
 #endif /*DISPLAYMENU_H_*/

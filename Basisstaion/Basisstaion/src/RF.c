@@ -15,23 +15,22 @@ RF_Status_t RF_CurrentStatus;//Stores the information about the RF-Modul
 RF_Config_t RF_CurrentConfig;//Can be used to configure the RF-Modul
 
 //List of RF-Modul Syncword network identifiers
-uint8_t RF_Syncwords[16][4] = {{'S','Y','N','C'},
-{'L','I','N','K'},
-{'U','S','E','R'},
-{'H','O','S','T'},
-{'D','A','T','A'},
-{'S','A','F','E'},
-{'C','H','I','P'},
-{'C','A','L','L'},
-{'G','A','T','E'},
-{'I','C','O','N'},
-{'F','U','N','K'},
-{'W','I','N','D'},
-{'R','A','I','N'},
-{'T','E','M','P'},
-{'P','O','R','T'},
-{'V','O','L','T'}};
-
+uint8_t RF_Syncwords[16][5] = {{'S','Y','N','C',0},
+{'L','I','N','K',0},
+{'U','S','E','R',0},
+{'H','O','S','T',0},
+{'D','A','T','A',0},
+{'S','A','F','E',0},
+{'C','H','I','P',0},
+{'C','A','L','L',0},
+{'G','A','T','E',0},
+{'I','C','O','N',0},
+{'F','U','N','K',0},
+{'W','I','N','D',0},
+{'R','A','I','N',0},
+{'T','E','M','P',0},
+{'P','O','R','T',0},
+{'V','O','L','T',0}};
 //Puts one char onto the SPI bus
 static void SPI_putc(uint8_t data)
 {
@@ -106,6 +105,7 @@ void RF_Init(uint8_t dev_add, uint8_t syncw_num)
 	RF_Set_PacketConfig(1,1,1,RF_Preamble_3,RF_AddressFilter_NODEADD_00);//Configure packetmode to CRC check|Whitening|Variable packet payload|3 Bytes Preamble|Adress Filter->Node Adress and Broadcast!
 	RF_Set_PayloadLenght(RF_Max_PacketPayload);//Bytes!
 	RF_Set_Sync_Num(syncw_num);
+	RF_CurrentStatus.CurrentSyncword = syncw_num;
 	RF_Set_IRQSources(RF_RXIRQ0_Packet_FIFOEMPTY, RF_RXIRQ1_Packet_CRCOK,RF_TXIRQ1_TXDONE);
 	RF_IRQ0_PORT.DIRCLR = (1<<RF_IRQ0_PIN);//Set as Input
 	RF_IRQ1_PORT.DIRCLR = (1<<RF_IRQ1_PIN);//Set as Input

@@ -232,8 +232,10 @@ typedef struct RF_Status
 	RF_TimeSlot_t TimeSlots[RF_MaxDevices];
 	uint16_t CurrentSlotTime;
 	uint8_t Registerd_Devices;
+	uint8_t CurrentSyncword;
 } RF_Status_t;
 
+extern uint8_t RF_Syncwords[16][5];
 
 
 
