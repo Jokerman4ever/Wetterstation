@@ -8,10 +8,11 @@
 #include "com.h"
 #include "string.h"
 #include "Http/server.h"
+#include "DIsplay/lcd-routines.h"
 #include "Storage/FileSys.h"
 #include <avr/interrupt.h>
 unsigned char nextChar;
-int init_schritt=1;
+int init_schritt=0;
 int8_t alter_schritt=2;
 char ip_zeichen;
 volatile uint8_t uart_str_count = 0;
@@ -123,8 +124,13 @@ uint8_t com_getString(uint8_t* buffer)
 ISR(USARTF0_RXC_vect)
 {  
 	nextChar = USARTF0.DATA;
+	
 	uart_string[uart_str_count] = nextChar;
     uart_str_count++;
+	
+	lcd_set_cursor(0,0);
+
+	lcd_Xstring(uart_string[uart_str_count],0);
 	
 }
 
@@ -138,7 +144,7 @@ void server_configuration()
 	switch(init_schritt)
 	{   
 		case 1: com_send_string("AT+CFUN=1,1\r"); break; //Resets the Modul
-		case 0: com_send_string("ATE 0\r"); break; //Auschalten des Echos ATE 1-> einschalten
+		case 0: com_send_string("ATE 1\r"); break; //Auschalten des Echos ATE 1-> einschalten
 		case 2: com_send_string("AT\r"); break;
 		case 3: com_send_string("AT+IPR=9600\r"); break;
 		case 4:com_send_string("AT+CSQ\r"); break;
@@ -147,25 +153,26 @@ void server_configuration()
 		case 7:com_send_string("AT+CSTT=\"internet.t-d1.de\"\r");  break;
 		case 8:com_send_string("AT+CIICR\r"); break;
 		case 9:com_send_string("AT+CIFSR\r");break;
-		case 10:
-		{
-			com_send_string("AT+CIPSTART=\"TCP\",\"8.23.224.120\",\"80\"\r");//_delay_ms(60000);
-			break;
-		}
+	//	case 10:
+		//{
+			//com_send_string("AT+CIPSTART=\"TCP\",\"8.23.224.120\",\"80\"\r");//_delay_ms(60000);
+			//break;
+		//}
 		
-		case 11:
+		case 10: 
 		{
-			com_send_string("AT+CIPSEND\r"); 
+			/*com_send_string("AT+CIPSEND\r"); 
 			com_send_antwortclient(hhtp_header1);
 			com_send_antwortclient(http_header2);
 			com_send_antwortclient(http_header3);
 			com_send_antwortclient(http_header4);
 			com_ausgabe(0x1A);
-			_delay_ms(30000);
+			_delay_ms(30000);*/
 			com_send_string("AT+CIPSERVER=1,80\r");
+			_delay_ms(10000);
 			break;
 			}
-		case 12:  com_send_string("AT+CIPSTATUS\r"); break;
+	//	case 12:  com_send_string("AT+CIPSTATUS\r"); break;
 	}
 
 	_delay_ms(10000);
@@ -186,7 +193,10 @@ void server_configuration()
 /********************************************************************************************************************/
 void server_configuration_auswertung(uint8_t antwort[])
 {
-	
+		
+		//lcd_set_cursor(0,0);
+
+		//lcd_Xstring(antwort,0);
 	alter_schritt=init_schritt;
 			
 switch(init_schritt)
@@ -257,7 +267,7 @@ switch(init_schritt)
 		}
 		//Bei den folgenden Befehlen wird als Antwort ein "OK" erwartet und daraufhin
 		//überrüft: "ATE 0"; "AT"; "AT+CGATT=1"; "AT+CSTT="internet.t-d1.de""; "AT+CIICR"; "AT+CIPSERVER=1,80"
-		case 0: case 1: case 2: case 3: case 6: case 7: case 8: case 10: case 11: 
+		case 0: case 1: case 2: case 3: case 6: case 7: case 8: case 10: 
 		{  //
 		//;
 	//	printf("ich schaue nach einem OK");
@@ -276,8 +286,17 @@ switch(init_schritt)
 		}
 			if(com_StrCmp(antwort,offsets,2,"OK")==true)
 			{
-				
+				if(init_schritt==10)
+				{
+			konfiguration_erfolgreich=true;
+			lcd_set_cursor(0,0);
+
+			lcd_Xstring("konf fertig",0);
+			
+				}
 				init_schritt++;
+				
+				
 			
 			}
 		
@@ -484,4 +503,8 @@ void ip_adresse_zwischenspeichern(uint8_t antwort_ip[]){
 				
 	}
 	
+	lcd_set_cursor(0,0);
+
+	lcd_Xstring("hallo",0);
+	lcd_Xstring(ip_adresse,0);
 }

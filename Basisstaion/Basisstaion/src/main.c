@@ -111,23 +111,31 @@ int main(void)
 	{
 		server_configuration(&com_initstep);
 	}*/
-	
+int offset=0;
 		server_configuration();
 	while(1)
 	{
 		
 		for(int i=0; i<UART_MAXSTRLEN; i++)
 		{
+			
+
+			
 			int offset;
 			if(uart_string[i]=='G')
 			{
+					lcd_set_cursor(0,1);
+					lcd_Xstring("ich kriege ein G",0);
+					_delay_ms(500);
+					offset=i;
+					i=UART_MAXSTRLEN;
 				
-				offset=i;
 			}
 		}
-		if(com_StrCmp(uart_string,0,3,"GET")==1)
-		{
-			
+		if(com_StrCmp(uart_string,offset,3,"GET")==1)
+		{   lcd_set_cursor(0,2);
+			lcd_Xstring("ich kriege ein GET",0);
+			_delay_ms(500);
 			com_send_antwortclient(html_code1);
 			com_send_antwortclient(html_code2);
 			com_send_antwortclient(html_code3);
