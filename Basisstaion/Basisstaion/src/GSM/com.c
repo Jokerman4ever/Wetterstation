@@ -210,7 +210,7 @@ switch(init_schritt)
 			for (int8_t i = 0; i < UART_MAXSTRLEN; i++)
 			{ 
 				if(antwort[i] == ':')
-				{ 
+				{ fsd
 
 					i+=2;
 					if(antwort[i] != '0')
