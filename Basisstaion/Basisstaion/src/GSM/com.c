@@ -12,7 +12,7 @@
 #include "Storage/FileSys.h"
 #include <avr/interrupt.h>
 unsigned char nextChar;
-int init_schritt=4;
+int init_schritt=0;
 int8_t alter_schritt=2;
 char ip_zeichen;
 volatile uint8_t uart_str_count = 0;
@@ -144,23 +144,24 @@ void server_configuration()
 
 	switch(init_schritt)
 	{   
-		case 1: com_send_string("AT+CFUN=1,1\r"); break; //Resets the Modul
+		
 		case 0: com_send_string("ATE 1\r"); break; //Auschalten des Echos ATE 1-> einschalten
+		case 1: com_send_string("AT+CFUN=1,1\r"); break; //Resets the Modul
 		case 2: com_send_string("AT\r"); break;
 		case 3: com_send_string("AT+IPR=9600\r"); break;
-		case 4:com_send_string("AT+CSQ\r"); break;
-		case 5:com_send_string("AT+CREG?\r");  break;
-		case 6: com_send_string("AT+CGATT=1\r"); break; 
-		case 7:com_send_string("AT+CSTT=\"internet.t-d1.de\"\r");  break;
-		case 8:com_send_string("AT+CIICR\r"); break;
-		case 9:com_send_string("AT+CIFSR\r");break;
+		
+		case 4:com_send_string("AT+CREG?\r");  break;
+		case 5: com_send_string("AT+CGATT=1\r"); break; 
+		case 6:com_send_string("AT+CSTT=\"internet.t-d1.de\"\r");  break;
+		case 7:com_send_string("AT+CIICR\r"); break;
+		case 8:com_send_string("AT+CIFSR\r");break;
 	//	case 10:
 		//{
 			//com_send_string("AT+CIPSTART=\"TCP\",\"8.23.224.120\",\"80\"\r");//_delay_ms(60000);
 			//break;
 		//}
 		
-		case 10: 
+		case 9: 
 		{
 			/*com_send_string("AT+CIPSEND\r"); 
 			com_send_antwortclient(hhtp_header1);
@@ -173,6 +174,8 @@ void server_configuration()
 			_delay_ms(10000);
 			break;
 			}
+			case 10:{com_send_string("AT+CSQ\r"); break;}
+
 	//	case 12:  com_send_string("AT+CIPSTATUS\r"); break;
 	}
 
@@ -194,6 +197,7 @@ void server_configuration()
 /********************************************************************************************************************/
 void server_configuration_auswertung(uint8_t antwort[])
 {
+	com_send_string(antwort);
 		
 		//lcd_set_cursor(0,0);
 
@@ -205,7 +209,7 @@ switch(init_schritt)
 		//Antwort auf dem Befehlt "AT+CREG?
 		//Ist die Signalstärke ungleich 0,0, war der Schritt erfolgreich und der 
 		//Zaehler "init_schritt" wird um eins erhöht
-		case 4:
+		case 10:
 		{
 
 		
@@ -213,7 +217,7 @@ switch(init_schritt)
 			
 			break;
 		}
-		case 5:
+		case 4:
 		//Antwort auf den Befehlt AT+CREG?
 		//Ist in der Antwort die Zahl 0,1 vorhanden
 		//war der Schritt erfolgreich
@@ -248,7 +252,7 @@ switch(init_schritt)
 		}
 		//Bei den folgenden Befehlen wird als Antwort ein "OK" erwartet und daraufhin
 		//überrüft: "ATE 0"; "AT"; "AT+CGATT=1"; "AT+CSTT="internet.t-d1.de""; "AT+CIICR"; "AT+CIPSERVER=1,80"
-		case 0: case 1: case 2: case 3: case 6: case 7: case 8: case 10: 
+		case 0: case 1: case 2: case 3: case 5: case 6: case 7: case 9: 
 		{  //
 		//;
 	//	printf("ich schaue nach einem OK");
@@ -291,7 +295,7 @@ switch(init_schritt)
 		}
 		//Befeht "AT+CIIFSR"
 		//Bei diesem Befehl wird die IP-Adresse des GSM-Moduls empfangen
-		case 9:
+		case 8:
 		{   //Falls die Antwort "ERROR" beginne die Konfiguration von Beginn an
 		
 			//Hier wird die IP-Adresse in ein char-Array gespeichert
