@@ -12,14 +12,15 @@
 #include "Storage/FileSys.h"
 #include <avr/interrupt.h>
 unsigned char nextChar;
-int init_schritt=0;
+int init_schritt=4;
 int8_t alter_schritt=2;
 char ip_zeichen;
 volatile uint8_t uart_str_count = 0;
 volatile uint8_t uart_string[UART_MAXSTRLEN + 1]="";
 volatile uint8_t ip_adresse[20]="";
-
+uint8_t COM_RSI[5]="";
 _Bool konfiguration_erfolgreich= false;
+uint8_t signalstaerke_stelle=0;
 
 
 extern uint8_t hhtp_header1[];
@@ -207,28 +208,8 @@ switch(init_schritt)
 		case 4:
 		{
 
-			for (int8_t i = 0; i < UART_MAXSTRLEN; i++)
-			{ 
-				if(antwort[i] == ':')
-				{ fsd
-
-					i+=2;
-					if(antwort[i] != '0')
-					{   
-						i=UART_MAXSTRLEN;
-						init_schritt++;
-					   
-					}
-
-					
-				}
-				
-				
-
-			}
-			
-	
-			
+		
+	signalstaerke_zwischenspeichern(antwort);
 			
 			break;
 		}
@@ -464,6 +445,40 @@ uint8_t com_StrCmp(uint8_t* str1,uint8_t off1,uint8_t len1,const char* str2)
 
 }
 */
+
+void signalstaerke_zwischenspeichern(uint8_t antwort[]){
+	
+		for (int8_t i = 0; i < UART_MAXSTRLEN; i++)
+		{
+			if(antwort[i] == ':')
+			{
+
+				i+=2;
+				if(antwort[i] != '0')
+				
+				{
+				
+					for(int ziffer=i;ziffer<(i+4); ziffer++)
+					{
+						COM_RSI[signalstaerke_stelle]=antwort[ziffer];
+						
+						signalstaerke_stelle++;
+					}
+					i=UART_MAXSTRLEN;
+					init_schritt++;
+					
+				}
+
+				
+			}
+			
+			
+
+		}
+		
+		com_send_string(COM_RSI);
+		
+}
 void ip_adresse_zwischenspeichern(uint8_t antwort_ip[]){
 	char ip;
 	uint8_t ip_laenge;
