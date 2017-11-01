@@ -219,6 +219,7 @@ void com_send_antwortclient(uint8_t senden_array[]){
 				case 'w': {messung =record.WindLevel;    break;}
 			    //Luftfeuchtigkeit
 				case 'f': {messung= record.Humidity;   break;}
+				//IP-Adresse
 				case 'i':{  com_send_string(ip_adresse);break;}
 			}
 			//Sende den Wert der Messung Ziffernweise mit Vorzeichen an das GSM-Modul

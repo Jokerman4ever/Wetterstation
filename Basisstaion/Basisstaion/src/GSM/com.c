@@ -11,18 +11,23 @@
 #include "DIsplay/lcd-routines.h"
 #include "Storage/FileSys.h"
 #include <avr/interrupt.h>
+//Variable für das Empfangen eines Zeichens
 unsigned char nextChar;
-int init_schritt=0;
+//Variable für die Konfigurationsschritte
+int8_t init_schritt=0;
 int8_t alter_schritt=2;
+//Variablen für das Speichern des Empfangenen Strings
+uint8_t uart_str_count = 0;
+uint8_t uart_string[UART_MAXSTRLEN + 1]="";
+//Variablen für das Abspeichern der Ip und der Signalstaerke
 char ip_zeichen;
-volatile uint8_t uart_str_count = 0;
-volatile uint8_t uart_string[UART_MAXSTRLEN + 1]="";
+//IP Adresse
 volatile uint8_t ip_adresse[20]="";
+//Signalstaerke
 uint8_t COM_RSI[5]="";
 _Bool konfiguration_erfolgreich= false;
 uint8_t signalstaerke_stelle=0;
-
-
+//Abschnitte des http_header
 extern uint8_t hhtp_header1[];
 extern uint8_t http_header2[];
 extern uint8_t http_header3[];
@@ -38,7 +43,7 @@ void com_init(void)
 	USARTF0.CTRLA = USART_RXCINTLVL_HI_gc; //Interruptfreigabe auf Pin Rx
 	USARTF0.CTRLB = USART_TXEN_bm | USART_RXEN_bm; //Freigabe von TX und RX für das Empfangen und senden
 	USARTF0.CTRLC = USART_CHSIZE_8BIT_gc;//Größer der Zeichen
-	//USARTF0.CTRLC=USART_CMODE_ASYNCHRONOUS_gc | USART_PMODE_DISABLED_gc | USART_CHSIZE_8BIT_gc;
+	USARTF0.CTRLC=USART_CMODE_ASYNCHRONOUS_gc | USART_PMODE_DISABLED_gc | USART_CHSIZE_8BIT_gc; //Modus und Anzahl Databits
 	//waitForString=1;
 	PORTF.DIRSET = (1<<3)|(1<<4); //Initialisiere die Pins von Rx und Tx
 	PORTF.OUTSET = (1<<4); //setze den TX Pin als Ausgang
@@ -62,7 +67,7 @@ uint8_t com_strlen(uint8_t* data) //
 void com_send_string(uint8_t* data) //Funktion mit Übergabe der zu sendenten Daten
 {
 	uint8_t length = 0; //lokale Variable für die Laenge des Strings
-	uint8_t counter = 0;//lokale Variable für eine Zaehler
+	uint8_t counter = 0;//lokale Variable für einen Zaehler
 	length = com_strlen(data); //Ermittle die Laenge der Daten
 	
 	//Solange counter kleiner ist als die Laenge, sende das Zeichen der übergebeben Daten an der Stelle
@@ -72,11 +77,11 @@ void com_send_string(uint8_t* data) //Funktion mit Übergabe der zu sendenten Dat
 		com_ausgabe(data[counter]); 
 		counter++;
 	}
-	//Sobald die kompletten Daten abgearbeitet sind, sende ein "\r"
-	//com_ausgabe(0x0D);//carriage return
+	
 }
 
-
+//Sobald die kompletten Daten abgearbeitet sind, sende ein "\r"
+//com_ausgabe(0x0D);//carriage return
 
 // Damit SABA zu hause testen kann
 void interrupt_init(void)
@@ -123,16 +128,13 @@ uint8_t com_getString(uint8_t* buffer)
 
 // ISR Routine für den Empfang
 ISR(USARTF0_RXC_vect)
-{  
+{   
+	//Schreibe das anliegende Zeichen in die Variable "nextChar"
 	nextChar = USARTF0.DATA;
-	
+	//Schreibe das Zeichen in das Array uart_string an der Stelle "uart_str_count"
 	uart_string[uart_str_count] = nextChar;
-    uart_str_count++;
-	
-//	lcd_set_cursor(0,0);
-
-	//lcd_Xstring(uart_string[uart_str_count],0);
-	
+	//Erhoehe den Zaehler fuer die Angabe der Stelle im Array "uart_string"
+    uart_str_count++;	
 }
 
 /******************************************************************************************/
@@ -253,46 +255,35 @@ switch(init_schritt)
 		//Bei den folgenden Befehlen wird als Antwort ein "OK" erwartet und daraufhin
 		//überrüft: "ATE 0"; "AT"; "AT+CGATT=1"; "AT+CSTT="internet.t-d1.de""; "AT+CIICR"; "AT+CIPSERVER=1,80"
 		case 0: case 1: case 2: case 3: case 5: case 6: case 7: case 9: 
-		{  //
-		//;
-	//	printf("ich schaue nach einem OK");
-			//Falls die Antwort "OK" ist, erhöhe den "init_schritt" um eins
+		{ 
+			//Suche im Empfangenen String nach einem "O"
 			laenge_antwort=com_strlen(antwort); 
-		for (uint8_t i = 0; i < laenge_antwort; i++)
-		{
-			if(antwort[i] == 'O')
+			for (uint8_t i = 0; i < laenge_antwort; i++)
 			{
-				
-				
-				offsets=i;
-				i=laenge_antwort;
-							
+				if(antwort[i] == 'O')
+				{
+					offsets=i;
+					i=laenge_antwort;
+				}
 			}
-		}
+			//Schau, ob beginnend an der Stelle des O's ein "OK" im Array steht.
 			if(com_StrCmp(antwort,offsets,2,"OK")==true)
-			{
+			{   //Falls es sich um den letzten Konfigurationsschritt handelt,
+				//setze die Variable "konfiguration_erfolgreich" auf true
 				if(init_schritt==10)
 				{
-			konfiguration_erfolgreich=true;
-			lcd_set_cursor(0,0);
-
-			lcd_Xstring("konf fertig",0);
-			
+					konfiguration_erfolgreich=true;
+					
 				}
+				//Andernfalls Erhoehe init_schritt um eins, um den naechsten Konfigurationsschritt durchzufuehren
 				init_schritt++;
-				
-				
-			
 			}
-		
-			/*else
-			{
-				init_schritt=0;
-			}*/
-						
 			
 			break;
-		}
+			}
+			
+			lcd_set_cursor(0,0);
+			lcd_Xstring("Konfiguration fertig",0);
 		//Befeht "AT+CIIFSR"
 		//Bei diesem Befehl wird die IP-Adresse des GSM-Moduls empfangen
 		case 8:
@@ -389,23 +380,20 @@ switch(init_schritt)
 
 }	//Falls der vorherige Konfigurationsschritt erfolgreich war,
 	//rufe die Funktion für das Senden der Befehle auf
-	//
-	//printf("%d",init_schritt);
-	//printf("%d",alter_schritt);
+    //Falls die Auswertung des Konfigurationsschritt erfolgreich war, wird der Zaehler inkrementiert
+	//Hat diese stattgefunden, wird die Funktion, um den nächsten AT-Befehl zu senden aufgerufen.
+	//Und durch zurücksetzen von "uart_str_count", kann das Array für das Speichern der Antwort wieder
+	//von Beginn verwendet werden. Die Beschreibung des Arrays erfolgt in der ISR-Routine
 	if((alter_schritt!=init_schritt)|| (init_schritt==2))
-	{   
-		//printf("%s",uart_string);
-		
-		uart_str_count=0;
-		/*for(int i=0; i<com_strlen(uart_string);i++)
-		{
-		uart_string[i]=' ';}*/
-	    server_configuration();
+	{   uart_str_count=0;
+		server_configuration();
 	}
     else 
 	{
+	//Falls der Konfigurationsschritt nicht erfolgreich war, beginnt die Konfiguration wieder von 
+	//Beginn an.
 		uart_str_count=0;
-		init_schritt=2;
+		init_schritt=0;
 		server_configuration();
 	}
 }
@@ -432,6 +420,8 @@ uint8_t com_StrCmp(uint8_t* str1,uint8_t off1,uint8_t len1,const char* str2)
 	}
 	return 1;
 }
+uint8_t* str1="+CSQ: 12,0 OK";
+com_StrCmp(str1,10,2,"OK");
 
 /*uint8_t com_check_string(uint8_t len, const char* antwort, uint8_t laenge_antwort)
 {
