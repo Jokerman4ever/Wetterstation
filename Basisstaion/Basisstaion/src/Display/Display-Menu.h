@@ -34,14 +34,14 @@ enum PageID {
 				// TabEinstellungen:
 				PageMenuEinstellungen = 30,
 				PageEinstellungen_Zurueck = 31,
-				PageEinstellungen_Namen = 32,	//raus
-				PageEinstellungen_Speicher = 33, //keine Ahnug?
-				PageEinstellungen_RF = 34,	//vermutlich raus?
-				PageEinstellungen_GSM = 35,	//Saba?
-				PageEinstellungen_Energie = 36,	//raus
-				PageEinstellungen_Einheit = 37,	//Das machste auf jeden fall TiM!!!!
-				PageEinstellungen_Intervall = 38, //Tim das machste auch!
-				PageEinstellungen_Sync = 39,		//muss rein - Zahl von 0 bis 15
+				PageEinstellungen_Namen = 32,
+				PageEinstellungen_Speicher = 33,
+				PageEinstellungen_RF = 34,	
+				PageEinstellungen_GSM = 35,	
+				PageEinstellungen_Energie = 36,
+				PageEinstellungen_Einheit = 37,
+				PageEinstellungen_Intervall = 38, 
+				PageEinstellungen_Sync = 39,		
 				PageSet_Namen = 40,	
 				PageSet_Speicher = 41,
 				PageSet_RF = 42,

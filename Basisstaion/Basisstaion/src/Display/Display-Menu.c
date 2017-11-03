@@ -234,6 +234,7 @@ void DSP_ChangePage(uint8_t ID)
 			//
 			break;
 		}
+		
 		case PageGSMInit:
 		{
 			lcd_set_cursor(0,1);			
@@ -251,8 +252,7 @@ void DSP_ChangePage(uint8_t ID)
 			for (uint8_t i = 0; i < init_schritt+1; i++)
 			{
 				lcd_Write(Kasten,1);
-			}
-			
+			}		
 			break;
 		}
 		
@@ -298,8 +298,6 @@ void DSP_ChangePage(uint8_t ID)
 			lcd_set_cursor(0,3);
 			sprintf(LineTemp,"  %s.%s.%s   %s:%s  ",Day,Month,Year,Hour,Minute);//das wird so nicht gehen, %d steht für decimal also eine zahl.... du übergibst nen string!!!
 			lcd_Xstring(LineTemp,0);
-			
-			
 			break;
 		}
 
@@ -491,7 +489,7 @@ void DSP_ChangePage(uint8_t ID)
 		}
 
 		case PageEinstellungen_Zurueck:
-		{//+++
+		{
 			lcd_set_cursor(0,1);
 			CenterStringPGM(DStr_BSMenuEinstellungen,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
@@ -510,28 +508,8 @@ void DSP_ChangePage(uint8_t ID)
 			break;
 		}
 		
-		/*case PageEinstellungen_Namen:
-		{
-			lcd_set_cursor(0,1);
-			CenterStringPGM(DStr_BSEinstellungen,LineTemp,0);
-			lcd_Xstring(LineTemp,0);
-			lcd_set_cursor(0,2);
-			CenterStringPGM(DStr_BSZurueck,LineTemp,0);
-			lcd_Xstring(LineTemp,0);
-			lcd_set_cursor(0,3);
-			CenterStringPGM(DStr_BSNamenVergeben,LineTemp,2);
-			lcd_Xstring(LineTemp,0);
-			lcd_set_cursor(0,4);
-			CenterStringPGM(DStr_BSSpeicherverwaltung,LineTemp,0);
-			lcd_Xstring(LineTemp,0);
-			//Pfeil nach unten:
-			lcd_set_cursor(0,2);
-			lcd_string("v");
-			break;
-		}
-*/
 		case PageEinstellungen_Speicher:
-		{//++
+		{
 			lcd_set_cursor(0,1);
 			CenterStringPGM(DStr_BSMenuEinstellungen,LineTemp,0);
 			lcd_Xstring(LineTemp,0);
@@ -549,76 +527,6 @@ void DSP_ChangePage(uint8_t ID)
 			lcd_Write(down,1);
 			break;
 		}
-		
-		/*case PageEinstellungen_RF:
-		{
-			lcd_set_cursor(0,1);
-			CenterStringPGM(DStr_BSEinstellungen,LineTemp,0);
-			lcd_Xstring(LineTemp,0);
-			lcd_set_cursor(0,2);
-			CenterStringPGM(DStr_BSSpeicherverwaltung,LineTemp,0);
-			lcd_Xstring(LineTemp,0);
-			lcd_set_cursor(0,3);
-			CenterStringPGM(DStr_BSRFverwaltung,LineTemp,2);
-			lcd_Xstring(LineTemp,0);
-			lcd_set_cursor(0,4);
-			CenterStringPGM(DStr_BSGSMverwaltung,LineTemp,0);
-			lcd_Xstring(LineTemp,0);
-			//Pfeil nach oben:
-			lcd_set_cursor(0,1);
-			lcd_string("^");
-			//Pfeil nach unten:
-			lcd_set_cursor(0,2);
-			lcd_string("v");
-			break;
-		}
-*/
-		/*case PageEinstellungen_GSM:
-		{
-			lcd_set_cursor(0,1);
-			CenterStringPGM(DStr_BSEinstellungen,LineTemp,0);
-			lcd_Xstring(LineTemp,0);
-			lcd_set_cursor(0,2);
-			CenterStringPGM(DStr_BSRFverwaltung,LineTemp,0);
-			lcd_Xstring(LineTemp,0);
-			lcd_set_cursor(0,3);
-			CenterStringPGM(DStr_BSGSMverwaltung,LineTemp,2);
-			lcd_Xstring(LineTemp,0);
-			lcd_set_cursor(0,4);
-			CenterStringPGM(DStr_BSEnergiemanagement,LineTemp,0);
-			lcd_Xstring(LineTemp,0);
-			//Pfeil nach oben:
-			lcd_set_cursor(0,1);
-			lcd_string("^");
-			//Pfeil nach unten:
-			lcd_set_cursor(0,2);
-			lcd_string("v");
-			break;
-		}										
-
-		case PageEinstellungen_Energie:
-		{
-			lcd_set_cursor(0,1);
-			CenterStringPGM(DStr_BSEinstellungen,LineTemp,0);
-			lcd_Xstring(LineTemp,0);
-			lcd_set_cursor(0,2);
-			CenterStringPGM(DStr_BSGSMverwaltung,LineTemp,0);
-			lcd_Xstring(LineTemp,0);
-			lcd_set_cursor(0,3);
-			CenterStringPGM(DStr_BSEnergiemanagement,LineTemp,2);
-			lcd_Xstring(LineTemp,0);
-			lcd_set_cursor(0,4);
-			CenterStringPGM(DStr_BSEinheiten,LineTemp,0);
-			lcd_Xstring(LineTemp,0);
-			//Pfeil nach oben:
-			lcd_set_cursor(0,1);
-			lcd_string("^");
-			//Pfeil nach unten:
-			lcd_set_cursor(0,2);
-			lcd_string("v");
-			break;
-		}
-*/
 		
 		case PageEinstellungen_Intervall:
 		{
@@ -683,19 +591,6 @@ void DSP_ChangePage(uint8_t ID)
 			break;
 		}
 		
-		case PageSet_Namen:
-		{
-			lcd_set_cursor(0,1);
-			//
-			lcd_set_cursor(0,2);
-			//
-			lcd_set_cursor(0,3);
-			//
-			lcd_set_cursor(0,4);
-			//
-			break;
-		}
-		
 		case PageSet_Speicher:
 		{
 			lcd_set_cursor(0,1);
@@ -710,45 +605,6 @@ void DSP_ChangePage(uint8_t ID)
 			if(ScrollPosition == 0)sprintf(LineTemp,"    LOESCHEN: NEIN");
 			else sprintf(LineTemp,">>  LOESCHEN: %s",ScrollPosition == 1 ? "NEIN": "JA");
 			lcd_Xstring(LineTemp,0);
-			//
-			lcd_set_cursor(0,4);
-			//
-			break;
-		}
-		
-		case PageSet_RF:
-		{
-			lcd_set_cursor(0,1);
-			//
-			lcd_set_cursor(0,2);
-			//
-			lcd_set_cursor(0,3);
-			//
-			lcd_set_cursor(0,4);
-			//
-			break;
-		}
-		
-		case PageSet_GSM:
-		{
-			lcd_set_cursor(0,1);
-			//
-			lcd_set_cursor(0,2);
-			//
-			lcd_set_cursor(0,3);
-			//
-			lcd_set_cursor(0,4);
-			//
-			break;
-		}
-		
-		case PageSet_Energie:
-		{
-			lcd_set_cursor(0,1);
-			//
-			lcd_set_cursor(0,2);
-			//
-			lcd_set_cursor(0,3);
 			//
 			lcd_set_cursor(0,4);
 			//
@@ -842,7 +698,6 @@ void DSP_ChangePage(uint8_t ID)
 		
 		case PageWettermonitor:	
 		{
-
 			if(big_station)
 			{
 				lcd_set_cursor(0,4);
@@ -861,7 +716,6 @@ void DSP_ChangePage(uint8_t ID)
 
 			break;
 		}			
-		
 		default: break;
 	}
 }
@@ -987,6 +841,7 @@ void DSP_ScrollMenu(uint8_t dir)
 			}
 			break;
 		}
+		
 		case PageEinstellungen_Speicher:
 		{
 			if(dir == 1)
@@ -999,6 +854,7 @@ void DSP_ScrollMenu(uint8_t dir)
 			}
 			break;
 		}
+		
 		case PageEinstellungen_Intervall:
 		{
 			if(dir == 1)
@@ -1011,6 +867,7 @@ void DSP_ScrollMenu(uint8_t dir)
 			}
 			break;
 		}
+		
 		case PageEinstellungen_Einheit:
 		{
 			if(dir == 1)
@@ -1024,6 +881,7 @@ void DSP_ScrollMenu(uint8_t dir)
 			}
 			break;
 		}
+		
 		case PageEinstellungen_Sync:
 		{
 			if(dir == 1)
@@ -1036,6 +894,7 @@ void DSP_ScrollMenu(uint8_t dir)
 			}
 			break;
 		}
+		
 		case PageSet_Sync:
 		{			
 			if(dir == 1)
@@ -1051,6 +910,7 @@ void DSP_ScrollMenu(uint8_t dir)
 			DSP_ChangePage(PageSet_Sync);
 			break;
 		}
+		
 		case PageSet_Speicher:
 		{
 			if(dir == 1)
@@ -1064,6 +924,7 @@ void DSP_ScrollMenu(uint8_t dir)
 			DSP_ChangePage(PageSet_Speicher);
 			break;
 		}
+		
 		case PageSet_Speicher_Loeschen:
 		{
 			if(dir == 1)
@@ -1078,28 +939,6 @@ void DSP_ScrollMenu(uint8_t dir)
 			break;
 		}
 		
-		
-		/*
-		// TabEinstellungen:
-		PageEinstellungen_Zurueck = 31,
-		PageEinstellungen_Namen = 32,---
-		PageEinstellungen_Speicher = 33, Flash löschen?
-		PageEinstellungen_RF = 34, ------
-		PageEinstellungen_GSM = 35,-----
-		PageEinstellungen_Energie = 36,----
-		PageEinstellungen_Einheit = 37,+++
-		PageEinstellungen_Intervall = 38,+++
-		PageEinstellungen_Sync = 39,++
-		PageSet_Namen = 40,
-		PageSet_Speicher = 41,
-		PageSet_RF = 42,
-		PageSet_GSM = 43,
-		PageSet_Energie = 44,
-		PageSet_Einheit = 45,
-		PageSet_Intervall = 46,
-		PageSet_Sync = 47,
-		// TabWettermonitor:
-		*/
 		case PageMenuWettermonitor:
 		{
 			if(dir == 1)
@@ -1112,10 +951,7 @@ void DSP_ScrollMenu(uint8_t dir)
 			}
 			break;
 		}
-		/*
-		PageWettermonitor = 51,
-		*/
-		
+
 		default: break;
 	}
 }
@@ -1244,7 +1080,6 @@ void DSP_SelectMenu(void)
 			break;
 		}
 		
-// Start Provisorium
 		case PageSet_Namen:
 		{
 			DSP_ChangePage(PageEinstellungen_Namen);
@@ -1314,7 +1149,6 @@ void DSP_SelectMenu(void)
 			}
 			break;
 		}					
-// Stop Provisorium
 
 		// TabWettermonitor:
 		case PageMenuWettermonitor:
