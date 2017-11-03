@@ -31,11 +31,11 @@ uint8_t html_code1[]="<html>"
 "<body>"
 "<h1 style=\"color:red;\">System Design Project 2017: Wetter station</h1>";
 uint8_t html_code2[]="Regenaktivitaet:&nbsp;<b>%r1</b><br>"
-"Windgeschwindigkeit:&nbsp;<b>%w1</b><br>"
-"Lichtintensitaet:&nbsp;<b>%l1</b><br>"
-"Temperatur:&nbsp;<b>%t1</b><br>"
-"Feuchtigkeit:&nbsp;<b>%f1</b><br>"
-"Druck:&nbsp;<b>%d1</b><br>";
+"Windgeschwindigkeit:&nbsp;<b>%w1 km/h</b><br>"
+"Lichtintensitaet:&nbsp;<b>%l1 lux</b><br>"
+"Temperatur:&nbsp;<b>%t1 °C</b><br>"
+"Feuchtigkeit:&nbsp;<b>%f1 % </b><br>"
+"Druck:&nbsp;<b>%d1 mB</b><br>";
 uint8_t html_code3[]="<br>"
 "<b>Anmerkung:</b><br>einfacher Prototyp zu Testzwecken, kein endgueltiges Design!"
 "</body>"
@@ -219,6 +219,7 @@ void com_send_antwortclient(uint8_t senden_array[]){
 				case 'w': {messung =record.WindLevel;    break;}
 			    //Luftfeuchtigkeit
 				case 'f': {messung= record.Humidity;   break;}
+				//IP-Adresse
 				case 'i':{  com_send_string(ip_adresse);break;}
 			}
 			//Sende den Wert der Messung Ziffernweise mit Vorzeichen an das GSM-Modul
