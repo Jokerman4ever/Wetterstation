@@ -33,5 +33,4 @@ void ip_adresse_zwischenspeichern(uint8_t antwort_ip[]);
 void signalstaerke_zwischenspeichern(uint8_t antwort[]);
 extern volatile uint8_t ip_adresse[20];
 extern int8_t init_schritt;
-
 #endif /* COM_H_ */
