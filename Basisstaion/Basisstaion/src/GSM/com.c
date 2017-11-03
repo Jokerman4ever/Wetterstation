@@ -83,12 +83,13 @@ void com_send_string(uint8_t* data) //Funktion mit Übergabe der zu sendenten Dat
 //Sobald die kompletten Daten abgearbeitet sind, sende ein "\r"
 //com_ausgabe(0x0D);//carriage return
 
-// Damit SABA zu hause testen kann
+// Nur für Testzwecke
+/*
 void interrupt_init(void)
 {
 	PMIC.CTRL |= PMIC_LOLVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_HILVLEN_bm;													// Interrupts (Highlevel, Mediumlevel und Lowlevel freigeben)
 	sei();
-}
+}*/
 
 void com_ausgabe(uint8_t data)
 {
@@ -97,6 +98,7 @@ void com_ausgabe(uint8_t data)
 	USARTF0.DATA = data;
 	while(!(USARTF0.STATUS & USART_TXCIF_bm));
 }
+//Funktionen um einzelen Buchstaben/Strings nach dem Polling Prinzip zu empfangen
 
 uint8_t com_getChar(uint8_t* error)
 {
@@ -148,37 +150,24 @@ void server_configuration()
 	{   
 		
 		case 0: com_send_string("ATE 1\r"); break; //Auschalten des Echos ATE 1-> einschalten
-		case 1: com_send_string("AT+CFUN=1,1\r"); break; //Resets the Modul
+		case 1: com_send_string("AT+CFUN=1,1\r"); _delay_ms(10000); //Resets the Modul
 		case 2: com_send_string("AT\r"); break;
 		case 3: com_send_string("AT+IPR=9600\r"); break;
 		
 		case 4:com_send_string("AT+CREG?\r");  break;
-		case 5: com_send_string("AT+CGATT=1\r"); break; 
+		case 5: com_send_string("AT+CGATT=1\r");_delay_ms(10000); break; 
 		case 6:com_send_string("AT+CSTT=\"internet.t-d1.de\"\r");  break;
-		case 7:com_send_string("AT+CIICR\r"); break;
+		case 7:com_send_string("AT+CIICR\r");_delay_ms(85000); break;
 		case 8:com_send_string("AT+CIFSR\r");break;
-	//	case 10:
-		//{
-			//com_send_string("AT+CIPSTART=\"TCP\",\"8.23.224.120\",\"80\"\r");//_delay_ms(60000);
-			//break;
-		//}
-		
 		case 9: 
 		{
-			/*com_send_string("AT+CIPSEND\r"); 
-			com_send_antwortclient(hhtp_header1);
-			com_send_antwortclient(http_header2);
-			com_send_antwortclient(http_header3);
-			com_send_antwortclient(http_header4);
-			com_ausgabe(0x1A);
-			_delay_ms(30000);*/
 			com_send_string("AT+CIPSERVER=1,80\r");
 			_delay_ms(10000);
 			break;
 			}
-			case 10:{com_send_string("AT+CSQ\r"); break;}
+	    case 10:com_send_string("AT+CSQ\r"); break;
 
-	//	case 12:  com_send_string("AT+CIPSTATUS\r"); break;
+
 	}
 
 	_delay_ms(10000);
@@ -199,11 +188,7 @@ void server_configuration()
 /********************************************************************************************************************/
 void server_configuration_auswertung(uint8_t antwort[])
 {
-	com_send_string(antwort);
-		
-		//lcd_set_cursor(0,0);
-
-		//lcd_Xstring(antwort,0);
+	
 	alter_schritt=init_schritt;
 			
 switch(init_schritt)
@@ -287,36 +272,14 @@ switch(init_schritt)
 		//Befeht "AT+CIIFSR"
 		//Bei diesem Befehl wird die IP-Adresse des GSM-Moduls empfangen
 		case 8:
-		{   //Falls die Antwort "ERROR" beginne die Konfiguration von Beginn an
-		
-			//Hier wird die IP-Adresse in ein char-Array gespeichert
-	
-		
-		//Falls die Antwort "OK" ist, erhöhe den "init_schritt" um eins
-		/*for (int8_t i = 0; i < UART_MAXSTRLEN; i++)
-		{
-			if(antwort[i] == 'E')
-			{
-				
-				offsets=i;
-				i=UART_MAXSTRLEN;
-				
-			}
-		}
-			if(com_StrCmp(antwort,offsets,5,"ERROR"))
-			{
-				init_schritt=0;
-			}
-			*/
-			
-			//printf("%s ich bin die antwort  ",uart_string);
-		ip_adresse_zwischenspeichern(antwort);
-		
-			    init_schritt++;
-			
-			
+		{  
+			//Hier wird die IP-Adresse in ein char-Array gespeichern
+			ip_adresse_zwischenspeichern(antwort);
+			init_schritt++;
 			break;
 		}
+		
+		//WIrd in dieser Version nicht mehr benötigt. Aber wäre bei einer Erweiterung erforderlich
     /*    case 10:
 		 {
 			 printf("ich bin im case 10");
@@ -351,7 +314,7 @@ switch(init_schritt)
 			break;
 		} 
 		 */
-		case 12:
+		/*case 12:
 		{	//Falls die Konfigration erfolgreich war, wird die
 			//Konfiguration abgeschlossen
 			
@@ -376,7 +339,7 @@ switch(init_schritt)
 			
 			else {init_schritt=2;}
 				break;
-		}
+		}*/
 
 }	//Falls der vorherige Konfigurationsschritt erfolgreich war,
 	//rufe die Funktion für das Senden der Befehle auf
@@ -420,8 +383,6 @@ uint8_t com_StrCmp(uint8_t* str1,uint8_t off1,uint8_t len1,const char* str2)
 	}
 	return 1;
 }
-uint8_t* str1="+CSQ: 12,0 OK";
-com_StrCmp(str1,10,2,"OK");
 
 /*uint8_t com_check_string(uint8_t len, const char* antwort, uint8_t laenge_antwort)
 {
@@ -439,40 +400,41 @@ com_StrCmp(str1,10,2,"OK");
 
 }
 */
-
+//Mit dieser Funtktion wird die Signalstaerke zwsichengespeichert
 void signalstaerke_zwischenspeichern(uint8_t antwort[]){
 	
-		for (int8_t i = 0; i < UART_MAXSTRLEN; i++)
+	for (int8_t i = 0; i < UART_MAXSTRLEN; i++)
+	{
+		if(antwort[i] == ':')
 		{
-			if(antwort[i] == ':')
+
+			i+=2;
+			if(antwort[i] != '0')
+			
 			{
-
-				i+=2;
-				if(antwort[i] != '0')
 				
+				for(int ziffer=i;ziffer<(i+4); ziffer++)
 				{
-				
-					for(int ziffer=i;ziffer<(i+4); ziffer++)
-					{
-						COM_RSI[signalstaerke_stelle]=antwort[ziffer];
-						
-						signalstaerke_stelle++;
-					}
-					i=UART_MAXSTRLEN;
-					init_schritt++;
+					COM_RSI[signalstaerke_stelle]=antwort[ziffer];
 					
+					signalstaerke_stelle++;
 				}
-
+				i=UART_MAXSTRLEN;
+				init_schritt++;
 				
 			}
-			
-			
 
+			
 		}
 		
-		com_send_string(COM_RSI);
 		
+
+	}
+	
+	
+	
 }
+//Mit dieser Funktion wird die Ip-Adresse zwischengespeichern
 void ip_adresse_zwischenspeichern(uint8_t antwort_ip[]){
 	char ip;
 	uint8_t ip_laenge;
@@ -483,20 +445,20 @@ void ip_adresse_zwischenspeichern(uint8_t antwort_ip[]){
 	for(uint8_t i=0; i<ip_laenge; i++)
 	{
 		
-	
-	if(antwort_ip[i]=='3'){
 		
-		ip_counter=i;
-		i=ip_laenge;
-	}
+		if(antwort_ip[i]=='3'){
+			
+			ip_counter=i;
+			i=ip_laenge;
+		}
 	}
 	
 	for(uint8_t s=ip_counter; s<ip_laenge; s++ )
 	
 	{
-		if(antwort_ip[s]!='\r'){		
-		ip_adresse[stell_ip]=antwort_ip[s];
-		stell_ip++;
+		if(antwort_ip[s]!='\r'){
+			ip_adresse[stell_ip]=antwort_ip[s];
+			stell_ip++;
 		}
 		
 		else
@@ -509,11 +471,8 @@ void ip_adresse_zwischenspeichern(uint8_t antwort_ip[]){
 		}
 		
 		
-				
+		
 	}
-	
-	lcd_set_cursor(0,0);
 
-	lcd_Xstring("hallo",0);
-	lcd_Xstring(ip_adresse,0);
+
 }

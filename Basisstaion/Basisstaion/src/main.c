@@ -113,36 +113,30 @@ int main(void)
 	}*/
 
 sprintf(ip_adresse,"111.111.111.111"); //////////////////////////////////////////////////////////////////
-	
-	
 int offset=0;
 		server_configuration();
 	while(1)
 	{
-		
+		//Auswertung der Anfrage des aufrufenden Browser
+		//Wird in der Anfrage ein "GET" erkannt, wird der html code
+		//Abschnittsweise mit den zugehörigen Messwerten der Ip Adresse ausgeliefert
 		for(int i=0; i<UART_MAXSTRLEN; i++)
 		{
-			
-
-			
-			int offset;
 			if(uart_string[i]=='G')
 			{
-					lcd_set_cursor(0,1);
-					lcd_Xstring("ich kriege ein G",0);
-					_delay_ms(500);
-					offset=i;
-					i=UART_MAXSTRLEN;
+				_delay_ms(1000);
+				offset=i;
+				i=UART_MAXSTRLEN;
 				com_send_string("AT+CIPSEND\r");				// Änderung
-				_delay_ms(500);
+				_delay_ms(1000);
 				com_send_antwortclient(html_code1);
 				com_send_antwortclient(html_code2);
 				com_send_antwortclient(html_code3);
-				_delay_ms(500);			
+				_delay_ms(1000);			
 				com_ausgabe(0x1A);								// Änderung				
 			}
 		}
-		if(com_StrCmp(uart_string,offset,3,"GET")==1)
+		/*if(com_StrCmp(uart_string,offset,3,"GET")==1)
 		{   lcd_set_cursor(0,2);
 			lcd_Xstring("ich kriege ein GET",0);
 			_delay_ms(500);
@@ -155,7 +149,7 @@ int offset=0;
 				uart_string[s]=' ';
 				uart_str_count=0;
 			}
-		}
+		}*/
 
 	
 
