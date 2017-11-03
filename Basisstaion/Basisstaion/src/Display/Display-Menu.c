@@ -65,6 +65,7 @@ uint8_t Fehler_k;
 uint8_t ScrollPosition;
 uint8_t down = 0x1E;
 uint8_t up = 0x1D;
+uint8_t Kasten = 0x1F;
 
 tm_t DSP_Time_Ms;	
 
@@ -233,6 +234,27 @@ void DSP_ChangePage(uint8_t ID)
 			//
 			break;
 		}
+		case PageGSMInit:
+		{
+			lcd_set_cursor(0,1);			
+			sprintf(LineTemp,"IP: %s",ip_adresse);
+			lcd_Xstring(LineTemp,0);
+			
+			lcd_set_cursor(0,2);
+			CenterStringPGM(DStr_BSName,LineTemp,0);
+			lcd_Xstring(LineTemp,0);
+			CenterString("Initialisiere",LineTemp,0);
+			lcd_set_cursor(0,3);
+			lcd_Xstring(LineTemp,0);
+			
+			lcd_set_cursor(1,4);
+			for (uint8_t i = 0; i < init_schritt+1; i++)
+			{
+				lcd_Write(Kasten,1);
+			}
+			
+			break;
+		}
 		
 		// TabHome:
 		case PageMenuHome:
@@ -267,7 +289,10 @@ void DSP_ChangePage(uint8_t ID)
 			//lcd_set_cursor(0,2);
 			
 			lcd_set_cursor(0,4);
+			sprintf(LineTemp,"                    ");
+			lcd_Xstring(LineTemp,0);
 			sprintf(LineTemp,"IP: %s",ip_adresse);
+			lcd_set_cursor(0,4);
 			lcd_Xstring(LineTemp,0);
 			
 			lcd_set_cursor(0,3);

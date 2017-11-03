@@ -14,7 +14,6 @@
 void HandleClients(void);
 void CheckFirstrun(void);
 //Für GSMS neu hinzugefügt
-extern int8_t init_schritt;
 extern int8_t alter_schritt;
 extern uint8_t uart_str_count;
 extern uint8_t html_code1[];
@@ -44,8 +43,12 @@ ISR(TCC1_OVF_vect)
 
 ISR(TCC0_OVF_vect)
 {
-	DSP_Refresh(0,17,RF_CurrentStatus.Registerd_Devices); /////////////////////////////////////////////
+	DSP_Refresh(0,18,RF_CurrentStatus.Registerd_Devices); /////////////////////////////////////////////
 	SystemTick();
+	if(DSP_CurrentPage == PageGSMInit)
+	{
+		DSP_ChangePage(PageGSMInit);
+	}
 }
 
 ISR(PORTA_INT0_vect)
@@ -91,57 +94,45 @@ int main(void)
 	//EEPROM_DisableMapping();
 	CheckFirstrun();
 	FS_Init();
+	sprintf(ip_adresse," - . - . - . - ");
 	RF_Packet_t p = RF_CreatePacket(buffer,1,16,0);//JUST FOR TEST!!!!
 	RF_Init(0x01, EEPROM_SyncWord);
 	val = RF_Get_Command(0x01);
 	PMIC.CTRL = PMIC_HILVLEN_bm | PMIC_MEDLVLEN_bm | PMIC_LOLVLEN_bm;
 	RF_Set_State(RF_State_StandBy);
-
-	DSP_ChangePage(PageHome);
-
+	Set_Unix_Time(1509702173);
+	DSP_ChangePage(PageGSMInit);
 	sei();
-
-	Set_Unix_Time(1509599593);
 	
 	com_init();
-	//SERVER
-	//Ist jetzt in der unstable branch!
-	/*com_init();
-	for (int8_t com_initstep = -3; com_initstep < 7;com_initstep++)
-	{
-		server_configuration(&com_initstep);
-	}*/
-
-sprintf(ip_adresse,"111.111.111.111"); //////////////////////////////////////////////////////////////////
-	
-	
-int offset=0;
+	int offset=0;
 		server_configuration();
 	while(1)
 	{
-		
 		for(int i=0; i<UART_MAXSTRLEN; i++)
 		{
-			
-
-			
 			int offset;
 			if(uart_string[i]=='G')
 			{
-					lcd_set_cursor(0,1);
-					lcd_Xstring("ich kriege ein G",0);
-					_delay_ms(500);
-					offset=i;
-					i=UART_MAXSTRLEN;
-				com_send_string("AT+CIPSEND\r");				// Änderung
+				uart_string[i]=' ';
+				lcd_set_cursor(0,1);
+				lcd_Xstring("ich kriege ein G",0);
 				_delay_ms(500);
+				offset=i;
+				i=UART_MAXSTRLEN;
+				com_send_string("AT+CIPSEND\r");				// Änderung
+				_delay_ms(3000);								// 3 Sekunden ?
 				com_send_antwortclient(html_code1);
 				com_send_antwortclient(html_code2);
 				com_send_antwortclient(html_code3);
-				_delay_ms(500);			
-				com_ausgabe(0x1A);								// Änderung				
+				_delay_ms(3000);			
+				com_ausgabe(0x1A);	
+				_delay_ms(3000);
+				com_send_string("AT+CIPCLOSE=0\r");
+				_delay_ms(3000);// Änderung				
 			}
 		}
+		/*
 		if(com_StrCmp(uart_string,offset,3,"GET")==1)
 		{   lcd_set_cursor(0,2);
 			lcd_Xstring("ich kriege ein GET",0);
@@ -149,29 +140,14 @@ int offset=0;
 			com_send_antwortclient(html_code1);
 			com_send_antwortclient(html_code2);
 			com_send_antwortclient(html_code3);
-			
 			for(int s= 0; s< com_strlen(uart_string);s++)
 			{
 				uart_string[s]=' ';
 				uart_str_count=0;
 			}
 		}
-
-	
-
-		/*if(uart_str_complete==1)
-		{
-
-			uart_str_complete=0;
-			if(com_StrCmp(uart_string,0,2,"GET")==1)
-			{
-				com_send_antwortclient();
-			}
-		}*/
-		//AUSKOMMENTIERT
-		/*RF_Send_Packet(p);
-		_xdelay_ms(1000);
 		*/
+		
 		if(RF_CurrentStatus.Acknowledgment == RF_Acknowledgments_State_Idle && RF_CurrentStatus.State != RF_State_Receive)RF_Set_State(RF_State_Receive);
 		_xdelay_ms(5);
 		HandleClients();	

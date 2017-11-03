@@ -19,6 +19,7 @@
 enum PageID {
 				// Welcome:
 				PageWelcome = 1,
+				PageGSMInit = 2,
 				// TabHome:
 				PageMenuHome = 10,
 				PageHome = 11,
@@ -53,6 +54,7 @@ enum PageID {
 				// TabWettermonitor:
 				PageMenuWettermonitor = 50,
 				PageWettermonitor = 51,
+
 			};
 			
 enum BatLvl {
@@ -82,4 +84,5 @@ void DSP_CopyString(const char* str, char* strout);
 void DSP_Refresh_Timer_Init(void);
 void DSP_Update_Weatherdata(FS_StationRecord_t* data);
 void DSP_FillErrorArray(uint16_t id);
+extern uint8_t DSP_CurrentPage;
 #endif /*DISPLAYMENU_H_*/

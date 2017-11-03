@@ -8,11 +8,12 @@
 #include "com.h"
 #include "string.h"
 #include "Http/server.h"
-#include "DIsplay/lcd-routines.h"
+#include "Display/lcd-routines.h"
+#include "Display/Display-Menu.h"
 #include "Storage/FileSys.h"
 #include <avr/interrupt.h>
 unsigned char nextChar;
-int init_schritt=0;
+int8_t init_schritt=0;
 int8_t alter_schritt=2;
 char ip_zeichen;
 volatile uint8_t uart_str_count = 0;
@@ -161,8 +162,8 @@ void server_configuration()
 		
 		case 10: 
 		{
-			/*com_send_string("AT+CIPSEND\r"); 
-			com_send_antwortclient(hhtp_header1);
+			//com_send_string("AT+CIPSEND\r"); 
+		/*	com_send_antwortclient(hhtp_header1);
 			com_send_antwortclient(http_header2);
 			com_send_antwortclient(http_header3);
 			com_send_antwortclient(http_header4);
@@ -284,21 +285,16 @@ switch(init_schritt)
 							
 			}
 		}
-			if(com_StrCmp(antwort,offsets,2,"OK")==true)
+		if(com_StrCmp(antwort,offsets,2,"OK")==true)
+		{
+			if(init_schritt==10)
 			{
-				if(init_schritt==10)
-				{
-			konfiguration_erfolgreich=true;
-			lcd_set_cursor(0,0);
-
-			lcd_Xstring("konf fertig",0);
-			
-				}
-				init_schritt++;
-				
-				
-			
+				konfiguration_erfolgreich=true;
+				lcd_set_cursor(0,0);
+				DSP_ChangePage(PageHome);
 			}
+			init_schritt++;
+		}
 		
 			/*else
 			{
@@ -503,8 +499,9 @@ void ip_adresse_zwischenspeichern(uint8_t antwort_ip[]){
 				
 	}
 	
-	lcd_set_cursor(0,0);
-
-	lcd_Xstring("hallo",0);
-	lcd_Xstring(ip_adresse,0);
+	//lcd_set_cursor(0,0);
+	//uint8_t[20] lnt;
+	//lcd_Xstring("hallo",0);
+	//CenterString(lnt,ip_adresse,0);
+	//lcd_Xstring(lnt,0);
 }
